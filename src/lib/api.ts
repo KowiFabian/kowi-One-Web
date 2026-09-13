@@ -1,1 +1,57 @@
-import { Message, KowiResponse, ConversationState } from '@/types';\n\nexport async function kowiChat(\n  userMessage: string,\n  messageHistory: Message[],\n  conversationId: string\n): Promise<KowiResponse> {\n  try {\n    const response = await fetch('/api/chat', {\n      method: 'POST',\n      headers: {\n        'Content-Type': 'application/json',\n      },\n      body: JSON.stringify({\n        userMessage,\n        messageHistory: messageHistory.map((m) => ({\n          role: m.type === 'user' ? 'user' : 'assistant',\n          content: m.content,\n        })),\n        conversationId,\n      }),\n    });\n\n    if (!response.ok) {\n      const error = await response.json();\n      console.error('API Error Response:', error);\n      return {\n        success: false,\n        error: error.error || error.message || 'Error desconocido',\n      };\n    }\n\n    const data = await response.json();\n    console.log('API Success Response:', data);\n    return {\n      success: true,\n      data: {\n        response: data.response,\n        goal: data.goal,\n      },\n    };\n  } catch (error) {\n    const errorMessage = error instanceof Error ? error.message : 'Error de conexión';\n    console.error('Chat API Error:', errorMessage);\n    return {\n      success: false,\n      error: errorMessage,\n    };\n  }\n}\n
+import { Message, KowiResponse } from '@/types';
+
+export async function kowiChat(
+  userMessage: string,
+  messageHistory: Message[],
+  conversationId: string
+): Promise<KowiResponse> {
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userMessage,
+        messageHistory: messageHistory.map((m) => ({
+          role: m.type === 'user' ? 'user' : 'assistant',
+          content: m.content,
+        })),
+        conversationId,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+
+      console.error('API Error Response:', error);
+
+      return {
+        success: false,
+        error: error.error || error.message || 'Error desconocido',
+      };
+    }
+
+    const data = await response.json();
+
+    console.log('API Success Response:', data);
+
+    return {
+      success: true,
+      data: {
+        response: data.response,
+        goal: data.goal,
+      },
+    };
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : 'Error de conexión';
+
+    console.error('Chat API Error:', errorMessage);
+
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
