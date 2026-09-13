@@ -1,294 +1,390 @@
-# 🎙️ Kowi One - Tu Voz Digital, Nuestro Futuro
+🌍 KOWI ONE
 
-[![Next.js](https://img.shields.io/badge/Next.js-14.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-18.2-blue?style=flat-square&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.3-blue?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-MVP%20Development-orange?style=flat-square)]()
+Human-First AI — From Intention to Action
 
-## 📋 Descripción del Proyecto
+Kowi One is a Human-First AI project designed to help people transform their intentions, ideas, talents and dreams into concrete action.
 
-**Kowi One** es una plataforma SaaS innovadora para la gestión y comercialización de voces clonadas con IA. Combinamos tecnología de punta con una interfaz intuitiva para permitir que creadores, empresas y profesionales:
+Kowi does not exist to replace human potential.
 
-- 🎤 **Clonar voces** con tecnología IA avanzada
-- 🔊 **Mejorar audio** con filtros profesionales
-- 📝 **Transcribir** contenido multimedia automáticamente
-- ✅ **Certificar** la autenticidad de voces digitales
+Kowi exists to amplify it.
 
-## 🚀 Fase 1: Core MVP
+INTENTION → CLARITY → GOAL → ACTION → PROGRESS
 
-### Estado Actual: ✅ EN DESARROLLO
+⸻
 
-La Fase 1 establece la base fundamental de Kowi One con una estructura moderna de Next.js 14, incluyendo:
+🇪🇸 Español
 
-### ✨ Características Implementadas
+¿Qué es Kowi One?
 
-#### 🎨 Frontend
-- **Landing Page** completa con hero section, features y CTA
-- **Login/Signup** con validación de formularios
-- **Dashboard** responsivo con sidebar navegable
-- **UI/UX moderna** usando Tailwind CSS
-- **Diseño Mobile-First** completamente responsive
+Kowi One es una inteligencia artificial centrada en las personas que ayuda a transformar una intención o un sueño en un objetivo concreto y un camino de acción.
 
-#### ⚙️ Configuración Técnica
-- ✅ **Next.js 14** con App Router
-- ✅ **TypeScript** con strict mode
-- ✅ **Tailwind CSS** para estilos
-- ✅ **ESLint y Prettier** para código limpio
-- ✅ **Lucide React** para iconografía
-- ✅ **Seguridad headers** en Next.js config
-- ✅ **.gitignore** optimizado
+La idea es sencilla:
 
-#### 📁 Estructura de Carpetas
-```
-src/
-├── app/
-│   ├── layout.tsx           # Root layout con metadata
-│   ├── globals.css          # Estilos globales
-│   ├── page.tsx             # Landing page
-│   ├── auth/
-│   │   ├── login/page.tsx   # Página de login
-│   │   └── signup/page.tsx  # Página de registro
-│   ├── dashboard/
-│   │   └── page.tsx         # Dashboard principal
-│   └── api/
-│       ├── health/route.ts          # Health check
-│       ├── transcribe/route.ts      # Transcripción (placeholder)
-│       ├── clone-voice/route.ts     # Clonación (placeholder)
-│       └── enhance-audio/route.ts   # Mejora de audio (placeholder)
-├── lib/
-│   ├── hooks.ts             # Custom hooks (useAuth, useProjects, useFileUpload)
-│   ├── supabase-client.ts   # Placeholder Supabase
-│   └── ai-services.ts       # Placeholder servicios IA
-└── types/
-    └── index.ts             # TypeScript definitions
-```
+Tú dices lo que quieres conseguir.
+Kowi te ayuda a convertirlo en un plan.
+Y juntos avanzáis paso a paso.
 
-#### 📚 Documentación Completa
-- ✅ **README.md** (este archivo)
-- ✅ **CONTRIBUTING.md** con guías de contribución
-- ✅ **SETUP.md** con instrucciones de desarrollo
-- ✅ **CHANGELOG.md** con historial de cambios
-- ✅ **package.json** con todos los scripts
+El recorrido Kowi
 
-## 🛠️ Quick Start
+INTENCIÓN → CLARIDAD → OBJETIVO → ACCIÓN → PROGRESO
 
-### Requisitos Previos
-- Node.js 18+
-- npm 9+
+En el MVP, Kowi:
 
-### Instalación
+1. Escucha la intención del usuario.
+2. Hace las preguntas mínimas necesarias.
+3. Ayuda a definir un objetivo concreto y medible.
+4. Crea un plan personalizado de 30 días.
+5. Define una primera acción inmediata.
+6. Continúa acompañando al usuario durante el proceso.
 
-```bash
-# Clonar repositorio
-git clone https://github.com/KowiFabian/kowi-One-Web.git
-cd kowi-One-Web
+Una visión más amplia
 
-# Instalar dependencias
+Kowi quiere ayudar a las personas a descubrir y desarrollar su potencial:
+
+TALENTO → VALOR → INGRESOS → AUTONOMÍA
+
+La tecnología debe ayudar a las personas a crear, aprender, trabajar, emprender y evolucionar.
+
+No a sustituirlas.
+
+Comunidad
+
+Kowi One está concebido como un proyecto abierto a una comunidad global de:
+
+* Personas con ideas.
+* Emprendedores.
+* Creadores.
+* Estudiantes.
+* Profesionales.
+* Educadores.
+* Investigadores.
+* Desarrolladores.
+* Personas que buscan nuevas oportunidades.
+
+La comunidad será una parte fundamental de la evolución de Kowi.
+
+⸻
+
+🇬🇧 English
+
+What is Kowi One?
+
+Kowi One is a Human-First AI project designed to help people transform intentions, ideas, talents and dreams into concrete goals and actions.
+
+The idea is simple:
+
+You say what you want to achieve.
+Kowi helps turn it into a plan.
+Then you move forward step by step.
+
+The Kowi journey
+
+INTENTION → CLARITY → GOAL → ACTION → PROGRESS
+
+In the MVP, Kowi:
+
+1. Understands the user’s intention.
+2. Asks only the questions that are necessary.
+3. Helps define a concrete and measurable goal.
+4. Creates a personalized 30-day action plan.
+5. Defines an immediate first action.
+6. Continues supporting the user throughout the process.
+
+A broader vision
+
+Kowi aims to help people discover and develop their potential:
+
+TALENT → VALUE → INCOME → AUTONOMY
+
+Technology should help people create, learn, work, build businesses and evolve.
+
+Not replace them.
+
+Community
+
+Kowi One is designed to grow with a global community of:
+
+* People with ideas.
+* Entrepreneurs.
+* Creators.
+* Students.
+* Professionals.
+* Educators.
+* Researchers.
+* Developers.
+* People looking for new opportunities.
+
+Community is a fundamental part of Kowi’s evolution.
+
+⸻
+
+🌎 Global Vision
+
+Kowi One is being designed from the beginning with a global perspective.
+
+The long-term vision includes:
+
+* 🌍 Multilingual interaction.
+* 🎙️ Conversational voice experiences.
+* 🤖 AI-assisted personal planning.
+* 🧠 Talent and potential discovery.
+* 📚 Personalized learning.
+* 💼 Employment and entrepreneurship support.
+* 💰 Paths from skills to economic value.
+* 👥 Global community.
+* ♿ Accessibility.
+* 🌱 Social impact.
+* 🔐 Responsible AI and user control.
+* 🪪 Human voice and digital identity technologies.
+* 🤝 Collaboration between humans and multiple AI systems.
+
+The goal is not simply to build another AI chatbot.
+
+The goal is to explore a new model of interaction between people, intelligence, technology and community.
+
+⸻
+
+🚀 MVP
+
+The first Kowi One MVP focuses on one fundamental problem:
+
+How can we help someone move from “I want to achieve something” to “I know what I need to do next”?
+
+MVP flow
+
+USER
+  ↓
+INTENTION
+  ↓
+QUESTIONS
+  ↓
+CLEAR OBJECTIVE
+  ↓
+30-DAY PLAN
+  ↓
+FIRST ACTION
+  ↓
+PROGRESS
+
+The first version is intentionally simple.
+
+We want to validate the fundamental experience before adding more complex systems.
+
+⸻
+
+🧠 Technology
+
+Current MVP architecture:
+
+* Next.js
+* React
+* TypeScript
+* Tailwind CSS
+* OpenAI API
+* Vercel
+* GitHub
+
+The AI API key is kept server-side and is never exposed to the browser.
+
+⸻
+
+🔐 Human-First Principles
+
+Kowi is designed around several principles:
+
+1. Human agency
+
+The human remains responsible for their decisions.
+
+2. AI as an amplifier
+
+AI should increase human capabilities rather than eliminate human participation.
+
+3. Transparency
+
+Users should understand what the system is doing.
+
+4. Privacy
+
+Personal information should be handled responsibly.
+
+5. Accessibility
+
+AI should become easier to use, not harder.
+
+6. Opportunity
+
+Technology should help more people access knowledge, tools and opportunities.
+
+7. Community
+
+The evolution of Kowi should be built together with its users and collaborators.
+
+⸻
+
+🛠️ Development
+
+This repository contains the Kowi One web application.
+
+Install
+
 npm install
 
-# Copiar variables de entorno
-cp .env.example .env.local
+Development
 
-# Iniciar servidor de desarrollo
 npm run dev
-```
 
-Visita `http://localhost:3000` en tu navegador.
+Open:
 
-## 📝 Scripts Disponibles
+http://localhost:3000
 
-```bash
-npm run dev          # Iniciar servidor de desarrollo
-npm run build        # Compilar para producción
-npm run start        # Iniciar servidor de producción
-npm run lint         # Ejecutar ESLint
-npm run format       # Formatear código con Prettier
-npm run type-check   # Verificar tipos TypeScript
-```
+Type checking
 
-## 🎨 Tecnología Stack
+npm run type-check
 
-| Categoría | Tecnología |
-|-----------|-----------|
-| **Framework** | Next.js 14 |
-| **React** | React 18.2 |
-| **Lenguaje** | TypeScript 5.2 |
-| **Estilos** | Tailwind CSS 3.3 |
-| **Iconos** | Lucide React |
-| **Linting** | ESLint 8.46 |
-| **Formateo** | Prettier 3.0 |
+Lint
 
-## 🔄 Roadmap Completo
+npm run lint
 
-### ✅ Fase 1: Core MVP (EN DESARROLLO)
-- Landing page y marketing
-- Autenticación (UI lista, backend pendiente)
-- Dashboard base
-- Estructura de tipos TypeScript
-- Placeholders para API integrations
+Production build
 
-### 📅 Fase 2: Supabase Authentication (PRÓXIMA)
-- Integración Supabase Auth
-- Gestión de sesiones
-- Protección de rutas
-- Perfiles de usuario
+npm run build
 
-### 📅 Fase 3: Projects & Audio Management
-- CRUD de proyectos
-- Upload de archivos de audio
-- Storage en Supabase
-- Gestión de versiones
+⸻
 
-### 📅 Fase 4: AI Services Integration
-- OpenAI Whisper (transcripción)
-- ElevenLabs (clonación de voz)
-- Audio enhancement
-- Processing pipeline
+🔑 Environment Variables
 
-### 📅 Fase 5: Marketplace & Monetization
-- Sistema de certificación
-- Marketplace de voces
-- Stripe/Payment integration
-- Analytics dashboard
+Create a .env.local file:
 
-## 🔐 Seguridad
+OPENAI_API_KEY=your_api_key_here
 
-### Características Implementadas
-- ✅ Headers de seguridad en Next.js
-- ✅ TypeScript strict mode
-- ✅ Validación de formularios
-- ✅ `.env.example` sin credenciales reales
-- ✅ `.gitignore` optimizado
+Never commit real API keys to GitHub.
 
-### Próximas Mejoras
-- Rate limiting en APIs
-- CSRF protection
-- Input sanitization
-- JWT tokens (con Supabase)
+⸻
 
-## 📊 Páginas Principales
+🌱 Roadmap
 
-### Landing Page (`/`)
-- Hero section con CTA
-- 4 features principales
-- Sección "Sobre Nosotros"
-- Call-to-action final
-- Footer completo
+Phase 1 — Core MVP
 
-### Login (`/auth/login`)
-- Formulario email/password
-- Opciones OAuth (Google, GitHub)
-- Link a signup
-- Validación en cliente
+* [x]	Next.js foundation
+* [x]	React interface
+* [x]	User intention input
+* [x]	AI conversation
+* [x]	Goal identification
+* [x]	30-day action plan
+* [ ]	Production deployment
+* [ ]	First real user tests
 
-### Signup (`/auth/signup`)
-- Full name input
-- Email/password con validación
-- Password strength indicator
-- Confirmación de términos
-- Link a login
+Phase 2 — Personalization
 
-### Dashboard (`/dashboard`)
-- Sidebar navegable (collapse mobile)
-- Tab Projects (con mock data)
-- Tab Profile (edición)
-- Tab Settings
-- Responsive design
+* [ ]	User profiles
+* [ ]	Progress tracking
+* [ ]	Persistent goals
+* [ ]	Personalized recommendations
+* [ ]	Feedback system
 
-## 🚀 Deployment
+Phase 3 — Voice
 
-### Vercel (Recomendado)
+* [ ]	Conversational voice
+* [ ]	Multilingual voice
+* [ ]	Human voice identity
+* [ ]	Consent and rights management
+* [ ]	Voice certification research
 
-```bash
-# 1. Push a GitHub
-git push origin phase/1-core-mvp
+Phase 4 — Global Kowi
 
-# 2. Conectar en Vercel
-# https://vercel.com/new
+* [ ]	Multiple languages
+* [ ]	AI model orchestration
+* [ ]	Community
+* [ ]	Education
+* [ ]	Entrepreneurship
+* [ ]	Employment support
+* [ ]	Social impact programs
 
-# 3. Configurar environment variables en Vercel Dashboard
-NEXT_PUBLIC_SUPABASE_URL=your_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
-OPENAI_API_KEY=your_key
-NEXT_PUBLIC_ELEVENLABS_API_KEY=your_key
-```
+Phase 5 — Human Potential Ecosystem
 
-## 📖 Documentación Adicional
+TALENT
+   ↓
+VALUE
+   ↓
+OPPORTUNITY
+   ↓
+INCOME
+   ↓
+AUTONOMY
+   ↓
+IMPACT
 
-- **[SETUP.md](SETUP.md)** - Guía completa de instalación y desarrollo
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Guías de contribución y estándares de código
-- **[CHANGELOG.md](CHANGELOG.md)** - Historial de cambios y roadmap
-- **[API Routes](SETUP.md#-api-routes)** - Documentación de endpoints
+⸻
 
-## 🤝 Contribuir
+🤝 Community
 
-¡Queremos tu ayuda! Lee [CONTRIBUTING.md](CONTRIBUTING.md) para:
+Kowi One is intended to evolve with people, not only for people.
 
-- Cómo configurar tu entorno
-- Estándares de código
-- Proceso de Pull Request
-- Guías de commit
+We want to build a global community around:
 
-### Quick Contribution Guide
+Ideas + Talent + AI + Human Creativity + Action
 
-```bash
-# 1. Crear rama de feature
-git checkout -b feature/mi-feature
+People should be able to contribute with:
 
-# 2. Hacer cambios y commit
-git commit -m "feat: agregar nueva feature"
+* Ideas
+* Testing
+* Development
+* Design
+* Research
+* Education
+* Translation
+* Community building
+* Entrepreneurship
+* Social impact
 
-# 3. Push y crear PR
-git push origin feature/mi-feature
-# Crear PR en GitHub hacia phase/1-core-mvp
-```
+⸻
 
-## 📞 Soporte
+🌍 Languages
 
-- **Issues**: [GitHub Issues](https://github.com/KowiFabian/kowi-One-Web/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/KowiFabian/kowi-One-Web/discussions)
-- **Email**: faviangaray@gmail.com
+Kowi One is designed to become multilingual.
 
-## 📜 Licencia
+The initial project language is Spanish, with English as the primary international development language.
 
-Este proyecto está bajo licencia **MIT**. Ver [LICENSE](LICENSE) para más detalles.
+Future versions may support languages from communities around the world.
 
-## 🙏 Agradecimientos
+⸻
 
-- [Next.js](https://nextjs.org/) - Framework web
-- [React](https://react.dev/) - Biblioteca UI
-- [Tailwind CSS](https://tailwindcss.com/) - Sistema de estilos
-- [TypeScript](https://www.typescriptlang.org/) - Tipado estático
-- [Lucide React](https://lucide.dev/) - Iconos
+📜 Project Philosophy
 
-## 👨‍💻 Autor
+Technology is powerful.
 
-**Fabian Kowitsch** - [@KowiFabian](https://github.com/KowiFabian)
+But technology alone does not create the future.
 
----
+People do.
 
-## 📊 Estadísticas del Proyecto
+Kowi One is an experiment to discover how AI can help more people turn what they imagine into something they can actually build.
 
-- **Versión**: 0.1.0 (MVP)
-- **Estado**: En Desarrollo
-- **Node**: 18+
-- **Licencia**: MIT
-- **Creado**: Agosto 2025
+Where human intention becomes action.
 
----
+⸻
 
-## 🎯 Próximos Pasos
+📍 Project
 
-1. ✅ Fase 1: Core MVP (Completar)
-2. 🔄 Crear PR hacia `main`
-3. 📋 Code review
-4. 🚀 Merge y deploy preview
-5. 👉 Comenzar Fase 2: Supabase Auth
+Kowi One
 
----
+Human-First AI
 
-**Hecho con ❤️ para la comunidad de creadores de contenido**
+Website: kowi.one
 
-*"Tu voz digital, nuestro futuro"* 🎙️
+Repository: Kowi One Web
+
+⸻
+
+❤️ Built for human potential
+
+Kowi One starts with a simple question:
+
+What could happen if everyone had an intelligent companion helping them turn their potential into action?
+
+We are building to find out.
+
+KOWI ONE — Human-First AI
+
+
+
