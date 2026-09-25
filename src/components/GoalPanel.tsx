@@ -10,7 +10,7 @@ interface GoalPanelProps {
 
 const GoalPanel: React.FC<GoalPanelProps> = ({ goal, onNewConversation }) => {
   return (
-    <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto shadow-lg">
+    <div className="w-full lg:w-80 lg:shrink-0 bg-white border-l border-gray-200 overflow-y-auto shadow-lg">
       <div className="sticky top-0 bg-primary text-white px-6 py-4">
         <h2 className="font-bold text-lg">Tu Plan</h2>
         <p className="text-xs text-blue-100 mt-1">30 días para lograrlo</p>

@@ -21,7 +21,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, loading }) => {
                 : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none'
             }`}
           >
-            <p className="text-sm md:text-base leading-relaxed">
+            <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">
               {message.content}
             </p>
           </div>

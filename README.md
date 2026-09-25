@@ -1,3 +1,9 @@
+# Estado de la implementación — 25 septiembre 2026
+
+La fase actual incorpora autenticación Supabase, RLS, chat protegido y landing Business. Para configurar y probar esta versión, consulta [Operaciones](docs/OPERATIONS.md) y [Seguridad y privacidad](docs/SECURITY-PRIVACY.md). El texto anterior que sigue es histórico y puede describir el MVP previo.
+
+---
+
 🌍 KOWI ONE
 
 Human-First AI — From Intention to Action
@@ -385,6 +391,3 @@ What could happen if everyone had an intelligent companion helping them turn the
 We are building to find out.
 
 KOWI ONE — Human-First AI
-
-
-

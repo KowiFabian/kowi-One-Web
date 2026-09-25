@@ -1,57 +1,16 @@
-import { Message, KowiResponse } from '@/types';
+import { browserSupabase } from './supabase-browser';
 
-export async function kowiChat(
-  userMessage: string,
-  messageHistory: Message[],
-  conversationId: string
-): Promise<KowiResponse> {
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        userMessage,
-        messageHistory: messageHistory.map((m) => ({
-          role: m.type === 'user' ? 'user' : 'assistant',
-          content: m.content,
-        })),
-        conversationId,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-
-      console.error('API Error Response:', error);
-
-      return {
-        success: false,
-        error: error.error || error.message || 'Error desconocido',
-      };
-    }
-
-    const data = await response.json();
-
-    console.log('API Success Response:', data);
-
-    return {
-      success: true,
-      data: {
-        response: data.response,
-        goal: data.goal,
-      },
-    };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : 'Error de conexión';
-
-    console.error('Chat API Error:', errorMessage);
-
-    return {
-      success: false,
-      error: errorMessage,
-    };
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const client = browserSupabase();
+  const session = client ? (await client.auth.getSession()).data.session : null;
+  if (!session) throw new Error('Inicia sesión para continuar.');
+  const response = await fetch(path, {
+    ...init, cache: 'no-store', signal: AbortSignal.timeout(55000),
+    headers: { ...init.headers, 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.error || 'No se pudo completar la operación.');
   }
+  return response.status === 204 ? undefined as T : response.json();
 }
