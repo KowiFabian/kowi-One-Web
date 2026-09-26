@@ -16,21 +16,31 @@ const body = { userMessage:'Quiero validar una idea', conversationId:'33333333-3
 const request = (value: unknown = body, auth = true) => new Request('https://kowi.test/api/chat', {
   method:'POST', headers:{'Content-Type':'application/json',...(auth ? {Authorization:'Bearer test-token'} : {})}, body:JSON.stringify(value),
 });
-type Scenario = { unauthorized?: boolean; owner?: boolean; quota?: boolean; invalidModel?: boolean; providerError?: boolean; refusal?: boolean; saveError?: boolean; previous?: boolean };
+const savedPlan = { intent: 'Crear un negocio', goal: 'Entrevistar a cinco clientes', plan: ['Investigar', 'Entrevistar', 'Probar', 'Evaluar'], first_action: 'Preparar preguntas' };
+type Scenario = { unauthorized?: boolean; owner?: boolean; quota?: boolean; invalidModel?: boolean; providerError?: boolean; refusal?: boolean; saveError?: boolean; previous?: boolean; revision?: number; savedGoal?: unknown; goalError?: boolean; malformedEnvelope?: boolean; invalidJson?: boolean; networkError?: boolean };
 function mock(s: Scenario = {}) {
   process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://supabase.test';
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'public-test-key';
   process.env.OPENAI_API_KEY = 'server-test-secret';
-  let modelCalls = 0; let saves = 0;
+  let modelCalls = 0; let saves = 0; let quotaCalls = 0;
   globalThis.fetch = async (input, init) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
     if (url.pathname === '/auth/v1/user') return Response.json(s.unauthorized ? {message:'invalid'} : {id:'11111111-1111-4111-8111-111111111111'}, {status:s.unauthorized ? 401 : 200});
     if (url.pathname === '/rest/v1/conversations') return Response.json(s.owner === false ? null : {id:body.conversationId});
     if (url.pathname === '/rest/v1/turns') {
       if (url.searchParams.has('request_id')) return Response.json(s.previous ? {user_message:body.userMessage,response:'Guardado',goal:null} : null);
-      return Response.json([]);
+      assert.equal(url.searchParams.get('conversation_id'), 'eq.' + body.conversationId);
+      assert.equal(url.searchParams.get('user_id'), 'eq.11111111-1111-4111-8111-111111111111');
+      if (url.searchParams.get('select') === 'goal') {
+        assert.equal(url.searchParams.get('sequence'), 'lte.' + (s.revision ?? 0));
+        assert.equal(url.searchParams.get('goal'), 'not.is.null');
+        assert.equal(url.searchParams.get('order'), 'sequence.desc');
+        assert.equal(url.searchParams.get('limit'), '1');
+        return s.goalError ? Response.json({message:'private database error'}, {status:500}) : Response.json(s.savedGoal ? {goal:s.savedGoal} : null);
+      }
+      return Response.json(s.revision ? [{sequence:s.revision,user_message:'Avance reciente',response:'Continúa',goal:null}] : []);
     }
-    if (url.pathname.endsWith('/consume_chat_quota')) return Response.json(s.quota !== false);
+    if (url.pathname.endsWith('/consume_chat_quota')) { quotaCalls++; return Response.json(s.quota !== false); }
     if (url.pathname.endsWith('/save_chat_turn')) {
       saves++;
       return s.saveError ? Response.json({code:'40001',message:'conflict'}, {status:409}) : new Response(null,{status:204});
@@ -38,9 +48,16 @@ function mock(s: Scenario = {}) {
     if (url.hostname === 'api.openai.com') {
       modelCalls++;
       const data = JSON.parse(String(init?.body));
-      assert.equal(data.messages.length,2);
+      assert.equal(data.messages.length,2 + (s.revision ? 2 : 0) + (s.savedGoal ? 1 : 0));
       assert.equal(data.messages[0].role,'system');
+      if (s.savedGoal) {
+        assert.equal(data.messages[1].role, 'user');
+        assert.ok(data.messages[1].content.includes(JSON.stringify(s.savedGoal)));
+      }
       assert.equal(data.store,false);
+      if (s.networkError) throw new DOMException('server-test-secret', 'TimeoutError');
+      if (s.invalidJson) return new Response('<html>server-test-secret</html>');
+      if (s.malformedEnvelope) return Response.json(null);
       if (s.providerError) return Response.json({error:{message:'server-test-secret'}},{status:429});
       return Response.json({choices:[{finish_reason:'stop',message:{
         refusal:s.refusal ? 'refused' : null,
@@ -49,7 +66,7 @@ function mock(s: Scenario = {}) {
     }
     throw new Error('Unexpected network request: '+url.pathname);
   };
-  return { get calls() { return modelCalls; }, get saves() { return saves; } };
+  return { get calls() { return modelCalls; }, get saves() { return saves; }, get quotas() { return quotaCalls; } };
 }
 test('unauthenticated chat is rejected without network calls', async () => {
   globalThis.fetch = async () => { throw new Error('Unexpected network'); };
@@ -77,6 +94,29 @@ test('malformed model output and refusal are not saved',async () => {
 });
 test('provider errors never expose secrets',async () => {
   mock({providerError:true}); const r=await POST(request()); assert.equal(r.status,502); assert.ok(!(await r.text()).includes('server-test-secret'));
+});
+
+test('stored plan survives beyond the recent dialogue window as unprivileged context', async () => {
+  const m = mock({revision: 15, savedGoal: savedPlan});
+  assert.equal((await POST(request())).status, 200);
+  assert.equal(m.calls, 1); assert.equal(m.saves, 1);
+});
+
+test('memory failures and completed conversations do not spend quota or call OpenAI', async () => {
+  for (const scenario of [{goalError:true}, {savedGoal:{intent:'invalid'}}, {revision:100}]) {
+    const m = mock(scenario);
+    assert.equal((await POST(request())).status, scenario.revision ? 409 : 503);
+    assert.equal(m.calls, 0); assert.equal(m.quotas, 0); assert.equal(m.saves, 0);
+  }
+});
+
+test('invalid provider envelopes, non-JSON responses and timeouts are safe gateway errors', async () => {
+  for (const scenario of [{malformedEnvelope:true}, {invalidJson:true}, {networkError:true}]) {
+    const m = mock(scenario); const response = await POST(request());
+    assert.equal(response.status, 502); assert.equal(m.saves, 0);
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.ok(!(await response.text()).includes('server-test-secret'));
+  }
 });
 test('save conflict never reports success',async () => {
   mock({saveError:true}); assert.equal((await POST(request())).status,409);

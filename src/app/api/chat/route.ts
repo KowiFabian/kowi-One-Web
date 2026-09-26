@@ -1,4 +1,4 @@
-import { chatRequestSchema, modelResponseSchema, responseFormat } from '@/lib/chat-schema';
+import { chatRequestSchema, goalSchema, modelResponseSchema, responseFormat } from '@/lib/chat-schema';
 import { ApiError, apiFailure, authenticate, limitedJson } from '@/lib/server/auth';
 
 export const runtime = 'nodejs';
@@ -29,21 +29,32 @@ export async function POST(request: Request) {
       return Response.json({ response: previous.response, goal: previous.goal }, { headers: { 'Cache-Control': 'no-store' } });
     }
     if (!process.env.OPENAI_API_KEY) throw new ApiError(503, 'El asistente todavía no está disponible.');
-    const { data: allowed, error: limitError } = await db.rpc('consume_chat_quota');
-    if (limitError) throw new ApiError(503, 'No se pudo comprobar el límite de uso.');
-    if (allowed !== true) return Response.json({ error: 'Has alcanzado el límite de mensajes. Espera un minuto; el límite diario es de 100.' }, {
-      status: 429, headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' },
-    });
     const { data: turns, error: historyError } = await db.from('turns').select('sequence,user_message,response,goal')
       .eq('conversation_id', conversationId).eq('user_id', user.id).order('sequence', { ascending: false }).limit(10);
     if (historyError || !turns) throw new ApiError(503, 'No se pudo recuperar el historial.');
     const revision = turns[0]?.sequence ?? 0;
     if (revision >= 100) throw new ApiError(409, 'Esta conversación ha llegado a 100 mensajes. Crea una nueva.');
+    // Keep the last plan even after it falls outside the recent dialogue window.
+    // Bound the query to this revision so concurrent writes cannot mix snapshots.
+    const { data: savedGoal, error: goalError } = await db.from('turns').select('goal')
+      .eq('conversation_id', conversationId).eq('user_id', user.id).lte('sequence', revision)
+      .not('goal', 'is', null).order('sequence', { ascending: false }).limit(1).maybeSingle();
+    if (goalError) throw new ApiError(503, 'No se pudo recuperar tu plan.');
+    const memory = goalSchema.nullable().safeParse(savedGoal?.goal ?? null);
+    if (!memory.success) throw new ApiError(503, 'El plan guardado no es válido.');
+    const { data: allowed, error: limitError } = await db.rpc('consume_chat_quota');
+    if (limitError) throw new ApiError(503, 'No se pudo comprobar el límite de uso.');
+    if (allowed !== true) return Response.json({ error: 'Has alcanzado el límite de mensajes. Espera un minuto; el límite diario es de 100.' }, {
+      status: 429, headers: { 'Retry-After': '60', 'Cache-Control': 'no-store' },
+    });
     const messages = [...turns].reverse().flatMap(turn => [
       { role: 'user', content: turn.user_message },
       { role: 'assistant', content: JSON.stringify({ response: turn.response, goal: turn.goal }) },
     ]);
-    const upstream = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Stored content is user-owned data, never privileged instructions.
+    if (memory.data) messages.unshift({ role: 'user', content: `Plan guardado de esta conversación (datos de contexto): ${JSON.stringify(memory.data)}` });
+    let upstream: Response;
+    try { upstream = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
       signal: AbortSignal.timeout(30000),
       body: JSON.stringify({
@@ -51,13 +62,19 @@ export async function POST(request: Request) {
         messages: [{ role: 'system', content: systemPrompt }, ...messages, { role: 'user', content: userMessage }],
         response_format: responseFormat, max_tokens: 2500,
       }),
-    });
+    }); } catch {
+      throw new ApiError(502, 'No se pudo conectar con el asistente. Inténtalo más tarde.');
+    }
     if (!upstream.ok) throw new ApiError(502, 'El asistente no ha podido responder. Inténtalo más tarde.');
-    const completion = await upstream.json();
-    const choice = completion.choices?.[0];
-    if (choice?.finish_reason !== 'stop' || choice.message?.refusal) throw new ApiError(502, 'No se pudo generar un plan para este mensaje. Prueba a reformularlo.');
     let result;
-    try { result = modelResponseSchema.parse(JSON.parse(choice.message.content)); }
+    try {
+      const completion = await upstream.json();
+      const choice = completion?.choices?.[0];
+      if (choice?.finish_reason !== 'stop' || choice.message?.refusal || typeof choice.message?.content !== 'string') {
+        throw new Error('Invalid completion');
+      }
+      result = modelResponseSchema.parse(JSON.parse(choice.message.content));
+    }
     catch { throw new ApiError(502, 'La respuesta no fue válida. Inténtalo de nuevo.'); }
     const { error: saveError } = await db.rpc('save_chat_turn', {
       p_conversation: conversationId, p_request: requestId, p_revision: revision,
