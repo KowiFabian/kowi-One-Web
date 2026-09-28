@@ -88,7 +88,7 @@ export default function Home() {
           <div className="mb-8 h-12 w-12 rounded-2xl border border-[#d7f2a7]/20 bg-[#d7f2a7]/5 p-3"><div className="hero-orb h-full w-full rounded-full"/></div>
           <h3 className="text-2xl font-semibold">{title}</h3><p className="mt-4 leading-relaxed text-[#a9c1b3]">{body}</p>
         </article>)}</div>
-        <div className="mt-10"><Link href="/business/demo" className="inline-flex rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31]">Probar demo comercial ↗</Link></div>
+        <div className="mt-10 flex flex-wrap gap-3"><Link href="/business/agent" className="inline-flex rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31]">Abrir agente comercial ↗</Link><Link href="/business/demo" className="inline-flex rounded-full border border-white/20 px-7 py-4 font-semibold">Ver demo</Link></div>
       </div>
     </section>
 
