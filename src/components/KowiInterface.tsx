@@ -86,7 +86,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     <div className="kowi-grid pointer-events-none fixed inset-0 opacity-30"/>
     <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#071612]/80 px-5 py-4 backdrop-blur-xl md:px-8">
       <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-8 w-8 rounded-full"/><span className="text-sm font-bold tracking-[.24em]">KOWI ONE</span></Link>
-      <div className="flex items-center gap-4 text-sm text-[#aec5b7]"><span className="hidden md:inline">Human‑First workspace</span><Link href="/privacidad">Privacidad</Link>
+      <div className="flex items-center gap-4 text-sm text-[#aec5b7]"><span className="hidden md:inline">Human‑First workspace</span><Link href="/business/agent">Business</Link><Link href="/privacidad">Privacidad</Link>
         <button disabled={busy} onClick={() => run(onSignOut)} className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">Salir</button></div>
     </header>
 
