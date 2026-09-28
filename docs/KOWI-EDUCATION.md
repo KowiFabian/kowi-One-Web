@@ -1,6 +1,6 @@
 # Kowi Education · modelo operativo inicial
 
-Estado: **diseño de piloto**, 28 de septiembre de 2026. No se ofrecen aún matrículas, títulos oficiales, vouchers, formación bonificada ni alianzas activas. El agente está disponible en `/educacion` para diseñar programas y orientar; no matricula ni emite credenciales.
+Estado: **diseño de piloto**, 28 de septiembre de 2026. No se ofrecen aún matrículas, títulos oficiales, vouchers, formación bonificada ni alianzas activas. La página `/school` publica únicamente el estado de diseño; `/educacion` redirige allí. El prompt de orientación educativa está preparado en el código, pero aún no se expone como servicio al público. No matricula ni emite credenciales.
 
 ## Propuesta y primera oferta
 
