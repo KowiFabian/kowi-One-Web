@@ -1,16 +1,122 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --bg: #071612;
+  --bg-soft: #0d241d;
+  --panel: rgba(18, 46, 37, .72);
+  --line: rgba(224, 247, 222, .14);
+  --text: #eef8ef;
+  --muted: #a9c8b5;
+  --lime: #d7f2a7;
+  --mint: #83d6ac;
+  --deep: #14382f;
+}
+
+* { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { margin: 0; font-family: Arial, Helvetica, sans-serif; }
-.site-shell { background: #10372f; }
-.connection-field { background: radial-gradient(circle, #598a63 0, #245344 42%, #174238 90%); }
-.orbit { position:absolute; width:70%; height:55%; border:1px solid #d5edaa66; border-radius:50%; }
-.orbit-one { transform:rotate(-30deg) scaleX(1.25); }
-.orbit-two { transform:rotate(47deg) scaleX(.8); }
-.orb { background: radial-gradient(circle at 30% 20%, #579269, #1b503f 70%); }
-.flow-card { position:absolute; z-index:20; padding:1rem 1.2rem; border:1px solid #ffffff44; border-radius:1rem; background:#204c40eb; box-shadow:0 18px 35px #0b2e2860; }
-.flow-card small { color:#cfeca9; font-size:.68rem; letter-spacing:.12em; }
-.flow-card p { margin-top:.35rem; font-size:1rem; }
-.eyebrow { font-size:.82rem; font-weight:700; letter-spacing:.22em; }
-@media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 15% 10%, rgba(91, 178, 126, .22), transparent 30%),
+    radial-gradient(circle at 85% 12%, rgba(196, 236, 156, .11), transparent 28%),
+    linear-gradient(180deg, #071612 0%, #0a1d17 52%, #07120f 100%);
+  font-family: Arial, Helvetica, sans-serif;
+}
+a { color: inherit; text-decoration: none; }
+button, input, textarea { font: inherit; }
+
+.kowi-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.02), transparent 12%),
+    radial-gradient(circle at 80% 20%, rgba(215,242,167,.08), transparent 22%);
+}
+.kowi-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+.glass {
+  background: linear-gradient(180deg, rgba(24,57,47,.78), rgba(12,34,28,.72));
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 80px rgba(0,0,0,.24);
+  backdrop-filter: blur(18px);
+}
+.hero-orb {
+  background:
+    radial-gradient(circle at 32% 28%, #bce8a0 0 6%, #6ab48b 19%, #245844 48%, #0d2b22 75%);
+  box-shadow:
+    0 0 40px rgba(151, 232, 170, .18),
+    0 0 120px rgba(98, 178, 125, .22),
+    inset 0 0 40px rgba(255,255,255,.12);
+}
+.orbit-ring {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 72%;
+  height: 44%;
+  border: 1px solid rgba(215,242,167,.26);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(-20deg);
+}
+.orbit-ring.two { transform: translate(-50%, -50%) rotate(45deg) scale(.85); }
+.orbit-ring.three { transform: translate(-50%, -50%) rotate(8deg) scale(1.12,.7); opacity: .45; }
+
+.signal-card {
+  position: absolute;
+  min-width: 170px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(8,31,25,.76);
+  border-radius: 20px;
+  padding: 14px 16px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 50px rgba(0,0,0,.22);
+}
+.signal-card small {
+  display: block;
+  color: var(--lime);
+  font-size: .68rem;
+  letter-spacing: .14em;
+  margin-bottom: 6px;
+}
+.signal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lime);
+  box-shadow: 0 0 16px var(--lime);
+}
+.kowi-pulse { animation: kowiPulse 3.6s ease-in-out infinite; }
+.float-a { animation: floatA 6s ease-in-out infinite; }
+.float-b { animation: floatB 7.5s ease-in-out infinite; }
+.fade-up { animation: fadeUp .7s ease both; }
+.fade-up.d2 { animation-delay: .12s; }
+.fade-up.d3 { animation-delay: .22s; }
+
+@keyframes kowiPulse {
+  0%,100% { transform: scale(1); filter: saturate(1); }
+  50% { transform: scale(1.035); filter: saturate(1.15); }
+}
+@keyframes floatA {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes floatB {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .kowi-pulse,.float-a,.float-b,.fade-up { animation: none; }
+}
