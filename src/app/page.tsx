@@ -22,7 +22,7 @@ export default function Home() {
         <span className="text-sm font-bold tracking-[.28em]">KOWI ONE</span>
       </Link>
       <nav className="hidden items-center gap-8 text-sm text-[#bad0c1] md:flex" aria-label="Principal">
-        <a href="#vision">Visión</a><a href="#business">Business</a><a href="#safety">Control humano</a>
+        <Link href="/kowi">One</Link><Link href="/business">Business</Link><Link href="/school">School</Link><Link href="/proyectos">Proyectos</Link><Link href="/organizacion">Organización</Link><Link href="/fundacion">Fundación</Link>
       </nav>
       <Link href="/kowi" className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10">Entrar a Kowi ↗</Link>
     </header>
@@ -31,7 +31,7 @@ export default function Home() {
       <div className="relative z-10">
         <div className="fade-up inline-flex items-center gap-2 rounded-full border border-[#d7f2a7]/20 bg-[#d7f2a7]/5 px-4 py-2 text-xs font-bold uppercase tracking-[.2em] text-[#d7f2a7]"><span className="signal-dot"/>Human‑First AI</div>
         <h1 className="fade-up d2 mt-7 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-[-.055em] md:text-7xl">
-          Convierte lo que imaginas en <span className="text-[#d7f2a7]">acción real.</span>
+          Tienes una idea. <span className="text-[#d7f2a7]">Ahora conviértela en acción.</span>
         </h1>
         <p className="fade-up d3 mt-7 max-w-2xl text-lg leading-relaxed text-[#b8cec0] md:text-xl">
           Kowi une personas, agentes de IA y herramientas para transformar una intención en un objetivo, un plan y una ejecución controlada por ti.
@@ -88,7 +88,7 @@ export default function Home() {
           <div className="mb-8 h-12 w-12 rounded-2xl border border-[#d7f2a7]/20 bg-[#d7f2a7]/5 p-3"><div className="hero-orb h-full w-full rounded-full"/></div>
           <h3 className="text-2xl font-semibold">{title}</h3><p className="mt-4 leading-relaxed text-[#a9c1b3]">{body}</p>
         </article>)}</div>
-        <div className="mt-10 flex flex-wrap gap-3"><Link href="/business/agent" className="inline-flex rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31]">Abrir agente comercial ↗</Link><Link href="/business/demo" className="inline-flex rounded-full border border-white/20 px-7 py-4 font-semibold">Ver demo</Link></div>
+        <div className="mt-10 flex flex-wrap gap-3"><Link href="/business" className="inline-flex rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31]">Abrir agente comercial ↗</Link><Link href="/business/demo" className="inline-flex rounded-full border border-white/20 px-7 py-4 font-semibold">Ver demo</Link></div>
       </div>
     </section>
 
@@ -103,7 +103,7 @@ export default function Home() {
 
     <footer className="border-t border-white/10 px-6 py-10 text-sm text-[#9db9aa]"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 md:flex-row">
       <div><div className="font-bold tracking-[.24em] text-white">KOWI ONE</div><div className="mt-2">Human‑First AI · Madrid, España</div></div>
-      <div className="flex flex-wrap gap-6"><a href="mailto:info@kowi.one">info@kowi.one</a><Link href="/privacidad">Privacidad</Link><Link href="/kowi">Entrar</Link></div>
+      <div className="flex flex-wrap gap-6"><Link href="/school">School</Link><Link href="/proyectos">Proyectos</Link><Link href="/organizacion">Organización</Link><Link href="/fundacion">Fundación</Link><a href="mailto:info@kowi.one">info@kowi.one</a><Link href="/privacidad">Privacidad</Link><Link href="/kowi">Entrar</Link></div>
     </div></footer>
   </main>;
 }

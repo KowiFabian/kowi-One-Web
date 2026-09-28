@@ -13,6 +13,12 @@ export async function POST(request: Request) {
     const { db, user } = await authenticate(request);
     const parsed = actionSchema.safeParse(await limitedJson(request));
     if (!parsed.success) throw new ApiError(400, 'Acción no válida.');
+    if (!parsed.data.lead_id) throw new ApiError(400, 'Elige un contacto de tu empresa.');
+    const { data: lead, error: leadError } = await db.from('business_leads').select('id,consent,contact')
+      .eq('id', parsed.data.lead_id).eq('user_id', user.id).maybeSingle();
+    if (leadError || !lead) throw new ApiError(404, 'Contacto no encontrado.');
+    if (['send_whatsapp','send_email'].includes(parsed.data.action_type) && !lead.consent)
+      throw new ApiError(409, 'Falta el consentimiento de comunicación de este contacto.');
     const { data, error } = await db.from('business_actions').insert({
       user_id: user.id,
       lead_id: parsed.data.lead_id ?? null,

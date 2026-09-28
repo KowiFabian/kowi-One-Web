@@ -18,6 +18,7 @@ export default function BusinessAgent() {
   const [name,setName]=useState('');
   const [contact,setContact]=useState('');
   const [notes,setNotes]=useState('');
+  const [consent,setConsent]=useState(false);
 
   const refresh=useCallback(async()=>setData(await api<Overview>('/api/business/overview')),[]);
   useEffect(()=>{ refresh().catch(e=>setNotice(e instanceof Error?e.message:'No se pudo cargar.')); },[refresh]);
@@ -33,8 +34,8 @@ export default function BusinessAgent() {
     e.preventDefault();
     if(!name.trim()) return;
     await run(async()=>{
-      await api('/api/business/leads',{method:'POST',body:JSON.stringify({name,contact,notes,next_action:'Primer contacto'})});
-      setName('');setContact('');setNotes('');await refresh();
+      await api('/api/business/leads',{method:'POST',body:JSON.stringify({name,contact,notes,next_action:'Primer contacto',consent,source:'manual'})});
+      setName('');setContact('');setNotes('');setConsent(false);await refresh();
     });
   }
 
@@ -58,7 +59,7 @@ export default function BusinessAgent() {
     });
   }
 
-  const pending=useMemo(()=>data.actions.filter(a=>a.status==='pending_approval'||a.status==='approved'),[data.actions]);
+  const pending=useMemo(()=>data.actions.filter(a=>a.status==='pending_approval'),[data.actions]);
   const channelStatus=(name:string)=>data.channels.find(c=>c.channel===name)?.status || 'not_configured';
 
   return <main className="kowi-shell min-h-screen text-[#eef8ef]">
@@ -101,6 +102,7 @@ export default function BusinessAgent() {
             <input value={name} onChange={e=>setName(e.target.value)} required maxLength={100} placeholder="Nombre" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 outline-none"/>
             <input value={contact} onChange={e=>setContact(e.target.value)} maxLength={120} placeholder="Email o teléfono" className="w-full rounded-xl border border-white/10 bg-white/5 p-3 outline-none"/>
             <textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={1000} placeholder="Necesidad, contexto o notas" rows={4} className="w-full rounded-xl border border-white/10 bg-white/5 p-3 outline-none"/>
+            <label className="block text-xs"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/> Consentimiento para comunicaciones de seguimiento</label>
             <button disabled={busy} className="w-full rounded-xl bg-[#d7f2a7] p-3 font-semibold text-[#17382f] disabled:opacity-50">Crear oportunidad</button>
           </div>
         </form>
@@ -136,7 +138,7 @@ export default function BusinessAgent() {
             <div className="flex items-start justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#d7f2a7]">{action.action_type}</p><h3 className="mt-2 font-semibold">{action.summary}</h3></div><span className="rounded-full border border-amber-200/20 px-2 py-1 text-[10px] text-amber-100">{action.status}</span></div>
             {action.error && <p className="mt-3 text-xs text-amber-100">{action.error}</p>}
             <div className="mt-4 flex gap-2">
-              <button disabled={busy} onClick={()=>run(async()=>{await api(`/api/business/actions/${action.id}/approve`,{method:'POST'});await refresh();})} className="rounded-full bg-[#d7f2a7] px-4 py-2 text-xs font-semibold text-[#17382f]">{action.status==='approved'?'Reintentar ejecución':'Aprobar y ejecutar'}</button>
+              <button disabled={busy} onClick={()=>run(async()=>{await api(`/api/business/actions/${action.id}/approve`,{method:'POST'});await refresh();})} className="rounded-full bg-[#d7f2a7] px-4 py-2 text-xs font-semibold text-[#17382f]">Aprobar y ejecutar</button>
               {action.status==='pending_approval' && <button disabled={busy} onClick={()=>run(async()=>{await api(`/api/business/actions/${action.id}/reject`,{method:'POST'});await refresh();})} className="rounded-full border border-white/10 px-4 py-2 text-xs">Rechazar</button>}
             </div>
           </article>)}
