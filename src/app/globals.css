@@ -9,8 +9,8 @@
   --line: rgba(224, 247, 222, .14);
   --text: #eef8ef;
   --muted: #a9c8b5;
-  --lime: #d7f2a7;
-  --mint: #83d6ac;
+  --lime: #e8b37b;
+  --mint: #f1caa2;
   --deep: #14382f;
 }
 
@@ -51,7 +51,7 @@ button, input, textarea { font: inherit; }
 }
 .hero-orb {
   background:
-    radial-gradient(circle at 32% 28%, #bce8a0 0 6%, #6ab48b 19%, #245844 48%, #0d2b22 75%);
+    radial-gradient(circle at 32% 28%, #ffe0b2 0 6%, #db9d6b 19%, #5b3d37 48%, #12192a 75%);
   box-shadow:
     0 0 40px rgba(151, 232, 170, .18),
     0 0 120px rgba(98, 178, 125, .22),
@@ -120,3 +120,17 @@ button, input, textarea { font: inherit; }
   html { scroll-behavior: auto; }
   .kowi-pulse,.float-a,.float-b,.fade-up { animation: none; }
 }
+/* Approved KOWI visual direction: midnight blue, connected world and warm gold. */
+.kowi-cosmos { background: #050913; color: #f4f3f2; }
+.kowi-cosmos a { color: inherit; }
+.kowi-emblem { display:inline-block; width:2.1rem; height:2.1rem; border:1.5px solid #e8b37b; border-radius:50%; position:relative; box-shadow:0 0 14px #e8b37b44; }
+.kowi-emblem::after { content:''; position:absolute; inset:5px -4px 3px 6px; border:1.3px solid #e8b37b; border-radius:50%; transform:rotate(-20deg); }
+.kowi-gold-btn { background:linear-gradient(135deg,#f5c795,#c88e5c); color:#14131a !important; box-shadow:0 8px 30px #b66c3a35; transition:transform .2s,filter .2s; }
+.kowi-gold-btn:hover { transform:translateY(-2px); filter:brightness(1.07); }
+.kowi-eyebrow { color:#e8b37b; font-size:.78rem; font-weight:700; letter-spacing:.22em; text-transform:uppercase; }
+.cosmos-tile { background:linear-gradient(145deg,#172236dd,#0b1220dd); border:1px solid #d4aa7c44; transition:border-color .2s,transform .2s; }
+.cosmos-tile:hover { transform:translateY(-3px); border-color:#e8b37b; }
+.cosmos-panel { background:linear-gradient(145deg,#132135,#0a1220); border:1px solid #d4aa7c3c; box-shadow:0 25px 90px #0008; }
+.kowi-halo { width:220px;height:220px;border-radius:50%;border:3px solid #eec194;transform:rotate(-18deg);box-shadow:0 0 18px #ffd4a7, inset 0 0 18px #ffbb82, 0 0 65px #da874f88;display:grid;place-items:center; }
+.kowi-halo-inner { width:145px;height:145px;border:2px solid #eec194;border-radius:50%;box-shadow:0 0 24px #f6c192; }
+@media(max-width:767px){ .kowi-cosmos h1{overflow-wrap:break-word;} }

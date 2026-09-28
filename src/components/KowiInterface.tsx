@@ -6,6 +6,10 @@ import GoalPanel from './GoalPanel';
 import { Message, ConversationState } from '@/types';
 import { api } from '@/lib/api';
 
+type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
+type BrowserRecognizer = { lang: string; onresult: ((event: SpeechResult) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void };
+type VoiceWindow = Window & { SpeechRecognition?: new () => BrowserRecognizer; webkitSpeechRecognition?: new () => BrowserRecognizer };
+
 type Conversation = { id: string; title: string; created_at: string };
 type Turn = { id: string; sequence: number; user_message: string; response: string; goal: ConversationState | null; created_at: string };
 const welcome: Message[] = [{ id: 'welcome', type: 'assistant', content: 'Cuéntame qué quieres hacer realidad. Empezamos por una sola intención.', timestamp: new Date(0) }];
@@ -19,6 +23,8 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [listening, setListening] = useState(false);
   const lock = useRef(false);
   const retry = useRef<{ text: string; id: string; conversation: string } | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -51,6 +57,24 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     setConfirmDelete(false); retry.current = null;
   }
 
+  function listen() {
+    const browser = window as VoiceWindow;
+    const Recognition = browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
+    if (!Recognition) { setNotice('El dictado no está disponible en este navegador. Puedes escribir tu mensaje.'); return; }
+    const recognition = new Recognition(); recognition.lang = 'es-ES'; setListening(true);
+    recognition.onresult = event => setDraft(previous => [previous, event.results[0]?.[0]?.transcript ?? ''].filter(Boolean).join(' ').slice(0, 2000));
+    recognition.onerror = () => { setListening(false); setNotice('No se pudo escuchar. Comprueba el permiso del micrófono.'); };
+    recognition.onend = () => setListening(false);
+    try { recognition.start(); } catch { setListening(false); setNotice('No se pudo iniciar el micrófono.'); }
+  }
+
+  function speak(response: string) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(response); utterance.lang = 'es-ES'; utterance.rate = 1;
+    window.speechSynthesis.speak(utterance);
+  }
+
   async function send(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
@@ -70,6 +94,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         { id: retry.current!.id + '-a', type: 'assistant', content: result.response, timestamp: new Date() },
       ]);
       if (result.goal) setGoal(result.goal);
+      speak(result.response);
       setDraft(''); retry.current = null; await refresh();
     });
   }
@@ -92,19 +117,19 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
 
     <div className="relative z-10 mx-auto grid max-w-[1500px] lg:grid-cols-[260px_minmax(0,1fr)_340px]">
       <aside className="border-b border-white/10 bg-white/[.015] p-4 lg:min-h-[calc(100vh-73px)] lg:border-b-0 lg:border-r" aria-label="Conversaciones guardadas">
-        <button disabled={busy} onClick={fresh} className="w-full rounded-2xl bg-[#d7f2a7] p-3.5 font-semibold text-[#15392f] disabled:opacity-50">＋ Nueva intención</button>
+        <button disabled={busy} onClick={fresh} className="w-full rounded-2xl bg-[#e8b37b] p-3.5 font-semibold text-[#17121a] disabled:opacity-50">＋ Nueva intención</button>
         <div className="mt-6 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.18em] text-[#789887]">Memoria</h2><button disabled={busy} onClick={() => run(async () => { await refresh(); if (conversationId) await load(conversationId); })} className="text-xs text-[#b5cabc]">Actualizar</button></div>
         <ul className="mt-3 max-h-52 space-y-1 overflow-y-auto lg:max-h-[72vh]">{conversations.map(c => <li key={c.id}>
           <button disabled={busy} aria-current={conversationId === c.id ? 'true' : undefined}
             onClick={() => run(async () => { await load(c.id); setDraft(''); retry.current = null; setConfirmDelete(false); })}
-            className={`w-full truncate rounded-xl p-3 text-left text-sm transition ${conversationId === c.id ? 'bg-[#d7f2a7]/10 text-[#eaffcf]' : 'text-[#a8c0b2] hover:bg-white/5'}`}>{c.title}</button>
+            className={`w-full truncate rounded-xl p-3 text-left text-sm transition ${conversationId === c.id ? 'bg-[#e8b37b]/10 text-[#eaffcf]' : 'text-[#a8c0b2] hover:bg-white/5'}`}>{c.title}</button>
         </li>)}</ul>
       </aside>
 
       <section className="min-w-0 p-4 md:p-8 lg:p-10" aria-label="Chat con Kowi">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#d7f2a7]/15 bg-[#d7f2a7]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#d7f2a7]"><span className="signal-dot"/>Kowi activo</div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#e8b37b]/15 bg-[#e8b37b]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#e8b37b]"><span className="signal-dot"/>Kowi activo</div>
             <h1 className="mt-4 text-3xl font-semibold tracking-[-.035em] md:text-4xl">De la intención a la acción.</h1>
             <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
@@ -122,8 +147,8 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} maxLength={2000} rows={3}
               placeholder="¿Qué quieres hacer realidad?"
               className="w-full resize-none bg-transparent p-3 text-base text-white outline-none placeholder:text-[#6f8f7e]" />
-            <div className="flex items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span>
-              <button disabled={busy || !draft.trim()} className="rounded-full bg-[#d7f2a7] px-6 py-3 font-semibold text-[#15392f] disabled:opacity-40">{busy ? 'Pensando…' : 'Enviar ↗'}</button></div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><div className="flex flex-wrap items-center gap-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span><button type="button" onClick={listen} disabled={busy || listening} className="rounded-full border border-white/20 px-3 py-2 text-sm disabled:opacity-50" aria-label="Dictar mensaje">{listening ? 'Escuchando…' : '🎙 Dictar'}</button><button type="button" onClick={() => { if (voiceEnabled) window.speechSynthesis?.cancel(); setVoiceEnabled(!voiceEnabled); }} aria-pressed={voiceEnabled} className="rounded-full border border-white/20 px-3 py-2 text-sm">{voiceEnabled ? '🔊 Voz activada' : '🔇 Escuchar respuestas'}</button></div>
+              <button disabled={busy || !draft.trim()} className="rounded-full bg-[#e8b37b] px-6 py-3 font-semibold text-[#17121a] disabled:opacity-40">{busy ? 'Pensando…' : 'Enviar ↗'}</button></div>
           </form>
 
           {conversationId && <div className="mt-5 flex flex-wrap gap-4 text-xs text-[#8da899]">
