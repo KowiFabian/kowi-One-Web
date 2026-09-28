@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Kowi - Tu intención. Tu camino. Tu acción.',
-  description: 'Convierte tu objetivo en un plan concreto de 30 días.',
+  title: 'Kowi One | Ideas que se convierten en acción',
+  description: 'Kowi conecta ideas, personas y agentes de IA. Explora Kowi Business o convierte tu intención en un plan concreto.',
 };
 
 export default function RootLayout({
