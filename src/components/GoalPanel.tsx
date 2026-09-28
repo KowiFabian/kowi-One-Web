@@ -1,64 +1,27 @@
 'use client';
-
 import React from 'react';
 import { ConversationState } from '@/types';
 
-interface GoalPanelProps {
-  goal: ConversationState;
-  onNewConversation: () => void;
+interface GoalPanelProps { goal: ConversationState; onNewConversation: () => void; }
+
+export default function GoalPanel({ goal, onNewConversation }: GoalPanelProps) {
+  return <div className="space-y-4">
+    {goal.goal && <section className="glass rounded-[1.4rem] p-5">
+      <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#d7f2a7]">Objetivo</p>
+      <p className="mt-3 text-sm leading-relaxed text-[#e4f0e7]">{goal.goal}</p>
+    </section>}
+    {goal.first_action && <section className="rounded-[1.4rem] border border-[#d7f2a7]/20 bg-[#d7f2a7]/10 p-5">
+      <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#d7f2a7]">Primera acción</p>
+      <p className="mt-3 text-sm font-medium leading-relaxed text-[#f1f8ec]">{goal.first_action}</p>
+      <p className="mt-3 text-xs text-[#9fb6a7]">Empieza por aquí. Puedes volver y ajustar el plan.</p>
+    </section>}
+    {goal.plan && goal.plan.length > 0 && <section className="glass rounded-[1.4rem] p-5">
+      <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#d7f2a7]">Plan de 30 días</p>
+      <div className="mt-4 space-y-4">{goal.plan.map((week, idx) => <div key={idx} className="border-l border-[#d7f2a7]/30 pl-4">
+        <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#7fa690]">Bloque {idx + 1}</p>
+        <p className="mt-1 text-sm leading-relaxed text-[#c9dbcf]">{week}</p>
+      </div>)}</div>
+    </section>}
+    <button onClick={onNewConversation} className="w-full rounded-full border border-white/10 px-4 py-3 text-sm text-[#c0d2c6] hover:bg-white/5">Nueva intención</button>
+  </div>;
 }
-
-const GoalPanel: React.FC<GoalPanelProps> = ({ goal, onNewConversation }) => {
-  return (
-    <div className="w-full lg:w-80 lg:shrink-0 bg-white border-l border-gray-200 overflow-y-auto shadow-lg">
-      <div className="sticky top-0 bg-primary text-white px-6 py-4">
-        <h2 className="font-bold text-lg">Tu Plan</h2>
-        <p className="text-xs text-blue-100 mt-1">30 días para lograrlo</p>
-      </div>
-
-      <div className="p-6 space-y-6">
-        {goal.goal && (
-          <div>
-            <h3 className="font-bold text-primary mb-2">Objetivo</h3>
-            <p className="text-sm text-gray-900">{goal.goal}</p>
-          </div>
-        )}
-
-        {goal.first_action && (
-          <div>
-            <h3 className="font-bold text-accent mb-2">Primer Paso</h3>
-            <p className="text-sm text-gray-900">{goal.first_action}</p>
-            <p className="text-xs text-gray-500 mt-2 italic">
-              Comienza hoy mismo
-            </p>
-          </div>
-        )}
-
-        {goal.plan && goal.plan.length > 0 && (
-          <div>
-            <h3 className="font-bold text-primary mb-3">Plan de 30 Días</h3>
-            <div className="space-y-3">
-              {goal.plan.map((week, idx) => (
-                <div key={idx} className="border-l-2 border-accent pl-3">
-                  <p className="text-xs font-semibold text-accent">
-                    Semana {idx + 1}
-                  </p>
-                  <p className="text-sm text-gray-900 mt-1">{week}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <button
-          onClick={onNewConversation}
-          className="w-full mt-6 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 hover:bg-gray-50 transition-colors"
-        >
-          Nueva Conversación
-        </button>
-      </div>
-    </div>
-  );
-};
-
-export default GoalPanel;

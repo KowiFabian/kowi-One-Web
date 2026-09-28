@@ -8,7 +8,7 @@ import { api } from '@/lib/api';
 
 type Conversation = { id: string; title: string; created_at: string };
 type Turn = { id: string; sequence: number; user_message: string; response: string; goal: ConversationState | null; created_at: string };
-const welcome: Message[] = [{ id: 'welcome', type: 'assistant', content: '¿Qué quieres conseguir?', timestamp: new Date(0) }];
+const welcome: Message[] = [{ id: 'welcome', type: 'assistant', content: 'Cuéntame qué quieres hacer realidad. Empezamos por una sola intención.', timestamp: new Date(0) }];
 
 export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<void> }) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -22,10 +22,9 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const lock = useRef(false);
   const retry = useRef<{ text: string; id: string; conversation: string } | null>(null);
   const end = useRef<HTMLDivElement>(null);
-  const refresh = useCallback(async () => {
-    setConversations(await api<Conversation[]>('/api/conversations'));
-  }, []);
-  useEffect(() => { refresh().catch(() => setNotice('No se pudo cargar tu historial. Usa Recargar.')); }, [refresh]);
+
+  const refresh = useCallback(async () => setConversations(await api<Conversation[]>('/api/conversations')), []);
+  useEffect(() => { refresh().catch(() => setNotice('No se pudo cargar tu historial.')); }, [refresh]);
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   async function load(id: string) {
@@ -37,6 +36,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     ]) : welcome);
     setGoal([...data.turns].reverse().find(t => t.goal)?.goal ?? null);
   }
+
   async function run(action: () => Promise<void>) {
     if (lock.current) return;
     lock.current = true; setBusy(true); setNotice('');
@@ -44,11 +44,13 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     catch (error) { setNotice(error instanceof Error ? error.message : 'No se pudo conectar. Inténtalo de nuevo.'); }
     finally { lock.current = false; setBusy(false); }
   }
+
   function fresh() {
     if (lock.current) return;
     setConversationId(null); setMessages(welcome); setGoal(null); setDraft(''); setNotice('');
     setConfirmDelete(false); retry.current = null;
   }
+
   async function send(event: React.FormEvent) {
     event.preventDefault();
     const text = draft.trim();
@@ -59,9 +61,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         const created = await api<Conversation>('/api/conversations', { method: 'POST' });
         id = created.id; setConversationId(id); setConversations(prev => [created, ...prev]);
       }
-      if (retry.current?.text !== text || retry.current.conversation !== id) {
-        retry.current = { text, conversation: id, id: crypto.randomUUID() };
-      }
+      if (retry.current?.text !== text || retry.current.conversation !== id) retry.current = { text, conversation: id, id: crypto.randomUUID() };
       const result = await api<{ response: string; goal: ConversationState | null }>('/api/chat', {
         method: 'POST', body: JSON.stringify({ userMessage: text, conversationId: id, requestId: retry.current.id }),
       });
@@ -70,10 +70,10 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         { id: retry.current!.id + '-a', type: 'assistant', content: result.response, timestamp: new Date() },
       ]);
       if (result.goal) setGoal(result.goal);
-      setDraft(''); retry.current = null;
-      await refresh();
+      setDraft(''); retry.current = null; await refresh();
     });
   }
+
   async function exportConversation() {
     if (!conversationId) return;
     const data = await api<{ turns: Turn[] }>(`/api/conversations/${conversationId}`);
@@ -81,54 +81,75 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'kowi-conversacion.json'; anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
-  return <main className="min-h-screen bg-slate-50">
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b bg-white px-6 py-4">
-      <Link href="/" className="text-xl font-bold tracking-widest text-teal-800">KOWI ONE</Link>
-      <div className="flex items-center gap-4 text-sm"><Link href="/privacidad">Privacidad</Link>
-        <button disabled={busy} onClick={() => run(onSignOut)} className="underline">Cerrar sesión</button></div>
+
+  return <main className="kowi-shell min-h-screen text-[#eef8ef]">
+    <div className="kowi-grid pointer-events-none fixed inset-0 opacity-30"/>
+    <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#071612]/80 px-5 py-4 backdrop-blur-xl md:px-8">
+      <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-8 w-8 rounded-full"/><span className="text-sm font-bold tracking-[.24em]">KOWI ONE</span></Link>
+      <div className="flex items-center gap-4 text-sm text-[#aec5b7]"><span className="hidden md:inline">Human‑First workspace</span><Link href="/privacidad">Privacidad</Link>
+        <button disabled={busy} onClick={() => run(onSignOut)} className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">Salir</button></div>
     </header>
-    <div className="mx-auto flex max-w-7xl flex-col lg:flex-row">
-      <aside className="border-b p-4 lg:w-60 lg:shrink-0 lg:border-r" aria-label="Conversaciones guardadas">
-        <button disabled={busy} onClick={fresh} className="w-full rounded-xl bg-teal-800 p-3 text-white disabled:opacity-50">Nueva conversación</button>
-        <h2 className="my-4 text-xs font-bold uppercase tracking-wider text-slate-500">Tus conversaciones</h2>
-        <button disabled={busy} onClick={() => run(async () => { await refresh(); if (conversationId) await load(conversationId); })}
-          className="mb-3 text-sm underline">Recargar</button>
-        <ul className="max-h-52 overflow-y-auto lg:max-h-[65vh]">{conversations.map(c => <li key={c.id}>
+
+    <div className="relative z-10 mx-auto grid max-w-[1500px] lg:grid-cols-[260px_minmax(0,1fr)_340px]">
+      <aside className="border-b border-white/10 bg-white/[.015] p-4 lg:min-h-[calc(100vh-73px)] lg:border-b-0 lg:border-r" aria-label="Conversaciones guardadas">
+        <button disabled={busy} onClick={fresh} className="w-full rounded-2xl bg-[#d7f2a7] p-3.5 font-semibold text-[#15392f] disabled:opacity-50">＋ Nueva intención</button>
+        <div className="mt-6 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.18em] text-[#789887]">Memoria</h2><button disabled={busy} onClick={() => run(async () => { await refresh(); if (conversationId) await load(conversationId); })} className="text-xs text-[#b5cabc]">Actualizar</button></div>
+        <ul className="mt-3 max-h-52 space-y-1 overflow-y-auto lg:max-h-[72vh]">{conversations.map(c => <li key={c.id}>
           <button disabled={busy} aria-current={conversationId === c.id ? 'true' : undefined}
             onClick={() => run(async () => { await load(c.id); setDraft(''); retry.current = null; setConfirmDelete(false); })}
-            className={`mb-1 w-full truncate rounded-lg p-2 text-left text-sm ${conversationId === c.id ? 'bg-teal-100' : 'hover:bg-slate-100'}`}>{c.title}</button>
+            className={`w-full truncate rounded-xl p-3 text-left text-sm transition ${conversationId === c.id ? 'bg-[#d7f2a7]/10 text-[#eaffcf]' : 'text-[#a8c0b2] hover:bg-white/5'}`}>{c.title}</button>
         </li>)}</ul>
       </aside>
-      <section className="min-w-0 flex-1 p-4 md:p-8" aria-label="Chat con Kowi">
-        <h1 className="text-2xl font-semibold">Tu intención. Tu camino. Tu acción.</h1>
-        <p className="mb-6 mt-2 text-sm text-slate-500">Cuéntame qué quieres lograr. También puedes registrar tus avances aquí.</p>
-        <div className="max-h-[55vh] min-h-48 overflow-y-auto pr-2" role="log" aria-label="Mensajes">
-          <MessageList messages={messages} loading={busy} /><div ref={end} />
-        </div>
-        {notice && <p role="alert" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm">{notice}</p>}
-        <form onSubmit={send} className="mt-6">
-          <label htmlFor="message" className="text-sm font-medium">Tu mensaje</label>
-          <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy}
-            maxLength={2000} rows={3} placeholder="Quiero convertir mi idea en un negocio…"
-            className="mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 focus:ring-2 focus:ring-teal-700" />
-          <div className="mt-2 flex items-center justify-between gap-3"><span className="text-xs text-slate-500">{draft.length}/2000 · IA: revisa las propuestas</span>
-            <button disabled={busy || !draft.trim()} className="rounded-xl bg-teal-800 px-6 py-3 text-white disabled:opacity-50">{busy ? 'Un momento…' : 'Enviar'}</button></div>
-        </form>
-        {conversationId && <div className="mt-6 flex flex-wrap gap-4 text-xs">
-          <button disabled={busy} onClick={() => run(exportConversation)} className="underline">Exportar conversación</button>
-          <button disabled={busy} onClick={() => setConfirmDelete(true)} className="text-red-700 underline">Eliminar conversación</button>
-          {confirmDelete && <div role="alert" className="w-full rounded-xl border border-red-200 p-4">
-            <p>Se eliminarán esta conversación y su plan. Esta acción no se puede deshacer.</p>
-            <button disabled={busy} className="mr-4 mt-3 font-semibold text-red-700" onClick={() => run(async () => {
-              await api(`/api/conversations/${conversationId}`, { method: 'DELETE' });
-              setConversationId(null); setMessages(welcome); setGoal(null); setConfirmDelete(false);
-              setDraft(''); retry.current = null; await refresh();
-            })}>Sí, eliminar</button>
-            <button disabled={busy} onClick={() => setConfirmDelete(false)}>Cancelar</button>
+
+      <section className="min-w-0 p-4 md:p-8 lg:p-10" aria-label="Chat con Kowi">
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-8">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#d7f2a7]/15 bg-[#d7f2a7]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#d7f2a7]"><span className="signal-dot"/>Kowi activo</div>
+            <h1 className="mt-4 text-3xl font-semibold tracking-[-.035em] md:text-4xl">De la intención a la acción.</h1>
+            <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
+          </div>
+
+          <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
+            <div className="max-h-[52vh] min-h-[300px] overflow-y-auto pr-1" role="log" aria-label="Mensajes">
+              <MessageList messages={messages} loading={busy}/><div ref={end}/>
+            </div>
+          </div>
+
+          {notice && <p role="alert" className="mt-4 rounded-2xl border border-amber-200/15 bg-amber-100/5 p-3 text-sm text-amber-50">{notice}</p>}
+
+          <form onSubmit={send} className="glass mt-4 rounded-[1.6rem] p-3">
+            <label htmlFor="message" className="sr-only">Tu mensaje</label>
+            <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} maxLength={2000} rows={3}
+              placeholder="¿Qué quieres hacer realidad?"
+              className="w-full resize-none bg-transparent p-3 text-base text-white outline-none placeholder:text-[#6f8f7e]" />
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span>
+              <button disabled={busy || !draft.trim()} className="rounded-full bg-[#d7f2a7] px-6 py-3 font-semibold text-[#15392f] disabled:opacity-40">{busy ? 'Pensando…' : 'Enviar ↗'}</button></div>
+          </form>
+
+          {conversationId && <div className="mt-5 flex flex-wrap gap-4 text-xs text-[#8da899]">
+            <button disabled={busy} onClick={() => run(exportConversation)} className="underline underline-offset-4">Exportar conversación</button>
+            <button disabled={busy} onClick={() => setConfirmDelete(true)} className="text-[#d6a7a7] underline underline-offset-4">Eliminar</button>
+            {confirmDelete && <div role="alert" className="w-full rounded-2xl border border-red-200/15 bg-red-100/5 p-4 text-sm">
+              <p>Se eliminarán esta conversación y su plan.</p>
+              <button disabled={busy} className="mr-4 mt-3 font-semibold text-red-200" onClick={() => run(async () => {
+                await api(`/api/conversations/${conversationId}`, { method: 'DELETE' });
+                setConversationId(null); setMessages(welcome); setGoal(null); setConfirmDelete(false); setDraft(''); retry.current = null; await refresh();
+              })}>Sí, eliminar</button><button disabled={busy} onClick={() => setConfirmDelete(false)}>Cancelar</button>
+            </div>}
           </div>}
-        </div>}
+        </div>
       </section>
-      {goal && <GoalPanel goal={goal} onNewConversation={fresh} />}
+
+      <aside className="border-t border-white/10 bg-white/[.015] p-5 lg:min-h-[calc(100vh-73px)] lg:border-l lg:border-t-0">
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#789887]">Mapa de progreso</p>
+        {goal ? <div className="mt-4"><GoalPanel goal={goal} onNewConversation={fresh}/></div> :
+        <div className="glass mt-4 rounded-[1.5rem] p-5">
+          <div className="hero-orb mb-5 h-12 w-12 rounded-full"/>
+          <h2 className="text-lg font-semibold">Tu objetivo aparecerá aquí.</h2>
+          <p className="mt-3 text-sm leading-relaxed text-[#90aa9b]">Cuando Kowi tenga suficiente contexto, convertirá tu intención en un objetivo, un plan de 30 días y una primera acción.</p>
+          <div className="mt-5 space-y-2 text-xs text-[#88a493]"><p>01 · intención</p><p>02 · objetivo</p><p>03 · plan</p><p>04 · acción</p></div>
+        </div>}
+      </aside>
     </div>
   </main>;
 }
