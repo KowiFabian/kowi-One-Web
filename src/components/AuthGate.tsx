@@ -4,8 +4,9 @@ import type { Session } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { browserSupabase } from '@/lib/supabase-browser';
 import KowiInterface from './KowiInterface';
+import BusinessConsole from './BusinessConsole';
 
-export default function AuthGate() {
+export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' }) {
   const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
   const [email, setEmail] = useState('');
@@ -44,8 +45,12 @@ export default function AuthGate() {
     finally { setBusy(false); }
   }
 
-  if (!ready) return <main className="grid min-h-screen place-items-center bg-[#071612] text-[#d7f2a7]" aria-live="polite">Preparando Kowi…</main>;
-  if (session) return <KowiInterface key={session.user.id} onSignOut={async () => {
+  if (!ready) return <main className="grid min-h-screen place-items-center bg-[#071612] text-[#e8b37b]" aria-live="polite">Preparando Kowi…</main>;
+  if (session) return mode === 'business' ? <BusinessConsole key={session.user.id} onSignOut={async () => {
+    const result = await browserSupabase()?.auth.signOut();
+    if (result?.error) throw new Error('No se pudo cerrar la sesión.');
+    setSession(null);
+  }} /> : <KowiInterface key={session.user.id} onSignOut={async () => {
     const result = await browserSupabase()?.auth.signOut();
     if (result?.error) throw new Error('No se pudo cerrar la sesión.');
     setSession(null);
@@ -57,27 +62,27 @@ export default function AuthGate() {
       <div className="relative min-h-[420px] border-b border-white/10 p-8 md:border-b-0 md:border-r md:p-10">
         <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-9 w-9 rounded-full"/><span className="text-sm font-bold tracking-[.26em]">KOWI ONE</span></Link>
         <div className="mt-16 max-w-md">
-          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#d7f2a7]">Tu espacio Human‑First</p>
-          <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] md:text-5xl">Una intención. Un camino. Una acción.</h1>
+          <p className="text-xs font-bold uppercase tracking-[.2em] text-[#e8b37b]">Tu espacio Human‑First</p>
+          <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] md:text-5xl">{mode === 'business' ? 'Tu empresa. Tu agente. Tu control.' : 'Una intención. Un camino. Una acción.'}</h1>
           <p className="mt-5 leading-relaxed text-[#abc3b4]">Entra para crear objetivos, conservar tus planes y continuar donde lo dejaste. Kowi te guía sin sustituir tus decisiones.</p>
         </div>
-        <div className="absolute bottom-8 left-8 right-8 rounded-2xl border border-[#d7f2a7]/15 bg-[#d7f2a7]/5 p-4 text-sm text-[#b8cebf]">Tus acciones sensibles siguen bajo tu autorización.</div>
+        <div className="absolute bottom-8 left-8 right-8 rounded-2xl border border-[#e8b37b]/15 bg-[#e8b37b]/5 p-4 text-sm text-[#b8cebf]">Tus acciones sensibles siguen bajo tu autorización.</div>
       </div>
 
       <div className="p-8 md:p-10">
-        <h2 className="text-2xl font-semibold">{sent ? 'Introduce tu código' : 'Entrar a Kowi'}</h2>
+          <h2 className="text-2xl font-semibold">{sent ? 'Introduce tu código' : mode === 'business' ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
         <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Te hemos enviado un código de acceso al correo indicado.' : 'Usa tu correo. No necesitas contraseña.'}</p>
         {!configured ? <p role="status" className="mt-6 rounded-xl border border-amber-300/20 bg-amber-100/5 p-4 text-sm text-amber-100">El acceso todavía no está configurado.</p> :
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm text-[#c9dbcf]">Correo electrónico
             <input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || sent}
-              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#d7f2a7]/50" />
+              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#e8b37b]/50" />
           </label>
           {sent && <label className="block text-sm text-[#c9dbcf]">Código de acceso
             <input autoComplete="one-time-code" inputMode="numeric" required maxLength={10} value={token}
-              onChange={e => setToken(e.target.value.trim())} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#d7f2a7]/50" />
+              onChange={e => setToken(e.target.value.trim())} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#e8b37b]/50" />
           </label>}
-          <button disabled={busy} className="w-full rounded-xl bg-[#d7f2a7] p-3.5 font-semibold text-[#15392f] disabled:opacity-50">
+          <button disabled={busy} className="w-full rounded-xl bg-[#e8b37b] p-3.5 font-semibold text-[#17121a] disabled:opacity-50">
             {busy ? 'Procesando…' : sent ? 'Entrar a Kowi' : 'Recibir código'}
           </button>
           {sent && <button type="button" disabled={busy} onClick={() => { setSent(false); setToken(''); setNotice(''); }} className="text-sm text-[#b9ccbf] underline underline-offset-4">Cambiar correo</button>}

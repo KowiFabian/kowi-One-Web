@@ -1,109 +1,45 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
-const capabilities = [
-  ['Kowi Personal', 'Convierte una intención en objetivo, plan y primera acción concreta.'],
-  ['Kowi Business', 'Atención, seguimiento, ventas y coordinación con revisión humana.'],
-  ['Human Approval', 'Las acciones sensibles se detienen hasta recibir autorización explícita.'],
-  ['Action Ledger', 'Cada acción importante deja contexto, permisos y evidencia para poder revisarla.'],
+const paths = [
+  { title:'Negocios que crecen', text:'Configura un agente para atender, vender y organizar el seguimiento de tu empresa.', href:'/business', mark:'01' },
+  { title:'Profesionales que avanzan', text:'Convierte una meta personal o profesional en un plan con una primera acción.', href:'/kowi', mark:'02' },
+  { title:'Proyectos que se hacen realidad', text:'Organiza fases, tareas y decisiones de tu próxima idea.', href:'/proyectos', mark:'03' },
+  { title:'Comunidades que se apoyan', text:'Conoce la visión de una red donde el conocimiento multiplica oportunidades.', href:'/comunidad', mark:'04' },
 ];
-
-const sectors = [
-  ['Peluquerías', 'Consultas, solicitudes de cita y seguimiento comercial.'],
-  ['Clínicas dentales', 'Primera atención, captación y preparación de citas sin automatizar decisiones clínicas.'],
-  ['Inmobiliarias', 'Cualificación de oportunidades, seguimiento y coordinación de visitas.'],
+const products = [
+  { name:'Kowi One', detail:'Tu intención, un objetivo y un plan para actuar.', href:'/kowi', state:'Piloto activo', icon:'◎' },
+  { name:'Kowi Business', detail:'Agente configurable, conversación real y CRM con aprobación humana.', href:'/business', state:'Piloto activo', icon:'▣' },
+  { name:'Kowi Proyectos', detail:'Ideas convertidas en fases, tareas y avances.', href:'/proyectos', state:'Piloto activo', icon:'◇' },
+  { name:'Kowi School', detail:'Aprendizaje aplicado a proyectos y nuevas capacidades.', href:'/school', state:'En desarrollo', icon:'✧' },
+  { name:'Kowi Comunidad', detail:'Personas y saberes conectados para ayudarse a avanzar.', href:'/comunidad', state:'En desarrollo', icon:'◌' },
 ];
-
+function Brand(){return <span className="inline-flex items-center gap-3"><span className="kowi-emblem" aria-hidden="true"/><span className="font-medium tracking-[.31em]">KOWI</span></span>}
 export default function Home() {
-  return <main className="kowi-shell min-h-screen text-[#eef8ef]">
-    <div className="kowi-grid pointer-events-none absolute inset-0 opacity-50" />
-    <header className="relative z-20 mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-6">
-      <Link href="/" className="flex items-center gap-3">
-        <span className="hero-orb h-9 w-9 rounded-full" />
-        <span className="text-sm font-bold tracking-[.28em]">KOWI ONE</span>
-      </Link>
-      <nav className="hidden items-center gap-8 text-sm text-[#bad0c1] md:flex" aria-label="Principal">
-        <a href="#vision">Visión</a><a href="#business">Business</a><a href="#safety">Control humano</a>
-      </nav>
-      <Link href="/kowi" className="rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-semibold hover:bg-white/10">Entrar a Kowi ↗</Link>
+  return <main className="kowi-cosmos min-h-screen text-[#f4f3f2]">
+    <header className="relative z-20 mx-auto flex max-w-[1460px] items-center justify-between gap-5 px-5 py-6 md:px-10">
+      <Link href="/" aria-label="Kowi, inicio" className="text-lg text-[#e8b37b]"><Brand/></Link>
+      <nav aria-label="Principal" className="hidden items-center gap-7 text-sm text-[#d4d5dd] lg:flex"><Link href="/">Inicio</Link><a href="#soluciones">Soluciones</a><Link href="/comunidad">Comunidad</Link><Link href="/proyectos">Proyectos</Link><Link href="/organizacion">Organización</Link><Link href="/fundacion">Fundación</Link></nav>
+      <div className="flex items-center gap-2"><Link href="/kowi" className="hidden rounded-full border border-white/20 px-4 py-2.5 text-sm sm:inline-flex">Iniciar sesión</Link><Link href="/business" className="kowi-gold-btn rounded-full px-5 py-2.5 text-sm font-semibold">Probar Kowi</Link></div>
     </header>
 
-    <section className="relative mx-auto grid max-w-7xl gap-12 px-6 pb-24 pt-14 md:grid-cols-[1.02fr_.98fr] md:items-center md:pb-32 md:pt-20">
-      <div className="relative z-10">
-        <div className="fade-up inline-flex items-center gap-2 rounded-full border border-[#d7f2a7]/20 bg-[#d7f2a7]/5 px-4 py-2 text-xs font-bold uppercase tracking-[.2em] text-[#d7f2a7]"><span className="signal-dot"/>Human‑First AI</div>
-        <h1 className="fade-up d2 mt-7 max-w-3xl text-5xl font-semibold leading-[1.02] tracking-[-.055em] md:text-7xl">
-          Convierte lo que imaginas en <span className="text-[#d7f2a7]">acción real.</span>
-        </h1>
-        <p className="fade-up d3 mt-7 max-w-2xl text-lg leading-relaxed text-[#b8cec0] md:text-xl">
-          Kowi une personas, agentes de IA y herramientas para transformar una intención en un objetivo, un plan y una ejecución controlada por ti.
-        </p>
-        <div className="mt-9 flex flex-wrap gap-3">
-          <Link href="/kowi" className="rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31] shadow-[0_0_45px_rgba(215,242,167,.18)] hover:bg-white">Crear mi plan ↗</Link>
-          <Link href="/business/demo" className="rounded-full border border-white/20 bg-white/5 px-7 py-4 font-semibold hover:bg-white/10">Ver Kowi Business</Link>
-        </div>
-        <div className="mt-8 flex flex-wrap gap-5 text-sm text-[#9db9aa]">
-          <span>✓ decisiones sensibles con aprobación</span>
-          <span>✓ historial y continuidad</span>
-          <span>✓ diseñado para personas y negocios</span>
-        </div>
+    <section className="relative isolate mx-auto max-w-[1460px] overflow-hidden rounded-b-[2rem] px-5 pb-12 pt-14 md:px-10 md:pb-14 md:pt-20">
+      <Image src="/kowi-earth.webp" alt="La Tierra iluminada por conexiones entre personas" fill priority sizes="100vw" className="-z-20 object-cover object-center opacity-85"/>
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#03060e] via-[#030712]/75 to-[#030713]/5"/>
+      <div className="grid min-h-[420px] gap-8 md:grid-cols-[.9fr_1.1fr] md:items-center">
+        <div className="max-w-2xl"><p className="mb-5 text-xs font-semibold uppercase tracking-[.3em] text-[#e8b37b]">Human-First AI · Una inteligencia que conecta</p><h1 className="text-5xl font-semibold leading-[1.05] tracking-[-.045em] md:text-7xl"><span className="text-[#eebc8e]">Tienes una idea.</span><br/>Ahora conviértela en acción.</h1><p className="mt-7 max-w-lg text-lg leading-relaxed text-[#d9dce3]">Kowi te escucha, te guía y te conecta con personas, conocimientos, herramientas y oportunidades para hacerla realidad.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/kowi" className="kowi-gold-btn rounded-full px-7 py-4 font-semibold">Hablar con Kowi ↗</Link><Link href="/business" className="rounded-full border border-white/40 bg-black/30 px-7 py-4 font-semibold backdrop-blur">Conoce Kowi Business</Link></div></div>
+        <div className="relative hidden min-h-[390px] items-center justify-center md:flex"><div className="kowi-halo"><span className="kowi-halo-inner"/></div><div className="absolute bottom-4 text-center"><div className="text-4xl tracking-[.3em] text-[#eab688]">KOWI</div><div className="mt-1 text-[11px] tracking-[.4em] text-[#e4d9d4]">HUMAN-FIRST AI</div></div><ul className="absolute right-0 top-[12%] space-y-4 text-sm text-[#e2e0e5]"><li>◎ &nbsp;Personas</li><li>✧ &nbsp;Conocimientos</li><li>◇ &nbsp;Herramientas</li><li>✦ &nbsp;Oportunidades</li><li>↗ &nbsp;Resultados</li></ul></div>
       </div>
-
-      <div className="relative min-h-[520px] overflow-hidden rounded-[2.4rem] border border-white/10 bg-[#0d2a22]/80 shadow-[0_40px_100px_rgba(0,0,0,.28)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(83,147,105,.24),transparent_50%)]" />
-        <div className="orbit-ring"/><div className="orbit-ring two"/><div className="orbit-ring three"/>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="hero-orb kowi-pulse z-10 flex h-44 w-44 items-center justify-center rounded-full border border-[#d7f2a7]/30">
-            <div className="text-center"><div className="text-5xl font-semibold">K</div><div className="mt-1 text-[10px] tracking-[.28em] text-[#d7f2a7]">HUMAN FIRST</div></div>
-          </div>
-        </div>
-        <div className="signal-card float-a left-[5%] top-[9%]"><small>INTENCIÓN</small><p className="text-sm">“Quiero hacer realidad una idea.”</p></div>
-        <div className="signal-card float-b right-[4%] top-[37%]"><small>CONEXIÓN</small><p className="text-sm">Persona + agente + herramienta</p></div>
-        <div className="signal-card float-a bottom-[8%] left-[10%]"><small>ACCIÓN</small><p className="text-sm">Plan, aprobación y evidencia</p></div>
-        <div className="absolute bottom-6 right-6 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-[#a9c8b5]">Kowi está diseñado para amplificar capacidad humana.</div>
-      </div>
+      <div className="relative z-10 mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{paths.map(p=><Link href={p.href} key={p.title} className="cosmos-tile group rounded-2xl p-5"><span className="text-xs text-[#e8b37b]">{p.mark} / EXPLORAR</span><h2 className="mt-8 text-xl font-semibold leading-tight">{p.title}</h2><p className="mt-2 text-sm leading-relaxed text-[#bcbfca]">{p.text}</p><span className="mt-5 inline-block text-[#e8b37b] group-hover:translate-x-1 transition-transform">Conocer más ↗</span></Link>)}</div>
     </section>
 
-    <section id="vision" className="relative border-y border-white/10 bg-white/[.025] px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <p className="text-xs font-bold uppercase tracking-[.22em] text-[#d7f2a7]">La plataforma</p>
-        <div className="mt-4 grid gap-8 md:grid-cols-[.9fr_1.1fr] md:items-end">
-          <h2 className="text-4xl font-semibold tracking-[-.04em] md:text-5xl">Una IA que no te reemplaza. Te ayuda a avanzar.</h2>
-          <p className="text-lg leading-relaxed text-[#adc5b6]">Kowi parte de una idea sencilla: la tecnología debe aumentar la capacidad de una persona para decidir, crear, organizarse y ayudar a otras. Por eso combina automatización con control humano, memoria útil y agentes especializados.</p>
-        </div>
-        <div className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {capabilities.map(([title,body],i)=><article key={title} className="glass rounded-[1.7rem] p-6">
-            <div className="mb-8 flex items-center justify-between"><span className="text-sm text-[#d7f2a7]">0{i+1}</span><span className="signal-dot"/></div>
-            <h3 className="text-xl font-semibold">{title}</h3><p className="mt-3 leading-relaxed text-[#a9c1b3]">{body}</p>
-          </article>)}
-        </div>
-      </div>
-    </section>
+    <section className="mx-auto grid max-w-[1380px] gap-8 px-5 py-24 md:grid-cols-[.55fr_1.45fr] md:px-10" id="hablar"><div><p className="kowi-eyebrow">KOWI ONE · PILOTO ACTIVO</p><h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">Habla con Kowi. Empieza a avanzar.</h2><p className="mt-5 leading-relaxed text-[#b9bfca]">Cuéntale qué quieres conseguir. Kowi aclara tu objetivo, propone un plan de 30 días y una acción para hoy. Puedes volver a tu conversación cuando quieras.</p><Link href="/kowi" className="kowi-gold-btn mt-7 inline-flex rounded-full px-6 py-3 font-semibold">Abrir mi espacio ↗</Link></div><div className="cosmos-panel grid gap-5 rounded-[2rem] p-6 lg:grid-cols-[1fr_.62fr]"><div><div className="flex items-center gap-3"><span className="kowi-emblem"/><div><h3 className="font-semibold">Conversación con Kowi</h3><p className="text-xs text-[#a9b4c2]">Tu idea, tu ritmo, tu decisión</p></div></div><div className="mt-8 space-y-4"><p className="ml-auto max-w-[85%] rounded-2xl rounded-tr-sm bg-[#283a50] p-4">Quiero abrir una peluquería en Madrid.</p><p className="max-w-[90%] rounded-2xl rounded-tl-sm border border-white/10 bg-white/5 p-4">Vamos a convertirlo en un objetivo y un plan. Para empezar, ¿qué experiencia tienes en el sector?</p></div><Link href="/kowi" className="mt-8 block rounded-full border border-white/20 bg-white/5 px-5 py-4 text-[#abb4c2]">Escribe tu idea y comienza ↗</Link></div><aside className="rounded-2xl border border-[#e8b37b]/20 bg-[#e8b37b]/5 p-5"><p className="kowi-eyebrow">TU CAMINO</p>{[['01','Intención'],['02','Objetivo claro'],['03','Plan por fases'],['04','Primera acción'],['05','Seguimiento']].map(([n,t])=><div className="mt-5 flex items-center gap-3" key={n}><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e8b37b]/60 text-sm text-[#e8b37b]">{n}</span><span>{t}</span></div>)}</aside></div></section>
 
-    <section id="business" className="px-6 py-24">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-8 md:grid-cols-2 md:items-end">
-          <div><p className="text-xs font-bold uppercase tracking-[.22em] text-[#d7f2a7]">Kowi Business</p><h2 className="mt-4 text-4xl font-semibold tracking-[-.04em] md:text-5xl">Un agente que trabaja con tu negocio, no por encima de él.</h2></div>
-          <p className="text-lg leading-relaxed text-[#adc5b6]">Atiende, organiza, detecta oportunidades y prepara el siguiente paso. Cuando una acción tiene impacto real, Kowi pide autorización.</p>
-        </div>
-        <div className="mt-12 grid gap-4 md:grid-cols-3">{sectors.map(([title,body])=><article key={title} className="glass rounded-[1.7rem] p-7">
-          <div className="mb-8 h-12 w-12 rounded-2xl border border-[#d7f2a7]/20 bg-[#d7f2a7]/5 p-3"><div className="hero-orb h-full w-full rounded-full"/></div>
-          <h3 className="text-2xl font-semibold">{title}</h3><p className="mt-4 leading-relaxed text-[#a9c1b3]">{body}</p>
-        </article>)}</div>
-        <div className="mt-10 flex flex-wrap gap-3"><Link href="/business/agent" className="inline-flex rounded-full bg-[#d7f2a7] px-7 py-4 font-semibold text-[#173b31]">Abrir agente comercial ↗</Link><Link href="/business/demo" className="inline-flex rounded-full border border-white/20 px-7 py-4 font-semibold">Ver demo</Link></div>
-      </div>
-    </section>
+    <section id="soluciones" className="border-y border-white/10 bg-[#090f1c] px-5 py-24 md:px-10"><div className="mx-auto max-w-[1380px]"><p className="kowi-eyebrow">UN ECOSISTEMA · MUCHOS CAMINOS</p><div className="mt-3 flex flex-wrap items-end justify-between gap-5"><div><h2 className="text-4xl font-semibold tracking-tight md:text-5xl">Soluciones para cada necesidad.</h2><p className="mt-3 text-[#b8bfca]">La misma visión. Diferentes formas de avanzar.</p></div><Link href="/organizacion" className="text-[#e8b37b] underline underline-offset-4">Conoce la organización ↗</Link></div><div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-5">{products.map(p=><Link href={p.href} key={p.name} className="cosmos-tile group flex flex-col rounded-2xl p-6"><span className="text-3xl text-[#e8b37b]" aria-hidden="true">{p.icon}</span><h3 className="mt-7 text-xl font-semibold">{p.name}</h3><p className="mt-3 flex-1 text-sm leading-relaxed text-[#b9bfca]">{p.detail}</p><p className="mt-6 text-xs uppercase tracking-wider text-[#e8b37b]">{p.state}</p><span className="mt-3 text-sm">Explorar ↗</span></Link>)}</div></div></section>
 
-    <section id="safety" className="px-6 pb-24">
-      <div className="mx-auto grid max-w-7xl gap-6 rounded-[2rem] border border-[#d7f2a7]/15 bg-[#d7f2a7]/5 p-8 md:grid-cols-[1fr_.8fr] md:p-12">
-        <div><p className="text-xs font-bold uppercase tracking-[.22em] text-[#d7f2a7]">Control humano por diseño</p><h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">Automatizar lo útil. Detener lo sensible.</h2><p className="mt-5 max-w-2xl leading-relaxed text-[#b2c9bb]">Pagos, identidad, voz, permisos, comunicaciones externas, borrado o cambios sensibles requieren aprobación explícita. Kowi puede preparar; la persona conserva la decisión.</p></div>
-        <div className="grid gap-3 text-sm">
-          {['Bajo riesgo → automatizable','Riesgo medio → revisión sugerida','Alto impacto → autorización obligatoria'].map((x,i)=><div key={x} className="glass rounded-2xl p-4"><span className="mr-3 text-[#d7f2a7]">0{i+1}</span>{x}</div>)}
-        </div>
-      </div>
-    </section>
+    <section className="mx-auto grid max-w-[1380px] gap-10 px-5 py-24 md:grid-cols-2 md:items-center md:px-10"><div><p className="kowi-eyebrow">MÁS QUE UNA IA</p><h2 className="mt-4 text-4xl font-semibold leading-tight tracking-tight md:text-5xl">Una organización para crear. Una comunidad para compartir.</h2><p className="mt-6 max-w-xl text-lg leading-relaxed text-[#b9bfca]">Kowi aspira a reunir a quienes tienen ideas con quienes pueden ayudar a realizarlas. La organización coordina productos y proyectos; School y la futura fundación amplían el acceso al conocimiento y las oportunidades.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/comunidad" className="kowi-gold-btn rounded-full px-6 py-3 font-semibold">Explorar comunidad ↗</Link><Link href="/fundacion" className="rounded-full border border-white/25 px-6 py-3">Nuestra visión de impacto</Link></div></div><div className="cosmos-panel rounded-[2rem] p-8"><p className="kowi-eyebrow">CÓMO TRABAJA KOWI</p><div className="mt-7 grid gap-4">{[['Escucha','Comprende la intención y pide solo el contexto necesario.'],['Orquesta','Propone un plan y conecta agentes, herramientas y personas.'],['Protege','Pide aprobación antes de pagos, mensajes externos y cambios sensibles.'],['Aprende','Registra avances y evidencia para ajustar el siguiente paso.']].map(([t,d],i)=><div key={t} className="flex gap-5 border-b border-white/10 pb-4"><span className="text-[#e8b37b]">0{i+1}</span><div><h3 className="font-semibold">{t}</h3><p className="mt-1 text-sm text-[#b9bfca]">{d}</p></div></div>)}</div></div></section>
 
-    <footer className="border-t border-white/10 px-6 py-10 text-sm text-[#9db9aa]"><div className="mx-auto flex max-w-7xl flex-col justify-between gap-5 md:flex-row">
-      <div><div className="font-bold tracking-[.24em] text-white">KOWI ONE</div><div className="mt-2">Human‑First AI · Madrid, España</div></div>
-      <div className="flex flex-wrap gap-6"><a href="mailto:info@kowi.one">info@kowi.one</a><Link href="/privacidad">Privacidad</Link><Link href="/kowi">Entrar</Link></div>
-    </div></footer>
+    <section className="border-t border-white/10 bg-[linear-gradient(120deg,#15253d,#0a1221_55%,#2c1c1a)] px-5 py-20 md:px-10"><div className="mx-auto flex max-w-[1380px] flex-wrap items-end justify-between gap-8"><div><h2 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">Tu idea puede cambiar tu vida. Y también la de otras personas.</h2><p className="mt-5 text-[#c9cbd2]">Empieza con un objetivo. Construye el siguiente paso con Kowi.</p></div><Link href="/kowi" className="kowi-gold-btn rounded-full px-8 py-4 font-semibold">Probar Kowi ahora ↗</Link></div></section>
+    <footer className="mx-auto flex max-w-[1380px] flex-wrap justify-between gap-6 px-5 py-10 text-sm text-[#abb4c2] md:px-10"><div><span className="text-[#e8b37b]"><Brand/></span><p className="mt-3">Human-First AI · Madrid, España</p></div><div className="flex flex-wrap gap-5"><Link href="/organizacion">Organización</Link><Link href="/fundacion">Fundación</Link><Link href="/privacidad">Privacidad</Link><a href="mailto:info@kowi.one">info@kowi.one</a></div></footer>
   </main>;
 }

@@ -8,8 +8,13 @@ type Action = {
   action_type: 'send_whatsapp' | 'send_email' | 'create_appointment' | 'update_lead';
   payload: Record<string, unknown>;
 };
+function requireVerified(channel: string) {
+  const verified = (process.env.KOWI_VERIFIED_CHANNELS || '').split(',').map(value => value.trim());
+  if (!verified.includes(channel)) throw new ApiError(409, 'Canal pendiente de verificación de extremo a extremo.');
+}
 
 async function sendWhatsApp(action: Action) {
+  requireVerified('whatsapp');
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const version = process.env.META_GRAPH_VERSION || 'v23.0';
@@ -28,6 +33,7 @@ async function sendWhatsApp(action: Action) {
 }
 
 async function sendEmail(action: Action) {
+  requireVerified('email');
   const key = process.env.RESEND_API_KEY;
   const from = process.env.KOWI_EMAIL_FROM || 'Kowi <info@kowi.one>';
   if (!key) throw new ApiError(409, 'Email todavía no está configurado.');
@@ -46,6 +52,7 @@ async function sendEmail(action: Action) {
 }
 
 async function createCalendarEvent(action: Action) {
+  requireVerified('calendar');
   const token = process.env.GOOGLE_CALENDAR_ACCESS_TOKEN;
   const calendarId = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID || 'primary');
   if (!token) throw new ApiError(409, 'Google Calendar todavía no está configurado.');
