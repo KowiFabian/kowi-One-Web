@@ -1,6 +1,7 @@
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
 
 export const dynamic = 'force-dynamic';
+const verified = (process.env.KOWI_VERIFIED_CHANNELS || '').split(',').map(value => value.trim());
 
 export async function GET(request: Request) {
   try {
@@ -16,20 +17,20 @@ export async function GET(request: Request) {
       {
         channel: 'whatsapp',
         provider: 'Meta WhatsApp Cloud API',
-        enabled: Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID),
-        status: process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID ? 'ready' : 'not_configured',
+        enabled: Boolean(process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID && verified.includes('whatsapp')),
+        status: process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID ? verified.includes('whatsapp') ? 'ready' : 'credentials_present' : 'not_configured',
       },
       {
         channel: 'email',
         provider: 'Resend',
-        enabled: Boolean(process.env.RESEND_API_KEY),
-        status: process.env.RESEND_API_KEY ? 'ready' : 'not_configured',
+        enabled: Boolean(process.env.RESEND_API_KEY && verified.includes('email')),
+        status: process.env.RESEND_API_KEY ? verified.includes('email') ? 'ready' : 'credentials_present' : 'not_configured',
       },
       {
         channel: 'calendar',
         provider: 'Google Calendar',
-        enabled: Boolean(process.env.GOOGLE_CALENDAR_ACCESS_TOKEN),
-        status: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN ? 'ready' : 'not_configured',
+        enabled: Boolean(process.env.GOOGLE_CALENDAR_ACCESS_TOKEN && verified.includes('calendar')),
+        status: process.env.GOOGLE_CALENDAR_ACCESS_TOKEN ? verified.includes('calendar') ? 'ready' : 'credentials_present' : 'not_configured',
       },
     ];
 

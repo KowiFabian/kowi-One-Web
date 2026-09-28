@@ -87,7 +87,7 @@ export default function BusinessAgent() {
               ['Agenda',channelStatus('calendar')],
               ['CRM','ready'],
             ].map(([label,status])=><div key={label} className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[.03] px-4 py-3">
-              <span>{label}</span><span className={status==='ready'?'text-[#d7f2a7]':'text-amber-200'}>{status==='ready'?'Listo':'Configurar'}</span>
+              <span>{label}</span><span className={status==='ready'?'text-[#d7f2a7]':'text-amber-200'}>{status==='ready'?'Activo':status==='credentials_present'?'Credenciales presentes · verificar':'Pendiente'}</span>
             </div>)}
           </div>
         </section>
