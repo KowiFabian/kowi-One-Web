@@ -1,16 +1,10 @@
 import { z } from 'zod';
 import { ApiError, apiFailure, authenticate, limitedJson } from '@/lib/server/auth';
+import { projectFields } from '@/lib/projects-schema';
 
 export const dynamic = 'force-dynamic';
 
-const changes = z.object({
-  idea: z.string().trim().min(5).max(2000),
-  objective: z.string().trim().min(3).max(1000),
-  phases: z.array(z.string().trim().min(1).max(500)).max(12),
-  tasks: z.array(z.string().trim().min(1).max(500)).max(30),
-  next_action: z.string().trim().min(3).max(500),
-  status: z.enum(['borrador', 'en_marcha', 'completado']),
-}).strict();
+const changes = projectFields.extend({ status: z.enum(['borrador', 'en_marcha', 'completado']) }).strict();
 const idSchema = z.string().uuid();
 type Context = { params: Promise<{ id: string }> };
 
@@ -18,11 +12,11 @@ export async function PATCH(request: Request, context: Context) {
   try {
     const { db, user } = await authenticate(request);
     const parsedId = idSchema.safeParse((await context.params).id);
-    const parsed = changes.safeParse(await limitedJson(request, 15000));
+    const parsed = changes.safeParse(await limitedJson(request, 35000));
     if (!parsedId.success || !parsed.success) throw new ApiError(400, 'Revisa los datos del proyecto.');
     const { data, error } = await db.from('projects').update({ ...parsed.data, updated_at: new Date().toISOString() })
       .eq('id', parsedId.data).eq('user_id', user.id)
-      .select('id,idea,objective,phases,tasks,next_action,status,created_at').maybeSingle();
+      .select('id,idea,objective,phases,tasks,next_action,status,details,created_at').maybeSingle();
     if (error) throw new ApiError(503, 'No se pudo actualizar el proyecto.');
     if (!data) throw new ApiError(404, 'Proyecto no encontrado.');
     await db.from('agent_ledger').insert({ user_id: user.id, actor_id: user.id, agent: 'projects',

@@ -1,5 +1,6 @@
 import 'server-only';
 import { ApiError } from './auth';
+import { recordEmailAccepted, sendEmail } from './email';
 
 type Action = {
   id: string;
@@ -30,25 +31,6 @@ async function sendWhatsApp(action: Action) {
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(502, 'WhatsApp no pudo enviar el mensaje.');
   return { external_id: data?.messages?.[0]?.id ?? '', detail: data };
-}
-
-async function sendEmail(action: Action) {
-  requireVerified('email');
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.KOWI_EMAIL_FROM || 'Kowi <info@kowi.one>';
-  if (!key) throw new ApiError(409, 'Email todavía no está configurado.');
-  const to = String(action.payload.to || '');
-  const subject = String(action.payload.subject || '');
-  const body = String(action.payload.body || '');
-  if (!to || !subject || !body) throw new ApiError(400, 'Faltan destinatario, asunto o mensaje.');
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to: [to], subject, text: body }),
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(502, 'Email no pudo enviar el mensaje.');
-  return { external_id: data?.id ?? '', detail: data };
 }
 
 async function createCalendarEvent(action: Action) {
@@ -87,13 +69,21 @@ export async function executeBusinessAction(db: any, action: Action) {
     return result;
   }
   if (action.action_type === 'send_email') {
-    const result = await sendEmail(action);
+    requireVerified('email');
+    const to = String(action.payload.to || '');
+    const result = await sendEmail({
+      to, subject: String(action.payload.subject || ''), text: String(action.payload.body || ''),
+      idempotencyKey: `business-action/${action.id}`,
+    });
     await db.from('business_messages').insert({
       user_id: action.user_id, lead_id: action.lead_id, channel: 'email', direction: 'outbound',
-      status: 'sent', recipient: String(action.payload.to || ''), subject: String(action.payload.subject || ''),
-      body: String(action.payload.body || ''), external_id: result.external_id, metadata: result.detail,
+      status: 'sent', recipient: to, subject: String(action.payload.subject || ''),
+      body: String(action.payload.body || ''), external_id: result.id, metadata: { provider_status: result.status },
     });
-    return result;
+    const eventLogged = await recordEmailAccepted({
+      userId: action.user_id, businessActionId: action.id, recipient: to, externalId: result.id,
+    });
+    return { external_id: result.id, detail: { provider_status: result.status, event_logged: eventLogged } };
   }
   if (action.action_type === 'create_appointment') {
     const result = await createCalendarEvent(action);

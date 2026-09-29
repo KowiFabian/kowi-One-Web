@@ -19,11 +19,11 @@ export default function School() {
     try {
       const saved = JSON.parse(localStorage.getItem('kowi-school-v1') || '{}');
       if (keys.includes(saved.track)) setTrack(saved.track);
-      if (saved.done && typeof saved.done === 'object') setDone(Object.fromEntries(keys.map(key => [key, Array.isArray(saved.done[key]) ? saved.done[key].filter((n: unknown) => Number.isInteger(n) && (n as number) >= 0 && (n as number) < 4) : []])) as Record<Track, number[]>);
+      if (saved.done && typeof saved.done === 'object') setDone(Object.fromEntries(keys.map(key => [key, Array.isArray(saved.done[key]) ? [...new Set(saved.done[key].filter((n: unknown) => Number.isInteger(n) && (n as number) >= 0 && (n as number) < tracks[key].steps.length))] : []])) as Record<Track, number[]>);
     } catch { /* Invalid local data starts a fresh plan. */ }
     setLoaded(true);
   }, []);
-  useEffect(() => { if (loaded) localStorage.setItem('kowi-school-v1', JSON.stringify({ track, done })); }, [track, done, loaded]);
+  useEffect(() => { if (loaded) { try { localStorage.setItem('kowi-school-v1', JSON.stringify({ track, done })); } catch { /* The guide remains usable when browser storage is unavailable. */ } } }, [track, done, loaded]);
   const selected = tracks[track];
   const completed = done[track];
   function toggle(index: number) { setDone(current => ({ ...current, [track]: current[track].includes(index) ? current[track].filter(n => n !== index) : [...current[track], index] })); }
