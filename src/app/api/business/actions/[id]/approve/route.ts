@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
 import { executeBusinessAction } from '@/lib/server/business-execution';
+import { serviceDb } from '@/lib/server/business-embed';
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -20,11 +21,13 @@ export async function POST(request: Request, context: Context) {
       if (leadError || !lead || !lead.consent || lead.contact !== action.payload?.to)
         throw new ApiError(409, 'Revisa contacto, destinatario y consentimiento antes de aprobar.');
     }
+    // The service credential is server-only. Never use the owner's JWT to claim delivery.
+    const executionDb = serviceDb();
     const { error: approvalError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'approved' });
     if (approvalError) throw new ApiError(409, 'La acción ya no está pendiente.');
     try {
-      const result = await executeBusinessAction(db, action);
-      const { data: done, error: doneError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'executed' });
+      const result = await executeBusinessAction(executionDb, action);
+      const { data: done, error: doneError } = await executionDb.rpc('complete_business_action', { p_id: id, p_actor: user.id, p_result: 'executed' });
       if (doneError) throw new ApiError(503, 'La ejecución necesita revisión manual.');
       if (action.lead_id) await db.from('business_lead_events').insert({
         user_id: user.id, lead_id: action.lead_id, event_type: 'action',
@@ -32,7 +35,7 @@ export async function POST(request: Request, context: Context) {
       });
       return Response.json(done, { headers: { 'Cache-Control': 'no-store' } });
     } catch (executionError) {
-      await db.rpc('transition_business_action', { p_id: id, p_decision: 'failed' });
+      await executionDb.rpc('complete_business_action', { p_id: id, p_actor: user.id, p_result: 'failed' });
       throw executionError;
     }
   } catch (error) { return apiFailure(error); }
