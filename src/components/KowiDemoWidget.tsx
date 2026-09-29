@@ -1,6 +1,7 @@
 'use client';
 import { useEffect,useRef,useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 type Msg={role:'kowi'|'user';text:string};
 const demos=[
@@ -9,6 +10,7 @@ const demos=[
  'Soy una inmobiliaria. Simula cómo cualificarías a una persona interesada en una vivienda.'
 ];
 export default function KowiDemoWidget(){
+ const pathname=usePathname();
  const [open,setOpen]=useState(false),[text,setText]=useState(''),[listening,setListening]=useState(false),[voice,setVoice]=useState(true);
  const [messages,setMessages]=useState<Msg[]>([{role:'kowi',text:'Hola, soy KOWI. Puedo enseñarte cómo un negocio atiende, cualifica oportunidades y organiza el seguimiento. Elige un ejemplo o escríbeme.'}]);
  const recognition=useRef<any>(null);
@@ -22,6 +24,7 @@ export default function KowiDemoWidget(){
  }
  function send(){const q=text.trim();if(!q)return;setText('');reply(q);}
  function mic(){const w=window as any;const SR=w.SpeechRecognition||w.webkitSpeechRecognition;if(!SR){setMessages(m=>[...m,{role:'kowi',text:'Tu navegador no ofrece reconocimiento de voz aquí. Puedes seguir escribiendo; la lectura en voz puede continuar disponible.'}]);return;} if(listening){recognition.current?.stop();return;}const rec=new SR();recognition.current=rec;rec.lang='es-ES';rec.interimResults=false;rec.onstart=()=>setListening(true);rec.onend=()=>setListening(false);rec.onerror=()=>setListening(false);rec.onresult=(e:any)=>{const q=e.results?.[0]?.[0]?.transcript||'';setText(q);if(q)reply(q);};rec.start();}
+ if(pathname==='/piloto')return null;
  return <div className="fixed bottom-5 right-5 z-[80]">
   {open&&<section className="mb-3 flex h-[min(650px,78vh)] w-[min(390px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[1.7rem] border border-white/15 bg-[#071612]/95 text-[#eef8ef] shadow-2xl backdrop-blur-xl" aria-label="Demo KOWI">
    <header className="flex items-center justify-between border-b border-white/10 p-4"><div className="flex items-center gap-3"><span className="hero-orb h-9 w-9 rounded-full"/><div><strong>KOWI</strong><p className="text-xs text-[#9fb9aa]">Demo comercial · Human-First AI</p></div></div><button onClick={()=>setOpen(false)} aria-label="Cerrar">✕</button></header>
