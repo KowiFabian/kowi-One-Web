@@ -8,6 +8,7 @@ const target = 'faviangaray@gmail.com';
 export default function TestEmailPage() {
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
+  const [configured, setConfigured] = useState(false);
   const [sentCode, setSentCode] = useState(false);
   const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
@@ -16,7 +17,8 @@ export default function TestEmailPage() {
 
   useEffect(() => {
     const client = browserSupabase();
-    if (!client) { setNotice('El acceso a Kowi no está configurado.'); setReady(true); return; }
+    if (!client) { setNotice('El acceso a Kowi no está configurado. No se puede solicitar el código todavía.'); setReady(true); return; }
+    setConfigured(true);
     let active = true;
     client.auth.getUser().then(({ data }) => { if (active) { setSessionEmail(data.user?.email ?? null); setReady(true); } })
       .catch(() => { if (active) { setNotice('No se pudo comprobar tu sesión.'); setReady(true); } });
@@ -26,7 +28,9 @@ export default function TestEmailPage() {
 
   async function requestCode(event: React.FormEvent) {
     event.preventDefault();
-    const client = browserSupabase(); if (!client || busy) return;
+    const client = browserSupabase();
+    if (!client) { setNotice('El acceso a Kowi no está configurado. Vuelve a cargar la página cuando termine el despliegue.'); return; }
+    if (busy) return;
     setBusy(true); setNotice('');
     try {
       const { error } = await client.auth.signInWithOtp({ email: target, options: { shouldCreateUser: true } });
@@ -66,7 +70,7 @@ export default function TestEmailPage() {
       <button type="button" onClick={send} disabled={busy} className="kowi-gold-btn mt-5 rounded-full px-6 py-3 font-semibold disabled:opacity-50">{busy ? 'Enviando…' : 'Enviar correo de prueba'}</button>
     </div> : <div className="mt-7">
       {sessionEmail && <p className="mb-4 rounded-xl border border-amber-300/30 p-3 text-sm">Tu sesión actual es {sessionEmail}. Para esta prueba entra con {target}.</p>}
-      {!sentCode ? <form onSubmit={requestCode}><p className="text-sm text-[#c5cad4]">1. Solicita un código de acceso para {target}.</p><button disabled={busy} className="kowi-gold-btn mt-4 rounded-full px-6 py-3 font-semibold disabled:opacity-50">{busy ? 'Solicitando…' : 'Recibir código por correo'}</button></form> :
+      {!sentCode ? <form onSubmit={requestCode}><p className="text-sm text-[#c5cad4]">1. Solicita un código de acceso para {target}.</p><button disabled={busy || !configured} className="kowi-gold-btn mt-4 rounded-full px-6 py-3 font-semibold disabled:opacity-50">{busy ? 'Solicitando…' : 'Recibir código por correo'}</button></form> :
       <form onSubmit={verifyCode}><label htmlFor="email-code" className="block text-sm text-[#c5cad4]">2. Introduce el código recibido</label><input id="email-code" autoComplete="one-time-code" inputMode="numeric" required maxLength={10} value={code} onChange={event => setCode(event.target.value)} className="mt-2 w-full rounded-xl border border-white/20 bg-[#101827] p-3 text-white"/><button disabled={busy} className="kowi-gold-btn mt-4 rounded-full px-6 py-3 font-semibold disabled:opacity-50">{busy ? 'Verificando…' : 'Verificar y continuar'}</button><button type="button" onClick={() => { setSentCode(false); setCode(''); }} className="ml-4 mt-4 text-sm underline">Solicitar otro código</button></form>}
     </div>}
     {notice && <p role="status" className="mt-6 rounded-xl border border-white/20 p-4">{notice}</p>}
