@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import KowiDemoWidget from '@/components/KowiDemoWidget';
 
 export const metadata: Metadata = {
   title: 'Kowi One | Ideas que se convierten en acción',
@@ -15,6 +16,7 @@ export default function RootLayout({
     <html lang="es">
       <body className="bg-secondary text-gray-900">
         {children}
+        <KowiDemoWidget />
       </body>
     </html>
   );
