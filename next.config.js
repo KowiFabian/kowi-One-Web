@@ -7,9 +7,19 @@ const nextConfig = {
       source: '/:path*',
       headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
-        { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+    }, {
+      // Only the synthetic public demo may be framed by another HTTPS website.
+      source: '/business/embed',
+      headers: [
+        { key: 'Content-Security-Policy', value: "object-src 'none'; base-uri 'self'; frame-ancestors https:; form-action 'self'" },
+      ],
+    }, {
+      source: '/((?!business/embed(?:/|$)).*)',
+      headers: [
+        { key: 'X-Frame-Options', value: 'DENY' },
         { key: 'Content-Security-Policy', value: "object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'" },
       ],
     }];

@@ -1,0 +1,13 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+
+const snippet = `<script defer src="https://kowi.one/kowi-business-embed.js" data-kowi-label="Hablar con Kowi"></script>`;
+
+export default function InstallBusiness() {
+  const [copied,setCopied] = useState(false);
+  async function copy(){try{await navigator.clipboard.writeText(snippet);setCopied(true);}catch{setCopied(false);}}
+  return <main className="min-h-screen bg-[#edf2e8] px-6 py-10 text-[#193d32]"><div className="mx-auto max-w-6xl"><Link href="/business" className="text-sm underline">← Kowi Business</Link><p className="mt-12 text-xs font-bold uppercase tracking-[.2em] text-[#638459]">Integración web · demo</p><h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight md:text-5xl">Pruébalo en tu propia página.</h1><p className="mt-5 max-w-3xl text-lg text-[#526b5a]">Copia este bloque HTML en una página de prueba de tu sitio. Aparece un botón flotante que abre la demostración sin cuenta, permite elegir sector y simular consultas. El piloto operativo para tu negocio requiere configuración y activación por Kowi.</p>
+    <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_460px]"><section className="rounded-3xl bg-white p-6 shadow-sm"><h2 className="text-2xl font-semibold">Código de inserción</h2><ol className="mt-4 list-inside list-decimal space-y-2 text-sm text-[#526b5a]"><li>Copia el código HTML.</li><li>Insértalo en un bloque HTML de tu web.</li><li>Abre la página publicada para comprobar el tamaño y la experiencia móvil.</li></ol><pre className="mt-6 overflow-x-auto whitespace-pre-wrap break-all rounded-2xl bg-[#102e27] p-5 text-xs leading-relaxed text-[#dcebb2]"><code>{snippet}</code></pre><button type="button" onClick={copy} className="mt-5 rounded-full bg-[#193d32] px-6 py-3 font-semibold text-white">{copied?'Copiado ✓':'Copiar código'}</button><p className="mt-6 text-sm leading-relaxed text-[#526b5a]">Este iframe muestra una simulación genérica: no identifica visitantes, no guarda sus mensajes y no envía comunicaciones. Para instalar un agente real con ficha de empresa, CRM, permisos e integraciones hay que contratar y configurar el piloto.</p><a href="mailto:info@kowi.one?subject=Instalar%20Kowi%20Business%20en%20mi%20web" className="mt-5 inline-block font-semibold underline">Solicitar instalación del piloto ↗</a></section><section><h2 className="mb-4 text-xl font-semibold">Vista previa</h2><iframe src="/business/embed" title="Vista previa de la demostración Kowi Business" loading="lazy" className="h-[620px] w-full rounded-[20px] border-0 shadow-xl" /></section></div></div></main>;
+}
