@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Persona = {
   name: string; role: string; assistant: string; project: string; preference: string;
@@ -39,6 +39,7 @@ const personas: Persona[] = [
 ];
 
 export default function PilotPage() {
+  const [liveAgent, setLiveAgent] = useState(false);
   const [selected, setSelected] = useState(0);
   const [step, setStep] = useState(0);
   const [message, setMessage] = useState('');
@@ -48,6 +49,18 @@ export default function PilotPage() {
   const [prepared, setPrepared] = useState(false);
   const persona = personas[selected];
   const turns = [persona.opening, persona.next];
+
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('agent');
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return;
+    const script = document.createElement('script');
+    script.src = '/embed/kowi.js';
+    script.dataset.agent = id;
+    script.dataset.kowiLabel = 'Probar agente conectado';
+    document.head.appendChild(script);
+    setLiveAgent(true);
+    return () => { script.remove(); document.querySelector('[data-kowi-business-widget]')?.remove(); };
+  }, []);
 
   function choose(index: number) { setSelected(index); setStep(0); setCustom([]); setMessage(''); setNotice(''); }
   function reply() {
@@ -70,7 +83,7 @@ export default function PilotPage() {
       </header>
       <section className="grid gap-10 py-14 lg:grid-cols-[1.1fr_.9fr] lg:items-end">
         <div><p className="text-xs font-semibold uppercase tracking-[.27em] text-[#d7aa79]">Laboratorio piloto · tres historias ficticias</p><h1 className="mt-6 max-w-3xl text-4xl font-semibold leading-tight tracking-tight sm:text-6xl">Cada persona tiene una idea. KOWI ayuda a darle forma.</h1><p className="mt-7 max-w-2xl text-lg leading-relaxed text-[#bbcabf]">Explora cómo un asistente distinto acompaña a una peluquería, una consulta y un estudio de arquitectura. La persona conserva el criterio, la relación y la decisión final.</p></div>
-        <div className="rounded-3xl border border-[#bbc994]/20 bg-[#22332d] p-7"><span className="text-xs uppercase tracking-[.2em] text-[#d7aa79]">Estado de esta prueba</span><h2 className="mt-4 text-2xl font-semibold">Simulación interactiva</h2><p className="mt-3 text-sm leading-relaxed text-[#c7d4c9]">Estos personajes y respuestas son ejemplos escritos para probar la experiencia. El chat de esta página no llama a OpenAI, no registra cuentas ni envía correos. La activación real del agente permanece sujeta a la verificación del servidor.</p></div>
+        <div className="rounded-3xl border border-[#bbc994]/20 bg-[#22332d] p-7"><span className="text-xs uppercase tracking-[.2em] text-[#d7aa79]">Estado de esta prueba</span><h2 className="mt-4 text-2xl font-semibold">{liveAgent?'Piloto con widget conectado':'Simulación interactiva'}</h2><p className="mt-3 text-sm leading-relaxed text-[#c7d4c9]">Estos personajes y respuestas son ejemplos escritos para probar la experiencia. El chat de esta página no llama a OpenAI, no registra cuentas ni envía correos. {liveAgent?'El botón «Probar agente conectado» es independiente y usa el identificador de agente proporcionado. Solo responderá si el canal está activo y kowi.one está autorizado.':'La activación real del agente permanece sujeta a la verificación del servidor.'}</p></div>
       </section>
       <section aria-labelledby="personas-title"><h2 id="personas-title" className="mb-5 text-2xl font-semibold">Elige un cliente de prueba</h2><div className="grid gap-4 md:grid-cols-3">{personas.map((item,index)=><button key={item.name} type="button" onClick={()=>choose(index)} aria-pressed={selected===index} className={`rounded-3xl border p-6 text-left transition ${selected===index?'border-[#d7aa79] bg-[#263b31]':'border-white/10 bg-[#192823] hover:border-[#d7aa79]/60'}`}><span className="text-xs uppercase tracking-widest text-[#d7aa79]">0{index+1} / {item.role}</span><strong className="mt-5 block text-2xl">{item.name}</strong><span className="mt-2 block text-sm text-[#b8c9bc]">{item.project}</span><span className="mt-5 block text-sm font-semibold text-[#d6e4b3]">Agente {item.assistant} ↗</span></button>)}</div></section>
       <div className="mt-9 grid gap-6 lg:grid-cols-[.75fr_1.25fr]"><aside className="rounded-3xl border border-white/10 bg-[#1a2924] p-7"><p className="text-xs uppercase tracking-[.2em] text-[#d7aa79]">Ficha del proyecto</p><h2 className="mt-4 text-2xl font-semibold">{persona.assistant} para {persona.name}</h2><p className="mt-4 text-sm leading-relaxed text-[#c7d4c9]">{persona.project}</p><div className="mt-6 border-t border-white/10 pt-5"><strong className="text-sm">Gustos y decisiones</strong><p className="mt-2 text-sm text-[#b8c9bc]">{persona.preference}</p></div><div className="mt-6 border-t border-white/10 pt-5"><strong className="text-sm">Control humano</strong><p className="mt-2 text-sm text-[#b8c9bc]">Cada cita, presupuesto, comunicación externa y dato sensible requiere revisión de la persona responsable.</p></div></aside>
