@@ -7,9 +7,9 @@ const areas = [
   { name:'Kowi One', state:'Piloto', text:'Un espacio personal para convertir una intención en un objetivo, un plan y una primera acción.', href:'/kowi' },
   { name:'Kowi Business', state:'Piloto', text:'Agente de empresa, conversación y seguimiento comercial con aprobación humana.', href:'/business' },
   { name:'Kowi Proyectos', state:'Piloto', text:'Ideas organizadas en fases, tareas y próximos pasos.', href:'/proyectos' },
-  { name:'Kowi School', state:'En desarrollo', text:'Aprendizaje aplicado a problemas reales y proyectos propios.', href:'/school' },
+  { name:'Kowi School', state:'En desarrollo', text:'Guías gratuitas para aprender a usar la IA con criterio y crear proyectos propios.', href:'/school' },
   { name:'Kowi Comunidad', state:'En desarrollo', text:'Una futura red de personas, conocimientos y capacidades.', href:'/comunidad' },
-  { name:'Fundación KOWI', state:'Iniciativa en desarrollo', text:'Una visión de impacto para ampliar oportunidades. Aún no es una fundación constituida.', href:'/fundacion' },
+  { name:'Fundación KOWI', state:'Iniciativa en desarrollo', text:'Educación abierta, cooperación y proyectos de impacto como iniciativa en desarrollo. Aún no es una fundación constituida.', href:'/fundacion' },
 ];
 export default function Organization() { return <main className="kowi-cosmos min-h-screen">
   <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-7 md:px-10"><Link href="/" className="inline-flex items-center gap-3 text-[#e8b37b]"><span className="kowi-emblem" aria-hidden="true"/><span className="font-semibold tracking-[.28em]">KOWI</span></Link><nav aria-label="Secciones de Kowi" className="flex flex-wrap justify-end gap-4 text-sm text-[#bdc4cf]"><Link href="/business">Business</Link><Link href="/proyectos">Proyectos</Link><Link href="/comunidad">Comunidad</Link></nav></header>
