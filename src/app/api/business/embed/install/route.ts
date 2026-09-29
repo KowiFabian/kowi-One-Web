@@ -26,7 +26,7 @@ export async function GET(request: Request) {
     const { db, user } = await authenticate(request);
     const { data, error } = await db.from('business_embeds').select('id,enabled,allowed_origins').eq('user_id', user.id).maybeSingle();
     if (error) throw new ApiError(503, 'La instalación todavía no está disponible.');
-    return Response.json({ businessId: data?.id ?? null, enabled: data?.enabled ?? false, allowedOrigins: data?.allowed_origins ?? [] }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ businessId: data?.id ?? null, enabled: data?.enabled ?? false, allowedOrigins: data?.allowed_origins ?? [], available: process.env.KOWI_BUSINESS_PUBLIC_ENABLED === 'true' && Boolean(process.env.OPENAI_API_KEY && process.env.SUPABASE_SERVICE_ROLE_KEY) }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return apiFailure(error); }
 }
 
@@ -50,6 +50,6 @@ export async function POST(request: Request) {
     }
     const { data, error } = await db.from('business_embeds').update({ allowed_origins: origins, enabled: parsed.data.enabled, updated_at: new Date().toISOString() }).eq('user_id', user.id).select('id,enabled,allowed_origins').single();
     if (error) throw new ApiError(503, 'No se pudo guardar la instalación.');
-    return Response.json({ businessId: data.id, enabled: data.enabled, allowedOrigins: data.allowed_origins }, { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json({ businessId: data.id, enabled: data.enabled, allowedOrigins: data.allowed_origins, available: true }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return apiFailure(error); }
 }

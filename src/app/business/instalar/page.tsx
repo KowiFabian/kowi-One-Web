@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { browserSupabase } from '@/lib/supabase-browser';
 
-type Install = { businessId: string | null; enabled: boolean; allowedOrigins: string[] };
+type Install = { businessId: string | null; enabled: boolean; allowedOrigins: string[]; available: boolean };
 const scriptUrl = 'https://kowi.one/embed/kowi.js';
 const demoSnippet = `<script defer src="${scriptUrl}" data-kowi-label="Hablar con Kowi"></script>`;
 
@@ -50,7 +50,7 @@ export default function InstallBusiness() {
     finally { setBusy(false); }
   }
 
-  const active = Boolean(install?.enabled && install.businessId);
+  const active = Boolean(install?.available && install.enabled && install.businessId);
   const snippet = active
     ? `<script defer src="${scriptUrl}" data-agent="${install!.businessId}" data-kowi-label="Hablar con nosotros"></script>`
     : demoSnippet;
@@ -70,7 +70,8 @@ export default function InstallBusiness() {
           <p className="mt-4 text-sm text-[#526b5a]">Escribe entre uno y cinco orígenes HTTPS, uno por línea, por ejemplo <code>https://miempresa.com</code>. Añade `www` por separado si lo usas.</p>
           <label className="mt-4 block text-sm font-semibold" htmlFor="origins">Dominios autorizados</label>
           <textarea id="origins" rows={3} value={origins} onChange={event => setOrigins(event.target.value)} placeholder={'https://miempresa.com\nhttps://www.miempresa.com'} className="mt-2 w-full rounded-xl border border-[#b9cfb8] p-3 font-mono text-sm" />
-          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !origins.trim()} onClick={() => update(true)} className="rounded-full bg-[#193d32] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? 'Guardando…' : active ? 'Guardar dominios' : 'Activar agente web'}</button>{active && <button type="button" disabled={busy} onClick={() => update(false)} className="rounded-full border border-[#b9cfb8] px-5 py-3 text-sm">Desactivar acceso</button>}</div>
+          {!install?.available && <p role="status" className="mt-4 rounded-xl bg-amber-50 p-3 text-sm">La activación para clientes está pendiente de configuración y verificación por Kowi. La demo se puede insertar ahora.</p>}
+          <div className="mt-4 flex flex-wrap gap-2"><button type="button" disabled={busy || !origins.trim() || !install?.available} onClick={() => update(true)} className="rounded-full bg-[#193d32] px-5 py-3 text-sm font-semibold text-white disabled:opacity-50">{busy ? 'Guardando…' : active ? 'Guardar dominios' : 'Activar agente web'}</button>{install?.enabled && <button type="button" disabled={busy} onClick={() => update(false)} className="rounded-full border border-[#b9cfb8] px-5 py-3 text-sm">Desactivar acceso</button>}</div>
           <p className="mt-4 text-sm" role="status">Estado: {active ? 'activo para los dominios indicados' : 'pendiente de activación'}</p>
         </>}
         {notice && <p role="alert" className="mt-4 rounded-xl bg-[#edf2e8] p-3 text-sm">{notice}</p>}
