@@ -1,6 +1,6 @@
 export type KowiAgent = {
   id: string; name: string; role: string; access: 'core'|'pro'; risk: 'low'|'medium'|'high';
-  capabilities: string[]; requiresApproval: string[];
+  capabilities: string[]; requiresApproval: string[]; availability?: 'proposed';
 };
 
 export const kowiAgents: KowiAgent[] = [
@@ -12,6 +12,7 @@ export const kowiAgents: KowiAgent[] = [
   {id:'marketing',name:'Marketing Agent',role:'Diseña campañas, contenido, segmentación y experimentos medibles.',access:'pro',risk:'medium',capabilities:['campaigns','content','analytics'],requiresApproval:['publish','ad_spend','external_message']},
   {id:'projects',name:'Projects Agent',role:'Convierte ideas en objetivos, fases, tareas y evidencia.',access:'core',risk:'low',capabilities:['planning','tasks','progress'],requiresApproval:['external_action']},
   {id:'education',name:'School Agent',role:'Guía aprendizaje aplicado y rutas de capacitación.',access:'core',risk:'low',capabilities:['learning','assessment','guidance'],requiresApproval:[]},
+  {id:'foundation-infrastructure',name:'Foundation Infrastructure Agent',role:'Prepara escenarios de inversión, fases, hitos y evidencias para proyectos educativos y sanitarios. Solo propone; no contrata, invierte ni opera.',access:'pro',risk:'high',availability:'proposed',capabilities:['needs_assessment','scenario_planning','milestone_planning','evidence_review'],requiresApproval:['investment','contract','construction','operation','public_transfer','external_message']},
   {id:'security',name:'Trust & Security Agent',role:'Evalúa riesgo, permisos, anomalías y cumplimiento antes de actuar.',access:'pro',risk:'high',capabilities:['risk_gate','permissions','audit'],requiresApproval:['permission_change','identity_change','deletion']},
   {id:'identity',name:'Identity Agent',role:'Gestiona consentimiento, credenciales e identidad/voz verificable.',access:'pro',risk:'high',capabilities:['consent','credentials','voice_identity'],requiresApproval:['identity_change','voice_use','revocation']},
 ];
