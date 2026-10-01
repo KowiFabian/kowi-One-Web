@@ -12,7 +12,7 @@ export default function ProjectsPage() {
     <div className="mx-auto max-w-6xl">
       <nav className="flex flex-wrap items-center justify-between gap-4 text-sm">
         <Link href="/" className="text-[#e8b37b]">← KOWI</Link>
-        <Link href="/kowi" className="rounded-full border border-white/20 px-4 py-2 text-[#d7e9dc]">Conversar con Kowi One ↗</Link>
+        <div className="flex flex-wrap gap-2"><Link href="/proyectos/lab" className="rounded-full bg-[#e8b37b] px-4 py-2 font-semibold text-[#17121a]">Project Factory</Link><Link href="/kowi" className="rounded-full border border-white/20 px-4 py-2 text-[#d7e9dc]">Conversar con Kowi One ↗</Link></div>
       </nav>
       <div className="my-12 max-w-3xl">
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#e8b37b]">KOWI PROYECTOS</p>
