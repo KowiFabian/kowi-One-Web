@@ -8,7 +8,7 @@ const nextConfig = {
       headers: [
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' },
       ],
     }, {
       // Only the synthetic public demo may be framed by another HTTPS website.
