@@ -61,7 +61,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     const browser = window as VoiceWindow;
     const Recognition = browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
     if (!Recognition) { setNotice('El dictado no está disponible en este navegador. Puedes escribir tu mensaje.'); return; }
-    const recognition = new Recognition(); recognition.lang = 'es-ES'; setListening(true);
+    const recognition = new Recognition(); recognition.lang = navigator.language || 'es-ES'; setListening(true);
     recognition.onresult = event => setDraft(previous => [previous, event.results[0]?.[0]?.transcript ?? ''].filter(Boolean).join(' ').slice(0, 2000));
     recognition.onerror = () => { setListening(false); setNotice('No se pudo escuchar. Comprueba el permiso del micrófono.'); };
     recognition.onend = () => setListening(false);
@@ -71,7 +71,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   function speak(response: string) {
     if (!voiceEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(response); utterance.lang = 'es-ES'; utterance.rate = 1;
+    const utterance = new SpeechSynthesisUtterance(response); utterance.lang = navigator.language || 'es-ES'; utterance.rate = 1;
     window.speechSynthesis.speak(utterance);
   }
 
