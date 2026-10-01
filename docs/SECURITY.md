@@ -17,9 +17,8 @@ Security:
 3. Leaked-password protection is disabled in Supabase Auth and should be enabled before commercial launch if available for the project tier.
 
 Performance:
-- Ten foreign keys were reported without covering indexes.
-- Multiple permissive SELECT policies exist on `agent_installations` and `organization_members`.
-These are optimization items, not proof of data exposure.
+- Ten foreign-key covering indexes were added to the live Supabase project on 2026-10-01; a re-run of the advisor no longer reports unindexed foreign keys.
+- Multiple permissive SELECT policies remain on `agent_installations` and `organization_members`; this is a performance cleanup item, not proof of data exposure.
 
 ## Required pre-launch controls
 - Verify authenticated routes use server-validated identity, not untrusted client metadata.
