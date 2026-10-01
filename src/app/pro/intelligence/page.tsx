@@ -62,7 +62,7 @@ export default function ProIntelligenceCenter(){
   <header className="border-b border-white/10 bg-[#050913]/90 px-6 py-5 backdrop-blur">
    <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
     <Link href="/pro" className="text-[#e8b37b]">← KOWI PRO</Link>
-    <div className="flex gap-2"><Link href="/business/agent" className="rounded-full border border-white/20 px-4 py-2 text-sm">CRM real</Link><Link href="/business/demo" className="kowi-gold-btn rounded-full px-4 py-2 text-sm font-semibold">Demo Business</Link></div>
+    <div className="flex gap-2"><Link href="/pro/intelligence/jucar-living" className="rounded-full border border-white/20 px-4 py-2 text-sm">Júcar Living</Link><Link href="/business/agent" className="rounded-full border border-white/20 px-4 py-2 text-sm">CRM real</Link><Link href="/business/demo" className="kowi-gold-btn rounded-full px-4 py-2 text-sm font-semibold">Demo Business</Link></div>
    </div>
   </header>
   <div className="mx-auto max-w-7xl px-6 py-10">
