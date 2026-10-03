@@ -18,7 +18,8 @@ async function check(path, options = {}, expected = 200) {
 }
 try {
   for (const path of ['/', '/kowi', '/business/agent', '/privacidad']) await check(path);
-  for (const path of ['/api/business/overview', '/api/business/profile', '/api/business/leads', '/api/business/actions', '/api/conversations', '/api/projects']) await check(path, {}, 401);
+  for (const path of ['/api/business/overview', '/api/business/profile', '/api/conversations', '/api/projects']) await check(path, {}, 401);
+  for (const path of ['/api/business/leads', '/api/business/actions']) await check(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
   await check('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
   await check('/api/business/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
   await check('/api/conversations', { headers: { Authorization: 'Bearer invalid-smoke-token' } }, 401);
