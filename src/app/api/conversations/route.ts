@@ -6,7 +6,7 @@ export async function GET(request: Request) {
   try {
     const { db, user } = await authenticate(request);
     const { data, error } = await db.from('conversations').select('id,title,created_at,agent')
-      .eq('user_id', user.id).order('created_at', { ascending: false }).limit(100);
+      .eq('user_id', user.id).is('organization_id',null).order('created_at', { ascending: false }).limit(100);
     if (error) throw new ApiError(503, 'No se pudieron cargar las conversaciones.');
     return Response.json(data, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return apiFailure(error); }

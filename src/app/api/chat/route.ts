@@ -21,9 +21,10 @@ export async function POST(request: Request) {
     if (!parsed.success) throw new ApiError(400, 'Revisa el mensaje (1–2000 caracteres) y la conversación.');
     const { userMessage, conversationId, requestId } = parsed.data;
     const { data: conversation, error: conversationError } = await db.from('conversations')
-      .select('id,agent').eq('id', conversationId).eq('user_id', user.id).maybeSingle();
+      .select('id,agent,organization_id').eq('id', conversationId).eq('user_id', user.id).maybeSingle();
     if (conversationError) throw new ApiError(503, 'No se pudo acceder a tus conversaciones.');
     if (!conversation) throw new ApiError(404, 'Conversación no encontrada.');
+    if(conversation.organization_id)throw new ApiError(409,'Usa el chat de agentes de esta empresa.');
     let businessContext: string | null = null;
     if (conversation.agent === 'business') {
       const { data: profile, error: profileError } = await db.from('business_profiles').select('config').eq('user_id', user.id).maybeSingle();
