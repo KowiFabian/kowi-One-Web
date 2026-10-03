@@ -26,7 +26,7 @@ test('Organization policies repair recursion while preserving tenant and owner p
  `);
  await assert.rejects(db.query('select * from organizations'),/infinite recursion/);
  await db.exec('reset role');
- await db.exec(await readFile('supabase/migrations/202610030001_organization_rls_recursion.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000100_organization_rls_recursion.sql','utf8'));
  await db.exec('set role authenticated');
  assert.equal((await db.query('select * from organizations')).rows.length,1);
  assert.equal((await db.query('select * from organization_members')).rows.length,1);

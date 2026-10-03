@@ -9,8 +9,8 @@ test('Database security reports preserve observations, incomplete coverage and a
  create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,deleted_at timestamptz);
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  insert into auth.users values ('${owner}','owner@example.test',now(),null),('${other}','other@example.test',now(),null);`);
- await db.exec(await readFile('supabase/migrations/202610030003_platform_authority.sql','utf8'));
- await db.exec(await readFile('supabase/migrations/202610030006_database_security_reports.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000300_platform_authority.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000600_database_security_reports.sql','utf8'));
  await db.exec(`insert into private.platform_roles(user_id,role) values ('${owner}','platform_owner');set role service_role;`);
  await db.query('select private.capture_platform_security_report()');
  await db.exec('reset role;create table public.unguarded(id uuid);set role service_role');

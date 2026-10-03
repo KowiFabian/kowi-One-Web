@@ -19,7 +19,7 @@ test('CRM isolates owners, constrains references and denies viewer writes',async
  create table organizations(id uuid primary key,owner_id uuid references auth.users);
  create table organization_members(organization_id uuid references organizations,user_id uuid references auth.users,role text,primary key(organization_id,user_id));
  insert into auth.users values ('${a}'),('${b}'),('${v}');`);
- await db.exec(await readFile('supabase/migrations/20261003030000_universal_tenant_crm.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000200_universal_tenant_crm.sql','utf8'));
  await db.exec(`insert into organizations values ('${oa}','${a}'),('${ob}','${b}');insert into organization_members values ('${oa}','${v}','viewer');set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
  assert.equal((await db.query('select * from crm_stages')).rows.length,6);
  const ca=(await db.query<{id:string}>('insert into contacts(organization_id,name) values ($1,$2) returning id',[oa,'Cliente A'])).rows[0].id;

@@ -10,7 +10,7 @@ test('Platform owner requires explicit verified identity and cannot be self-assi
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  grant usage on schema auth to authenticated,service_role;grant execute on function auth.uid() to authenticated,service_role;
  insert into auth.users values ('${founder}','founder@example.test',null,null,'{}'),('${attacker}','attacker@example.test',now(),null,'{"role":"platform_owner"}');`);
- await db.exec(await readFile('supabase/migrations/202610030003_platform_authority.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000300_platform_authority.sql','utf8'));
  await db.exec('set role service_role');
  await assert.rejects(db.query('select private.bootstrap_platform_owner()'),/not configured/);
  await db.exec(`reset role;insert into private.platform_bootstrap_config(founder_user_id,founder_email) values ('${founder}','wrong@example.test');set role service_role;`);

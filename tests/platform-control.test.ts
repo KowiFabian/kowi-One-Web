@@ -10,8 +10,8 @@ test('Global control reads require trusted verified authority and leave an audit
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create table organizations(id uuid primary key);create table agent_installations(id uuid primary key);
  insert into auth.users values ('${owner}','owner@example.test',now(),null),('${other}','other@example.test',now(),null);`);
- await db.exec(await readFile('supabase/migrations/202610030003_platform_authority.sql','utf8'));
- await db.exec(await readFile('supabase/migrations/202610030004_platform_control_snapshot.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000300_platform_authority.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000400_platform_control_snapshot.sql','utf8'));
  await db.exec(`insert into private.platform_roles(user_id,role) values ('${owner}','platform_owner');insert into organizations values(gen_random_uuid());set role authenticated;select set_config('request.jwt.claim.sub','${other}',false);`);
  await assert.rejects(db.query('select platform_control_snapshot()'),/Platform authority required/);
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[owner]);
