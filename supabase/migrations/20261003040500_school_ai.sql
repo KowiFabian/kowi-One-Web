@@ -26,6 +26,35 @@ insert into public.modules(course_id,title,sort_order) select id,'Misión práct
 insert into public.lessons(module_id,title,content,sort_order)
 select m.id,'Study → Build → Test → Execute → Prove',jsonb_build_object('discover','Define el problema','learn','Aprende el concepto mínimo','try','Haz una prueba guiada','build','Construye un entregable','break','Introduce un fallo','fix','Diagnostica y corrige','execute','Obtén un resultado reproducible','explain','Explica decisiones','prove','Resuelve sin guía','evidence','Guarda evidencia verificable'),1 from public.modules m where not exists(select 1 from public.lessons l where l.module_id=m.id);
 
+insert into public.resources(source,author,url,language,level,license_status,last_checked_at) values
+('MDN Web Docs','Mozilla','https://developer.mozilla.org/','en','foundational','link_only','2026-10-03'),
+('OWASP Top 10','OWASP Foundation','https://owasp.org/www-project-top-ten/','en','competent','link_only','2026-10-03'),
+('Microsoft Learn','Microsoft','https://learn.microsoft.com/','es','foundational','link_only','2026-10-03'),
+('AWS Skill Builder','Amazon Web Services','https://skillbuilder.aws/','en','foundational','link_only','2026-10-03'),
+('Supabase Docs','Supabase','https://supabase.com/docs','en','competent','link_only','2026-10-03'),
+('Vercel Docs','Vercel','https://vercel.com/docs','en','competent','link_only','2026-10-03');
+insert into public.school_agents(agent_id,role,permissions,risk_level,status) values
+('school-orchestrator','Education Orchestrator',array['route_learning','read_authorized_progress'],'medium','ACTIVE'),
+('school-diagnostic','Diagnostic Agent',array['score_diagnostic','read_authorized_evidence'],'low','ACTIVE'),
+('school-learning-architect','Learning Architect',array['build_learning_path','read_authorized_progress'],'low','ACTIVE'),
+('school-tutor','Tutor Agent',array['explain','generate_examples'],'low','ACTIVE'),
+('school-socratic','Socratic Tutor',array['ask_questions','coach_reasoning'],'low','ACTIVE'),
+('school-resource-curator','Resource Curator',array['propose_resources'],'low','ACTIVE'),
+('school-content','Content Agent',array['draft_content'],'medium','ACTIVE'),
+('school-video','Video Curriculum Agent',array['draft_video_package'],'low','ACTIVE'),
+('school-practice','Practice Agent',array['generate_practice'],'low','ACTIVE'),
+('school-lab','Lab Agent',array['generate_isolated_lab'],'medium','ACTIVE'),
+('school-project','Project Agent',array['draft_project'],'medium','ACTIVE'),
+('school-code-mentor','Code Mentor',array['review_code','explain_code'],'medium','ACTIVE'),
+('school-business-mentor','Business Mentor',array['business_case_feedback'],'low','ACTIVE'),
+('school-security-mentor','Security Mentor',array['security_feedback'],'medium','ACTIVE'),
+('school-evaluator','Evaluator',array['score_attempt'],'medium','ACTIVE'),
+('school-evidence-verifier','Evidence Verifier',array['verify_evidence'],'high','ACTIVE'),
+('school-portfolio','Portfolio Agent',array['compose_portfolio'],'low','ACTIVE'),
+('school-career','Career Agent',array['map_skills_to_roles'],'low','ACTIVE'),
+('school-quality','Quality Agent',array['audit_content'],'low','ACTIVE'),
+('school-security','School Security Agent',array['audit_permissions','pause_agent'],'high','ACTIVE');
+
 alter table public.school_profiles enable row level security;alter table public.skill_definitions enable row level security;alter table public.student_skills enable row level security;alter table public.learning_paths enable row level security;alter table public.courses enable row level security;alter table public.modules enable row level security;alter table public.lessons enable row level security;alter table public.resources enable row level security;alter table public.exercises enable row level security;alter table public.assessments enable row level security;alter table public.assessment_attempts enable row level security;alter table public.evidence enable row level security;alter table public.credentials enable row level security;alter table public.portfolios enable row level security;alter table public.learning_events enable row level security;alter table public.school_agents enable row level security;alter table public.school_project_links enable row level security;
 revoke all on public.school_profiles,public.skill_definitions,public.student_skills,public.learning_paths,public.courses,public.modules,public.lessons,public.resources,public.exercises,public.assessments,public.assessment_attempts,public.evidence,public.credentials,public.portfolios,public.learning_events,public.school_agents,public.school_project_links from anon,authenticated;
 grant select on public.skill_definitions,public.courses,public.modules,public.lessons,public.resources,public.exercises,public.assessments to anon,authenticated;
