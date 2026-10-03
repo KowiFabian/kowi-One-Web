@@ -1,0 +1,30 @@
+name: KOWI Daily Security Report
+on:
+  schedule:
+    - cron: '31 7 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/daily-security-report.mjs
+      - .github/workflows/daily-security.yml
+permissions:
+  contents: read
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Generate observed security report
+        run: node scripts/daily-security-report.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kowi-daily-security-report
+          path: daily-security-report.json
+          retention-days: 90
