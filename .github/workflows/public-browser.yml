@@ -1,0 +1,36 @@
+name: Public Browser E2E
+on:
+  pull_request:
+    paths:
+      - tests/e2e/**
+      - playwright.public.config.mjs
+      - .github/workflows/public-browser.yml
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install isolated browser test tooling
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+      - run: npx playwright install --with-deps chromium
+      - name: Verify public visitor journey without sending OTP
+        run: npx playwright test --config=playwright.public.config.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: public-browser-evidence
+          path: |
+            public-browser-report
+            test-results
+          retention-days: 30
