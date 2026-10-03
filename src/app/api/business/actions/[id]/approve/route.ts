@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
-import { executeBusinessAction } from '@/lib/server/business-execution';
+import { executeBusinessAction, BusinessExecutionUncertainError } from '@/lib/server/business-execution';
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -25,14 +25,15 @@ export async function POST(request: Request, context: Context) {
     try {
       const result = await executeBusinessAction(db, action);
       const { data: done, error: doneError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'executed' });
-      if (doneError) throw new ApiError(503, 'La ejecución necesita revisión manual.');
+      if (doneError) throw new BusinessExecutionUncertainError('La ejecución necesita revisión manual; no repitas la operación.');
       if (action.lead_id) await db.from('business_lead_events').insert({
         user_id: user.id, lead_id: action.lead_id, event_type: 'action',
         detail: { action_id: id, status: 'executed', result },
       });
       return Response.json(done, { headers: { 'Cache-Control': 'no-store' } });
     } catch (executionError) {
-      await db.rpc('transition_business_action', { p_id: id, p_decision: 'failed' });
+      if (!(executionError instanceof BusinessExecutionUncertainError))
+        await db.rpc('transition_business_action', { p_id: id, p_decision: 'failed' });
       throw executionError;
     }
   } catch (error) { return apiFailure(error); }
