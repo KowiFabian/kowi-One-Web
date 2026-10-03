@@ -10,7 +10,7 @@ export default function SchoolHome(){
  const route=useMemo(()=>active?pathFor(active):[],[active]);
  function build(){const g=goal.trim();if(!g)return;setActive(g);try{localStorage.setItem('kowi-school-goal',g);localStorage.setItem('kowi-school-path',JSON.stringify(pathFor(g)));}catch{}}
  return <main className="min-h-screen bg-[#fbfbf8] text-[#17211c]">
-  <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5"><Link href="/" className="font-semibold tracking-[.16em]">KOWI</Link><div className="flex gap-4 text-sm"><Link href="/school/lab">Lab</Link><Link href="/school/passport">Skills Passport</Link><Link href="/school/portfolio">Portfolio</Link></div></nav>
+  <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5"><Link href="/" className="font-semibold tracking-[.16em]">KOWI</Link><div className="flex gap-4 text-sm"><Link href="/school/dashboard">Mi aprendizaje</Link><Link href="/school/lab">Lab</Link><Link href="/school/passport">Skills Passport</Link><Link href="/school/portfolio">Portfolio</Link></div></nav>
   <section className="mx-auto max-w-4xl px-5 pb-16 pt-12 text-center">
    <p className="text-xs font-semibold uppercase tracking-[.22em] text-[#4f765f]">KOWI SCHOOL AI</p>
    <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] sm:text-6xl">¿Qué quieres aprender o conseguir?</h1>
