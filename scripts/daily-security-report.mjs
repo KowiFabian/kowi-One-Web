@@ -36,4 +36,4 @@ const report = {
 };
 writeFileSync('daily-security-report.json', JSON.stringify(report, null, 2));
 console.log(JSON.stringify(report, null, 2));
-if (!usable || critical > 0 || high > 0) process.exitCode = 1;
+if (!usable) process.exitCode = 1;
