@@ -22,6 +22,9 @@ jobs:
           node-version: 22
       - name: Check public HTTP and unauthenticated APIs
         run: node scripts/production-smoke.mjs > production-smoke.json
+      - name: Show HTTP evidence
+        if: always()
+        run: cat production-smoke.json
       - uses: actions/upload-artifact@v4
         if: always()
         with:
