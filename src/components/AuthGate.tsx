@@ -37,9 +37,9 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' }
         if (error) throw new Error('Código no válido o caducado. Solicita uno nuevo.');
         setToken('');
       } else {
-        const { error } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: true } });
+        const { error } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: new URL(mode === 'business' ? '/business' : '/kowi', window.location.origin).toString() } });
         if (error) throw new Error('No se pudo enviar el código. Vuelve a intentarlo.');
-        setSent(true); setNotice('Revisa tu correo e introduce el código de acceso.');
+        setSent(true); setNotice('Revisa tu correo. Introduce el código o abre el enlace de acceso si tu correo lo incluye.');
       }
     } catch (error) { setNotice(error instanceof Error ? error.message : 'No se pudo iniciar sesión.'); }
     finally { setBusy(false); }
@@ -71,7 +71,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' }
 
       <div className="p-8 md:p-10">
           <h2 className="text-2xl font-semibold">{sent ? 'Introduce tu código' : mode === 'business' ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Te hemos enviado un código de acceso al correo indicado.' : 'Usa tu correo. No necesitas contraseña.'}</p>
+        <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Revisa el correo indicado: introduce el código de acceso o abre el enlace si lo incluye.' : 'Usa tu correo. No necesitas contraseña.'}</p>
         {!configured ? <p role="status" className="mt-6 rounded-xl border border-amber-300/20 bg-amber-100/5 p-4 text-sm text-amber-100">El acceso todavía no está configurado.</p> :
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm text-[#c9dbcf]">Correo electrónico
