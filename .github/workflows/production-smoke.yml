@@ -1,0 +1,30 @@
+name: Production HTTP smoke
+on:
+  pull_request:
+    paths:
+      - scripts/production-smoke.mjs
+      - .github/workflows/production-smoke.yml
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 7 * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check public HTTP and unauthenticated APIs
+        run: node scripts/production-smoke.mjs > production-smoke.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-http-evidence
+          path: production-smoke.json
+          retention-days: 30
