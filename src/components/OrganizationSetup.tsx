@@ -26,6 +26,7 @@ export default function OrganizationSetup(){
   {!!rows.length&&<label className="block">Empresa<select className={field} value={selected} disabled={busy||loading} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
   {!loading&&!rows.length&&!error&&<p>Aún no hay empresas registradas.</p>}
   <form onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
+  {selected&&<Link href={'/business/crm-org?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Abrir CRM de esta empresa</Link>}
   <Link href="/control-center" className="inline-block underline">Ver registros de tus empresas</Link>
  </section>;
 }
