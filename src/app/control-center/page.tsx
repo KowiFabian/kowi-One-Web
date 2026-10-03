@@ -4,6 +4,10 @@ import Link from 'next/link';
 import {api} from '@/lib/api';
 type Snapshot={organizations:{id:string;name:string}[];organization:{id:string;name:string}|null;observations:{label:string;status:string;count:number|null}[];observedAt:string};
 export default function Page(){
+ const [globalData,setGlobalData]=useState<{organizations:number;installations:number;observed_at:string}|null>(null);
+ const [globalError,setGlobalError]=useState('');
+ const [globalBusy,setGlobalBusy]=useState(false);
+ async function loadGlobal(){if(globalBusy)return;setGlobalBusy(true);setGlobalError('');setGlobalData(null);try{const result=await api<{observed:{organizations:number;installations:number;observed_at:string}}>('/api/control-center/platform');setGlobalData(result.observed);}catch(e){setGlobalError(e instanceof Error?e.message:'Vista global no disponible.');}finally{setGlobalBusy(false);}}
  const [snapshot,setSnapshot]=useState<Snapshot|null>(null);
  const [selected,setSelected]=useState('');
  const [error,setError]=useState('');
@@ -16,6 +20,7 @@ export default function Page(){
  <Link href="/business#crear" className="underline">KOWI Business</Link>
  <h1 className="text-3xl font-semibold">KOWI Control Center</h1>
  <p className="text-[#a9c1b3]">Vista privada de registros accesibles para tu cuenta. La administración global requiere autoridad de plataforma verificada.</p>
+ <section className="glass rounded-xl p-5"><h2 className="text-xl">Administración global</h2><p className="mt-3 text-sm">Solo Platform Owner y KOWI Admin verificados. Cada consulta autorizada queda auditada.</p><button className="mt-3 rounded-xl border border-white/20 p-3" disabled={globalBusy} onClick={loadGlobal}>{globalBusy?'Consultando…':'Consultar vista global'}</button>{globalError&&<p className="mt-3" role="alert">{globalError}</p>}{globalData&&<p className="mt-3">Empresas registradas: {globalData.organizations}. Instalaciones registradas: {globalData.installations}. Consulta: {globalData.observed_at}.</p>}</section>
  {error&&<p role="alert">{error} <Link href="/business#crear" className="underline">Entrar</Link></p>}
  {loading&&<p role="status">Consultando registros…</p>}
  {snapshot&&<>
