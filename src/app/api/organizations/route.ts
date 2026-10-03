@@ -1,6 +1,6 @@
 import {randomUUID} from 'node:crypto';
 import {authenticate,ApiError,apiFailure,limitedJson} from '@/lib/server/auth';
-import {organizationSchema} from '@/lib/organization-schema';
+import {organizationSchema,organizationSlug} from '@/lib/organization-schema';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store'};
@@ -21,9 +21,8 @@ export async function POST(request:Request){
   const {count,error}=await db.from('organizations').select('id',{head:true,count:'exact'}).eq('owner_id',user.id);
   if(error||count===null)throw new ApiError(503,'No se pudo comprobar el registro.');
   if(count>=20)throw new ApiError(429,'Has alcanzado el límite de empresas de esta cuenta.');
-  const prefix=input.data.name.normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,45)||'empresa';
   for(let i=0;i<3;i++){
-   const {data,error}=await db.from('organizations').insert({owner_id:user.id,name:input.data.name,slug:prefix+'-'+randomUUID()}).select('id,name,slug').single();
+   const {data,error}=await db.from('organizations').insert({owner_id:user.id,name:input.data.name,slug:organizationSlug(input.data.name,randomUUID())}).select('id,name,slug').single();
    if(!error)return Response.json(data,{status:201,headers});
    if(error.code!=='23505')break;
   }

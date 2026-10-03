@@ -15,7 +15,7 @@ test('Persisted agent lifecycle denies reactivation, tenant moves and active pol
  alter table agent_installations enable row level security;
  grant select,insert,update on agent_installations to authenticated;
  create policy agent_access on agent_installations for all to authenticated using(private.crm_role(organization_id)='owner') with check(private.crm_role(organization_id)='owner');`);
- await db.exec(await readFile('supabase/migrations/202610030005_agent_lifecycle.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/20261003000500_agent_lifecycle.sql','utf8'));
  await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
  const id=(await db.query<{id:string}>('insert into agent_installations(organization_id) values ($1) returning id',[oa])).rows[0].id;
  await db.query("update agent_installations set status='active' where id=$1",[id]);
