@@ -20,10 +20,20 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' }
     const client = browserSupabase();
     if (!client) { setConfigured(false); setReady(true); return; }
     let active = true;
-    client.auth.getSession().then(({ data }) => { if (active) { setSession(data.session); setReady(true); } })
-      .catch(() => { if (active) { setNotice('No se pudo recuperar la sesión.'); setReady(true); } });
+    let timeout = 0;
+    timeout = window.setTimeout(() => {
+      if (active) {
+        setNotice('El acceso está tardando más de lo esperado. Puedes solicitar un código igualmente.');
+        setReady(true);
+      }
+    }, 2500);
+    client.auth.getSession().then(({ data }) => {
+      if (active) { window.clearTimeout(timeout); setSession(data.session); setReady(true); }
+    }).catch(() => {
+      if (active) { window.clearTimeout(timeout); setNotice('No se pudo recuperar la sesión. Puedes solicitar un nuevo código.'); setReady(true); }
+    });
     const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) setSession(next); });
-    return () => { active = false; data.subscription.unsubscribe(); };
+    return () => { active = false; window.clearTimeout(timeout); data.subscription.unsubscribe(); };
   }, []);
 
   async function submit(event: React.FormEvent) {
