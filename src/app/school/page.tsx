@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import {useMemo,useState} from 'react';
 import {pathFor,schoolLevels} from '@/lib/school/curriculum';
+import SchoolTutor from '@/components/school/SchoolTutor';
 
 const examples=['Quiero aprender IA desde cero.','Quiero crear un agente para mi empresa.','Quiero conseguir trabajo en operaciones con IA.','Quiero aprender programación.','Quiero transformar mi negocio con IA.'];
 export default function SchoolHome(){
@@ -25,6 +26,7 @@ export default function SchoolHome(){
    <div className="mt-7 grid gap-3 md:grid-cols-2">{route.map((id,index)=>{const l=schoolLevels[id];return <Link href={'/school/learn/'+l.slug} key={l.id} className="rounded-2xl border border-[#e0e3df] p-5 hover:border-[#70927e]"><span className="text-xs text-[#6c7a72]">MISIÓN {index+1} · NIVEL {l.id}</span><h3 className="mt-2 text-xl font-semibold">{l.title}</h3><p className="mt-2 text-sm text-[#5d6962]">{l.outcome}</p>{id!==0&&<p className="mt-3 text-xs font-semibold text-[#315d45]">SKIP BY PROOF disponible →</p>}</Link>})}</div>
   </div></section>}
   <section className="mx-auto grid max-w-6xl gap-5 px-5 py-14 md:grid-cols-3">{[['STUDY','Aprende solo lo necesario para tu objetivo.'],['BUILD','Cada concepto termina en una construcción o decisión.'],['PROVE','La evidencia pesa más que completar páginas.']].map(([a,b])=><article key={a} className="rounded-2xl border border-[#e0e3df] bg-white p-6"><p className="font-mono text-sm text-[#4f765f]">{a}</p><p className="mt-3 text-lg">{b}</p></article>)}</section>
+  <SchoolTutor goal={active||goal}/>
   <footer className="mx-auto max-w-6xl border-t border-[#e0e3df] px-5 py-8 text-sm text-[#657169]">KOWI School · No demuestres solamente lo que estudiaste. Demuestra lo que puedes hacer.</footer>
  </main>
 }
