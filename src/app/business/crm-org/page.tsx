@@ -29,6 +29,7 @@ export default function Page(){
  {!loading&&!orgs.length&&!error&&<p>Registra una empresa desde KOWI Business.</p>}
  {org&&!loading&&!error&&<>
  <nav className="flex flex-wrap gap-3">{entities.map(e=><button className="rounded-xl border border-white/20 p-3" disabled={busy} aria-pressed={entity===e} key={e} onClick={()=>{setEntity(e);setTitle('');}}>{labels[e]}</button>)}</nav>
+ <Link href={'/business/pipeline?organization_id='+org} className="inline-block underline">Configurar nombres del pipeline</Link>
  <p className="text-sm">Los permisos de tu empresa determinan qué cambios puedes guardar.</p>
  <form onSubmit={save} className="glass grid gap-4 rounded-xl p-5 md:grid-cols-2">
  <label>{entity==='contacts'?'Nombre':'Título'}<input className={field} disabled={busy} required maxLength={160} value={title} onChange={e=>setTitle(e.target.value)}/></label>
