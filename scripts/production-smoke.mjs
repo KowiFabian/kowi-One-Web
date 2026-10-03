@@ -17,8 +17,8 @@ async function check(path, options = {}, expected = 200) {
   checks.push({ path, method: options.method || 'GET', expected, passed: true });
 }
 try {
-  for (const path of ['/', '/kowi', '/business/agent', '/privacidad', '/control-center', '/business/crm-org']) await check(path);
-  for (const path of ['/api/business/overview', '/api/business/profile', '/api/conversations', '/api/projects', '/api/organizations', '/api/control-center', '/api/crm/contacts?organization_id=11111111-1111-4111-8111-111111111111', '/api/crm-stages?organization_id=11111111-1111-4111-8111-111111111111']) await check(path, {}, 401);
+  for (const path of ['/', '/kowi', '/business/agent', '/privacidad', '/control-center', '/business/crm-org', '/business/intelligence', '/business/agents']) await check(path);
+  for (const path of ['/api/business/overview', '/api/business/profile', '/api/conversations', '/api/projects', '/api/organizations', '/api/control-center', '/api/control-center/platform', '/api/control-center/security-reports', '/api/organization-agents?organization_id=11111111-1111-4111-8111-111111111111', '/api/intelligence?organization_id=11111111-1111-4111-8111-111111111111', '/api/crm/contacts?organization_id=11111111-1111-4111-8111-111111111111', '/api/crm-stages?organization_id=11111111-1111-4111-8111-111111111111']) await check(path, {}, 401);
   for (const path of ['/api/business/leads', '/api/business/actions']) await check(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
   await check('/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
   await check('/api/business/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '{}' }, 401);
