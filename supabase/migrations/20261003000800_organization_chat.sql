@@ -37,8 +37,8 @@ alter table public.agent_installations add column last_verified_at timestamptz;
 revoke insert,update on public.agent_installations from authenticated;
 grant insert(organization_id,name,status,config,allowed_origins) on public.agent_installations to authenticated;
 grant update(name,status,config,allowed_origins) on public.agent_installations to authenticated;
-create function private.guard_agent_registration() returns trigger language plpgsql set search_path='' as $begin
- if new.status<>'draft' then raise exception 'New agents must start in draft';end if;return new;end$;
+create function private.guard_agent_registration() returns trigger language plpgsql set search_path='' as $$begin
+ if new.status<>'draft' then raise exception 'New agents must start in draft';end if;return new;end$$;
 revoke all on function private.guard_agent_registration() from public,anon,authenticated;
 create trigger guard_agent_registration before insert on public.agent_installations for each row execute function private.guard_agent_registration();
 create function private.guard_agent_activation() returns trigger language plpgsql set search_path='' as $$begin
@@ -93,7 +93,7 @@ grant execute on function public.save_organization_chat(uuid,uuid,uuid,uuid,uuid
 create or replace function public.save_chat_turn(
   p_conversation uuid, p_request uuid, p_revision integer,
   p_message text, p_response text, p_goal jsonb
-) returns void language plpgsql security definer set search_path = '' as $
+) returns void language plpgsql security definer set search_path = '' as $$
 declare
   u uuid := auth.uid();
   current_revision integer;
@@ -110,5 +110,5 @@ begin
   if current_revision = 0 then
     update public.conversations set title = left(p_message,120) where id = p_conversation;
   end if;
-end $;
+end $$;
 commit;
