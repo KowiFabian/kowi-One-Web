@@ -22,6 +22,10 @@ jobs:
       - run: npm ci
       - name: Generate observed security report
         run: node scripts/daily-security-report.mjs
+      - name: Alert on high or critical dependencies
+        if: github.event_name != 'pull_request'
+        run: |
+          node --input-type=module -e "import { readFileSync } from 'node:fs'; const r = JSON.parse(readFileSync('daily-security-report.json', 'utf8')); const v = r.observed_data.dependency_audit.counts; if (!v || v.high > 0 || v.critical > 0) process.exit(1);"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
