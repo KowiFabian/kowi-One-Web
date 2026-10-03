@@ -24,7 +24,7 @@ export default function Page(){
  const field='mt-2 w-full rounded-xl border border-white/20 bg-[#102b22] p-3';
  return <main className="kowi-shell min-h-screen p-5 text-white md:p-10"><div className="mx-auto max-w-5xl space-y-6">
  <Link href="/business#crear" className="underline">KOWI Business</Link><h1 className="text-3xl">Agentes de tu empresa</h1>
- <p>Registra identidad y configuración empresarial. Las nuevas instalaciones quedan en DRAFT; su conversación y ejecución necesitan integración y verificación antes de activación comercial.</p>
+ <p>Registra identidad y configuración empresarial. Las nuevas instalaciones quedan en DRAFT. Prueba una conversación privada y verifica sus resultados antes de activar el agente. Los canales externos requieren verificación separada.</p>
  {loading&&<p role="status">Cargando…</p>}{error&&<p role="alert">{error}</p>}
  {!!organizations.length&&<label className="block">Empresa<select className={field} disabled={busy||loading} value={org} onChange={e=>setOrg(e.target.value)}>{organizations.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
  {!loading&&!organizations.length&&!error&&<p>Registra primero una empresa en KOWI Business.</p>}
@@ -36,7 +36,7 @@ export default function Page(){
  <label className="md:col-span-2">Políticas confirmadas<textarea className={field} maxLength={1500} disabled={busy} value={policies} onChange={e=>setPolicies(e.target.value)}/></label>
  <button className="rounded-xl bg-[#e8b37b] p-3 text-black disabled:opacity-50" disabled={busy}>Registrar agente en DRAFT</button>
  </form>}
- {!loading&&org&&<ul className="space-y-3">{agents.map(agent=><li key={agent.id} className="glass flex flex-wrap items-center justify-between gap-4 rounded-xl p-5"><div><h2 className="font-semibold">{agent.name}</h2><p className="text-sm">{agent.status.toUpperCase()}</p></div>{canWrite&&agent.status!=='terminated'&&<div className="flex gap-3">{agent.status!=='revoked'&&<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'revoked')}>Revocar</button>}<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'terminated')}>Terminar</button></div>}</li>)}</ul>}
+ {!loading&&org&&<ul className="space-y-3">{agents.map(agent=><li key={agent.id} className="glass flex flex-wrap items-center justify-between gap-4 rounded-xl p-5"><div><h2 className="font-semibold">{agent.name}</h2><p className="text-sm">{agent.status.toUpperCase()}</p><Link href={'/business/agent-chat?organization_id='+org+'&agent_id='+agent.id} className="mt-2 inline-block underline">Conversación e historial</Link></div>{canWrite&&agent.status!=='terminated'&&<div className="flex gap-3">{agent.status!=='revoked'&&<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'revoked')}>Revocar</button>}<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'terminated')}>Terminar</button></div>}</li>)}</ul>}
  <Link href="/control-center" className="inline-block underline">Control Center</Link>
  </div></main>;
 }
