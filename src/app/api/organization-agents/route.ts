@@ -7,7 +7,7 @@ const headers={'Cache-Control':'no-store'};
 const writers=['owner','admin','configurator'];
 export async function GET(request:Request){try{
  const {db,organizationId,role}=await requireOrganization(request);
- const {data,error}=await db.from('agent_installations').select('id,name,status,config,created_at,updated_at').eq('organization_id',organizationId).order('created_at').limit(100);
+ const {data,error}=await db.from('agent_installations').select('id,name,status,config,created_at,updated_at,last_verified_at').eq('organization_id',organizationId).order('created_at').limit(100);
  if(error)throw new ApiError(503,'No se pudieron cargar los agentes.');
  return Response.json({items:data,role},{headers});
 }catch(e){return apiFailure(e);}}
