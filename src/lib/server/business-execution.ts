@@ -2,6 +2,17 @@ import 'server-only';
 import { ApiError } from './auth';
 import { recordEmailAccepted, sendEmail } from './email';
 
+export class BusinessExecutionUncertainError extends ApiError {
+ constructor(message:string){super(503,message);}
+}
+async function persistExecutionRecord(db:any,table:'business_messages'|'business_appointments',record:Record<string,unknown>){
+ try{const {error}=await db.from(table).insert(record);if(error)throw error;}
+ catch{throw new BusinessExecutionUncertainError('El proveedor aceptó la acción, pero no se pudo registrar su evidencia. Requiere revisión manual; no repitas la operación.');}
+}
+async function providerFetch(url:string,options:RequestInit){
+ try{return await fetch(url,{...options,signal:AbortSignal.timeout(20000)});}
+ catch{throw new BusinessExecutionUncertainError('No se pudo confirmar el resultado del proveedor. Requiere revisión manual antes de repetir la operación.');}
+}
 type Action = {
   id: string;
   user_id: string;
@@ -23,14 +34,16 @@ async function sendWhatsApp(action: Action) {
   const to = String(action.payload.to || '');
   const body = String(action.payload.body || '');
   if (!to || !body) throw new ApiError(400, 'Faltan destinatario o mensaje.');
-  const res = await fetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
+  const res = await providerFetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body } }),
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(502, 'WhatsApp no pudo enviar el mensaje.');
-  return { external_id: data?.messages?.[0]?.id ?? '', detail: data };
+  const id=data?.messages?.[0]?.id;
+  if(typeof id!=='string'||!id.trim())throw new BusinessExecutionUncertainError('WhatsApp respondió sin identificador verificable. Revisa el proveedor antes de repetir.');
+  return { external_id:id, detail:data };
 }
 
 async function createCalendarEvent(action: Action) {
@@ -42,7 +55,7 @@ async function createCalendarEvent(action: Action) {
   const starts_at = String(action.payload.starts_at || '');
   const ends_at = String(action.payload.ends_at || '');
   if (!title || !starts_at || !ends_at) throw new ApiError(400, 'Faltan datos de la cita.');
-  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
+  const res = await providerFetch(`https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -55,13 +68,15 @@ async function createCalendarEvent(action: Action) {
   });
   const data = await res.json().catch(() => null);
   if (!res.ok) throw new ApiError(502, 'Calendar no pudo crear la cita.');
-  return { external_id: data?.id ?? '', detail: data };
+  const id=data?.id;
+  if(typeof id!=='string'||!id.trim())throw new BusinessExecutionUncertainError('Calendar respondió sin identificador verificable. Revisa el proveedor antes de repetir.');
+  return {external_id:id,detail:data};
 }
 
 export async function executeBusinessAction(db: any, action: Action) {
   if (action.action_type === 'send_whatsapp') {
     const result = await sendWhatsApp(action);
-    await db.from('business_messages').insert({
+    await persistExecutionRecord(db,'business_messages',{
       user_id: action.user_id, lead_id: action.lead_id, channel: 'whatsapp', direction: 'outbound',
       status: 'sent', recipient: String(action.payload.to || ''), subject: '',
       body: String(action.payload.body || ''), external_id: result.external_id, metadata: result.detail,
@@ -75,7 +90,7 @@ export async function executeBusinessAction(db: any, action: Action) {
       to, subject: String(action.payload.subject || ''), text: String(action.payload.body || ''),
       idempotencyKey: `business-action/${action.id}`,
     });
-    await db.from('business_messages').insert({
+    await persistExecutionRecord(db,'business_messages',{
       user_id: action.user_id, lead_id: action.lead_id, channel: 'email', direction: 'outbound',
       status: 'sent', recipient: to, subject: String(action.payload.subject || ''),
       body: String(action.payload.body || ''), external_id: result.id, metadata: { provider_status: result.status },
@@ -87,7 +102,7 @@ export async function executeBusinessAction(db: any, action: Action) {
   }
   if (action.action_type === 'create_appointment') {
     const result = await createCalendarEvent(action);
-    await db.from('business_appointments').insert({
+    await persistExecutionRecord(db,'business_appointments',{
       user_id: action.user_id, lead_id: action.lead_id, title: String(action.payload.title || ''),
       starts_at: String(action.payload.starts_at || ''), ends_at: String(action.payload.ends_at || ''),
       status: 'confirmed', location: String(action.payload.location || ''), notes: String(action.payload.notes || ''),
