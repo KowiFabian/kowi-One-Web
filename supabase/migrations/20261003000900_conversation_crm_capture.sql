@@ -1,9 +1,9 @@
 begin;
-alter table public.contacts add column conversation_id uuid;
-alter table public.contacts add constraint contacts_conversation_tenant foreign key(conversation_id,organization_id) references public.conversations(id,organization_id);
-alter table public.leads add column conversation_id uuid;
-alter table public.leads add constraint leads_conversation_tenant foreign key(conversation_id,organization_id) references public.conversations(id,organization_id);
-create table private.conversation_capture_requests(
+alter table public.contacts add column if not exists conversation_id uuid;
+do $$begin if not exists(select 1 from pg_constraint where conrelid='public.contacts'::regclass and conname='contacts_conversation_tenant') then alter table public.contacts add constraint contacts_conversation_tenant foreign key(conversation_id,organization_id) references public.conversations(id,organization_id);end if;end$$;
+alter table public.leads add column if not exists conversation_id uuid;
+do $$begin if not exists(select 1 from pg_constraint where conrelid='public.leads'::regclass and conname='leads_conversation_tenant') then alter table public.leads add constraint leads_conversation_tenant foreign key(conversation_id,organization_id) references public.conversations(id,organization_id);end if;end$$;
+create table if not exists private.conversation_capture_requests(
  organization_id uuid not null references public.organizations(id),request_id uuid not null,
  conversation_id uuid not null,contact_id uuid not null,lead_id uuid not null,opportunity_id uuid not null,fingerprint text not null,
  created_at timestamptz not null default now(),primary key(organization_id,request_id),
@@ -14,7 +14,7 @@ create table private.conversation_capture_requests(
 );
 alter table private.conversation_capture_requests enable row level security;
 revoke all on private.conversation_capture_requests from public,anon,authenticated,service_role;
-create function public.capture_organization_conversation(p_org uuid,p_actor uuid,p_conversation uuid,p_request uuid,p_name text,p_email text,p_phone text,p_consent boolean,p_title text) returns jsonb
+create or replace function public.capture_organization_conversation(p_org uuid,p_actor uuid,p_conversation uuid,p_request uuid,p_name text,p_email text,p_phone text,p_consent boolean,p_title text) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare contact uuid;lead uuid;opportunity uuid;stage uuid;fingerprint text;prior private.conversation_capture_requests;
 begin
