@@ -26,3 +26,13 @@ test('Privacy information and mobile navigation remain reachable', async ({ page
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1)).toBe(false);
 });
+
+test('Private business surfaces fit the viewport and reject unauthenticated access', async ({page})=>{
+ for(const [path,title] of [['/control-center','KOWI Control Center'],['/business/crm-org','CRM de tu empresa'],['/business/intelligence','KOWI Intelligence'],['/business/agents','Agentes de tu empresa']]){
+  const response=await page.goto(path);
+  expect(response.status()).toBe(200);
+  await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible();
+  await expect(page.getByRole('alert').filter({hasText:/Inicia sesión/}).first()).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+ }
+});
