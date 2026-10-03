@@ -20,6 +20,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Inspect patched braces release
+        run: npm view braces version dist --json
       - name: Generate observed security report
         run: node scripts/daily-security-report.mjs
       - uses: actions/upload-artifact@v4
