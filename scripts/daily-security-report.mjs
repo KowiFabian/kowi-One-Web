@@ -21,7 +21,7 @@ const unknown = [
 ].map(category => ({ category, coverage: 'UNOBSERVED', observation: null, interpretation: 'Este job no tiene acceso autorizado a la fuente necesaria.' }));
 const report = {
   title: 'KOWI DAILY SECURITY REPORT', schema_version: 1, observed_at: new Date().toISOString(),
-  status, scope: 'Repository dependency audit including development dependencies. Overall KOWI security is not certified by this report.',
+  status: critical > 0 ? 'CRITICAL' : 'ATTENTION', dependency_status: status, scope: 'Repository dependency audit including development dependencies. Overall KOWI security is not certified by this report.',
   repository: 'KowiFabian/kowi-One-Web', commit: process.env.GITHUB_SHA || null,
   observed_data: { dependency_audit: { coverage: usable ? 'OBSERVED' : 'FAILED', counts: vulnerabilities, findings } },
   interpretation: usable ? 'Avisos del registro npm sobre dependencias instaladas; no acreditan explotación ni fuga de información.' : 'No se pudo obtener una auditoría válida; no se puede afirmar ausencia de vulnerabilidades.',
