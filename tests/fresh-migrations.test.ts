@@ -13,7 +13,7 @@ test('Fresh application migrations reconstruct the observed production schema wi
  const files=(await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort();
  for(const file of files){
   // pg_cron is a Supabase runtime extension; its actual schedule is verified separately.
-  if(file==='20261003000700_security_report_schedule.sql')continue;
+  if(['20261003000700_security_report_schedule.sql','20261003001100_job_timeout_schedule.sql'].includes(file))continue;
   await db.exec(await readFile('supabase/migrations/'+file,'utf8'));
  }
  assert.equal((await db.query('select * from organizations')).rows.length,0);
