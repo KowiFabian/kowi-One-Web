@@ -1,7 +1,7 @@
 name: Verify Kowi
 on:
   push:
-    branches: [phase/1-core-mvp]
+    branches: [main, phase/1-core-mvp]
   pull_request:
 permissions:
   contents: read
@@ -20,3 +20,4 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm audit --omit=dev
+
