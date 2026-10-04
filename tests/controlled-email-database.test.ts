@@ -25,9 +25,15 @@ test('Controlled email requires saved AI evidence, owner/admin scope and consent
  await db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
  assert.equal((await db.query<{allowed:boolean}>('select can_prepare_controlled_email_test($1,$2) allowed',[org,conversation])).rows[0].allowed,true);
  await assert.rejects(db.query('select prepare_controlled_email_test($1,$2,false)',[org,conversation]),/insufficient_privilege/);
- const action=(await db.query<{status:string;risk_level:string;payload:{to:string;controlled_test:boolean}}>('select * from prepare_controlled_email_test($1,$2,true)',[org,conversation])).rows[0];
+ const action=(await db.query<{id:string;status:string;risk_level:string;payload:{to:string;controlled_test:boolean}}>('select * from prepare_controlled_email_test($1,$2,true)',[org,conversation])).rows[0];
  assert.equal(action.status,'pending_approval');assert.equal(action.risk_level,'high');assert.equal(action.payload.to,'self@example.test');assert.equal(action.payload.controlled_test,true);
  assert.equal((await db.query('select * from business_messages')).rows.length,0);
+ assert.equal((await db.query<{allowed:boolean}>('select can_execute_controlled_email_test($1) allowed',[action.id])).rows[0].allowed,true);
+ const forged=(await db.query<{id:string}>("insert into business_actions(user_id,action_type,summary,payload) values ($1,'send_email','Forged proposal',$2) returning id",[a,action.payload])).rows[0].id;
+ assert.equal((await db.query<{allowed:boolean}>('select can_execute_controlled_email_test($1) allowed',[forged])).rows[0].allowed,false);
+ await assert.rejects(db.query("select transition_business_action($1,'approved')",[forged]),/Action unavailable/);
+ await db.query("select transition_business_action($1,'approved')",[action.id]);
+ assert.equal((await db.query<{allowed:boolean}>('select can_execute_controlled_email_test($1) allowed',[action.id])).rows[0].allowed,false);
  await assert.rejects(db.query('select prepare_controlled_email_test($1,$2,true)',[org,conversation]),/Test quota exceeded/);
  await assert.rejects(db.query('update private.controlled_email_test_quotas set count=0'),/permission denied/);
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[b]);

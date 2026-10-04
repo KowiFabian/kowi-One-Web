@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
 import { executeBusinessAction, BusinessExecutionUncertainError } from '@/lib/server/business-execution';
 
-import {controlledEmailTestSchema,validControlledEmailTest} from '@/lib/controlled-email-test';
+import {validControlledEmailTest} from '@/lib/controlled-email-test';
 import { createClient } from '@supabase/supabase-js';
 type Context = { params: Promise<{ id: string }> };
 
@@ -39,9 +39,8 @@ export async function POST(request: Request, context: Context) {
     let controlledEmailTestRecipient:string|undefined;
     if(action.payload?.controlled_test===true){
       if(action.action_type!=='send_email'||!user.email||!validControlledEmailTest(action.payload,user.email))throw new ApiError(409,'Destinatario o contenido de prueba no autorizado.');
-      const payload=controlledEmailTestSchema.parse(action.payload);
-      const {data:allowed,error:contextError}=await db.rpc('can_prepare_controlled_email_test',{p_org:payload.organization_id,p_conversation:payload.conversation_id});
-      if(contextError||allowed!==true)throw new ApiError(409,'La conversación persistente o autoridad de aprobación no están verificadas.');
+      const {data:allowed,error:contextError}=await db.rpc('can_execute_controlled_email_test',{p_action:id});
+      if(contextError||allowed!==true)throw new ApiError(409,'La propuesta debe haber sido emitida por el servidor para una conversación persistente autorizada.');
       if(!process.env.RESEND_API_KEY||!process.env.KOWI_EMAIL_FROM)throw new ApiError(409,'El proveedor de prueba no está configurado.');
       controlledEmailTestRecipient=user.email;
     }
