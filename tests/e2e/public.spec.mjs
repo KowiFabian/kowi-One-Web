@@ -69,3 +69,20 @@ test('Installable workspace exposes valid icons and only caches the public offli
  expect(blockedWorkerRequests).toBeGreaterThan(0);
  }finally{await context.unroute('**/*');}
 });
+
+test('News distinguishes official facts and editorial context on desktop and mobile',async({page})=>{
+ const response=await page.goto('/news');
+ expect(response.status()).toBe(200);
+ await expect(page.getByRole('heading',{name:'El futuro se comprende. Después se construye.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Radar tecnológico',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Dato observado',exact:true})).toHaveCount(3);
+ await expect(page.getByRole('heading',{name:'Interpretación KOWI',exact:true})).toHaveCount(3);
+ const links=page.getByRole('link',{name:/Comprobar fuente:/});
+ await expect(links).toHaveCount(3);
+ for(const link of await links.all())expect(await link.getAttribute('href')).toMatch(/^https:\/\/github\.com\/(openai\/openai-python|NVIDIA\/OpenShell|supabase\/supabase-js)\/releases\/tag\//);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+ await page.getByRole('link',{name:'Preparar una orden de comunicación ↗'}).click();
+ await expect(page).toHaveURL(/\/business\/director\?kind=communications$/);
+ await expect(page.getByRole('heading',{name:'KOWI Director',exact:true})).toBeVisible();
+ await expect(page.getByRole('alert').filter({hasText:/Inicia sesión/}).first()).toBeVisible();
+});

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import InstallKowi from '@/components/InstallKowi';
 const spaces=[
+ ['/news','KOWI News','Actualidad tecnológica con fuentes, fechas y próximos pasos Human-First.'],
  ['/kowi','KOWI One','Convierte una intención en un objetivo y un plan personal.'],
  ['/business/agent-chat','Conversación empresarial','Habla con IA y conserva respuestas y evidencia en tu empresa.'],
  ['/business/expansion','Desarrollo internacional','Prepara mercados, idiomas, propuesta y criterios de entrada con control humano.'],
