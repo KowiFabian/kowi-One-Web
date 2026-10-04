@@ -1,4 +1,5 @@
 begin;
+alter table public.agent_ledger alter column actor_id drop not null;
 create or replace function public.transition_business_action(p_id uuid,p_decision text) returns public.business_actions
 language plpgsql security definer set search_path='' as $$
 declare a public.business_actions;
