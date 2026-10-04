@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
 import { executeBusinessAction, BusinessExecutionUncertainError } from '@/lib/server/business-execution';
 
+import {controlledEmailTestSchema,validControlledEmailTest} from '@/lib/controlled-email-test';
 import { createClient } from '@supabase/supabase-js';
 type Context = { params: Promise<{ id: string }> };
 
@@ -35,10 +36,19 @@ export async function POST(request: Request, context: Context) {
       if (leadError || !lead || !lead.consent || lead.contact !== action.payload?.to)
         throw new ApiError(409, 'Revisa contacto, destinatario y consentimiento antes de aprobar.');
     }
+    let controlledEmailTestRecipient:string|undefined;
+    if(action.payload?.controlled_test===true){
+      if(action.action_type!=='send_email'||!user.email||!validControlledEmailTest(action.payload,user.email))throw new ApiError(409,'Destinatario o contenido de prueba no autorizado.');
+      const payload=controlledEmailTestSchema.parse(action.payload);
+      const {data:allowed,error:contextError}=await db.rpc('can_prepare_controlled_email_test',{p_org:payload.organization_id,p_conversation:payload.conversation_id});
+      if(contextError||allowed!==true)throw new ApiError(409,'La conversación persistente o autoridad de aprobación no están verificadas.');
+      if(!process.env.RESEND_API_KEY||!process.env.KOWI_EMAIL_FROM)throw new ApiError(409,'El proveedor de prueba no está configurado.');
+      controlledEmailTestRecipient=user.email;
+    }
     const { error: approvalError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'approved' });
     if (approvalError) throw new ApiError(409, 'La acción ya no está pendiente.');
     try {
-      const result = await executeBusinessAction(executionDb, action);
+      const result = await executeBusinessAction(executionDb, action,{controlledEmailTestRecipient});
       const { data: done, error: doneError } = await executionDb.rpc('transition_business_action', { p_id: id, p_decision: 'executed' });
       if (doneError) throw new BusinessExecutionUncertainError('La ejecución necesita revisión manual; no repitas la operación.');
       if (action.lead_id) await executionDb.from('business_lead_events').insert({

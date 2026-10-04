@@ -1,6 +1,6 @@
 import 'server-only';
 import { ApiError } from './auth';
-import { recordEmailAccepted, sendEmail } from './email';
+import { recordEmailAccepted, sendEmail, EmailAcceptanceUncertainError } from './email';
 
 export class BusinessExecutionUncertainError extends ApiError {
  constructor(message:string){super(503,message);}
@@ -13,6 +13,7 @@ async function providerFetch(url:string,options:RequestInit){
  try{return await fetch(url,{...options,signal:AbortSignal.timeout(20000)});}
  catch{throw new BusinessExecutionUncertainError('No se pudo confirmar el resultado del proveedor. Requiere revisión manual antes de repetir la operación.');}
 }
+import {validControlledEmailTest} from '@/lib/controlled-email-test';
 type Action = {
   id: string;
   user_id: string;
@@ -73,7 +74,7 @@ async function createCalendarEvent(action: Action) {
   return {external_id:id,detail:data};
 }
 
-export async function executeBusinessAction(db: any, action: Action) {
+export async function executeBusinessAction(db: any, action: Action, options:{controlledEmailTestRecipient?:string}={}) {
   if (action.action_type === 'send_whatsapp') {
     const result = await sendWhatsApp(action);
     await persistExecutionRecord(db,'business_messages',{
@@ -84,16 +85,18 @@ export async function executeBusinessAction(db: any, action: Action) {
     return result;
   }
   if (action.action_type === 'send_email') {
-    requireVerified('email');
+    if(options.controlledEmailTestRecipient){
+      if(!validControlledEmailTest(action.payload,options.controlledEmailTestRecipient))throw new ApiError(400,'La prueba no coincide con el destinatario o contenido autorizado.');
+    }else requireVerified('email');
     const to = String(action.payload.to || '');
     const result = await sendEmail({
       to, subject: String(action.payload.subject || ''), text: String(action.payload.body || ''),
       idempotencyKey: `business-action/${action.id}`,
-    });
+    }).catch(error=>{if(error instanceof EmailAcceptanceUncertainError)throw new BusinessExecutionUncertainError(error.message);throw error;});
     await persistExecutionRecord(db,'business_messages',{
       user_id: action.user_id, lead_id: action.lead_id, channel: 'email', direction: 'outbound',
       status: 'sent', recipient: to, subject: String(action.payload.subject || ''),
-      body: String(action.payload.body || ''), external_id: result.id, metadata: { provider_status: result.status },
+      body: String(action.payload.body || ''), external_id: result.id, metadata: { provider_status: result.status,business_action_id:action.id },
     });
     const eventLogged = await recordEmailAccepted({
       userId: action.user_id, businessActionId: action.id, recipient: to, externalId: result.id,
