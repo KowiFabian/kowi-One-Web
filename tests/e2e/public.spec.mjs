@@ -128,5 +128,7 @@ test('LOCAL UI FIXTURE: Business selection and agenda preserve tenant context',a
  await page.getByRole('navigation',{name:'Accesos rápidos del negocio'}).getByRole('link',{name:'Agenda',exact:true}).click();
  await expect(page).toHaveURL(new RegExp('organization_id='+b+'&entity=appointments'));
  await expect(page.getByRole('heading',{name:'CRM de tu empresa',exact:true})).toBeVisible();
- await expect(page.getByRole('alert')).toHaveCount(0);
+ await expect(page.getByText('Acceso de consulta.',{exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Citas propuestas',exact:true})).toHaveAttribute('aria-pressed','true');
+ await expect(page.locator('main [role="alert"]')).toHaveCount(0);
 });
