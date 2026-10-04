@@ -30,6 +30,7 @@ test('Local approval executes verified changes atomically; provider outcomes rem
  const external=await propose('send_email',{to:'new@example.test',body:'Synthetic'});
  await db.query("select transition_business_action($1,'approved')",[external]);
  for(const decision of ['executed','failed'])await assert.rejects(db.query('select transition_business_action($1,$2)',[external,decision]),/insufficient_privilege/);
+ await assert.rejects(db.query("insert into agent_ledger(user_id,actor_id,agent,action,permission,result,evidence) values ($1,$1,'business','send_email','backend_execution','completed','{}')",[a]),/row-level security/);
  await assert.rejects(db.query("insert into business_messages(channel,body,status) values ('email','Forged','sent')"),/permission denied/);
  await assert.rejects(db.query("insert into business_appointments(title,starts_at,ends_at) values ('Forged',now(),now()+interval '1 hour')"),/permission denied/);
  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[b]);

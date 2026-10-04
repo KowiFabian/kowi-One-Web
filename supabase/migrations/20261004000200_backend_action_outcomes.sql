@@ -17,6 +17,7 @@ begin
 end$$;
 revoke all on function public.transition_business_action(uuid,text) from public,anon;
 grant execute on function public.transition_business_action(uuid,text) to authenticated,service_role;
+create policy business_ledger_backend_only on public.agent_ledger as restrictive for insert to authenticated with check(agent<>'business');
 revoke insert,update,delete on public.business_messages,public.business_appointments from authenticated;
 create or replace function public.audit_business_action() returns trigger language plpgsql security definer set search_path='' as $$
 begin
