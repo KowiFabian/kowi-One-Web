@@ -19,8 +19,8 @@ test('Controlled email requires saved AI evidence, owner/admin scope and consent
  set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
  assert.equal((await db.query<{allowed:boolean}>('select can_prepare_controlled_email_test($1,$2) allowed',[org,conversation])).rows[0].allowed,false);
  await assert.rejects(db.query('select prepare_controlled_email_test($1,$2,true)',[org,conversation]),/insufficient_privilege/);
- await db.exec("reset role;set role service_role;select set_config('request.jwt.claim.sub','',false);");
  const revision=(await db.query<{updated_at:string}>('select updated_at from agent_installations where id=$1',[agent])).rows[0].updated_at;
+ await db.exec("reset role;set role service_role;select set_config('request.jwt.claim.sub','',false);");
  await db.query("select save_organization_chat($1,$2,$3,$4,$5,0,'Synthetic test prompt','Synthetic test response','fixture-model',1,1,'synthetic-fixture-provider',$6)",[org,agent,a,conversation,request,revision]);
  await db.exec(`reset role;set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
  assert.equal((await db.query<{allowed:boolean}>('select can_prepare_controlled_email_test($1,$2) allowed',[org,conversation])).rows[0].allowed,true);

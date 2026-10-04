@@ -1,5 +1,5 @@
 begin;
-create table private.controlled_email_test_quotas(user_id uuid primary key references auth.users(id),window_started_at timestamptz not null default now(),count integer not null default 0);
+create table private.controlled_email_test_quotas(user_id uuid primary key references auth.users(id) on delete cascade,window_started_at timestamptz not null default now(),count integer not null default 0);
 alter table private.controlled_email_test_quotas enable row level security;
 revoke all on private.controlled_email_test_quotas from public,anon,authenticated,service_role;
 create function public.can_prepare_controlled_email_test(p_org uuid,p_conversation uuid) returns boolean
