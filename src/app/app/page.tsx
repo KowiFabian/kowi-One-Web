@@ -3,6 +3,7 @@ import InstallKowi from '@/components/InstallKowi';
 const spaces=[
  ['/kowi','KOWI One','Convierte una intención en un objetivo y un plan personal.'],
  ['/business/agent-chat','Conversación empresarial','Habla con IA y conserva respuestas y evidencia en tu empresa.'],
+ ['/business/expansion','Desarrollo internacional','Prepara mercados, idiomas, propuesta y criterios de entrada con control humano.'],
  ['/business/director','KOWI Director','Ordena, revisa el plan, concede aval y consulta decisiones de mediodía.'],
  ['/business/crm-org','Contactos y agenda','Organiza clientes, oportunidades, citas propuestas y tareas.'],
  ['/test-email','Correo controlado','Prepara una prueba a tu cuenta verificada y autoriza el envío exacto.'],

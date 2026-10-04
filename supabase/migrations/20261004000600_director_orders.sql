@@ -117,7 +117,7 @@ declare actor uuid;job public.director_orders;step jsonb;created uuid;results js
  if not found then raise insufficient_privilege;end if;
  for step in select value from jsonb_array_elements(job.plan->'steps') loop
  if step->>'type'='task' then
- insert into public.tasks(organization_id,title,status) values(p_org,step->>'title','open') returning id into created;
+ insert into public.tasks(organization_id,title,status) values(p_org,left(job.objective,50)||' · '||left(step->>'title',100),'open') returning id into created;
  elsif step->>'type'='group' and job.kind='foundation' then
  insert into public.foundation_groups(organization_id,name,purpose,created_from) values(p_org,step->>'title',job.objective,p_order) returning id into created;
  else raise insufficient_privilege;end if;
