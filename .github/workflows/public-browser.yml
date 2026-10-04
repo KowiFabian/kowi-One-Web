@@ -14,6 +14,11 @@ jobs:
   public-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      KOWI_PUBLIC_TEST_BASE_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:3000' || 'https://kowi.one' }}
+      # Explicit public test placeholders; these do not authenticate any provider.
+      NEXT_PUBLIC_SUPABASE_URL: https://browser-fixture.invalid
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: browser-fixture-not-a-credential
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,6 +29,9 @@ jobs:
       - name: Install isolated browser test tooling
         run: npm install --no-save --package-lock=false @playwright/test@1.56.1
       - run: npx playwright install --with-deps chromium
+      - name: Wait for this production commit
+        if: github.event_name == 'push'
+        run: node scripts/wait-for-production.mjs
       - name: Verify public visitor journey without sending OTP
         run: npx playwright test --config=playwright.public.config.mjs
       - uses: actions/upload-artifact@v4

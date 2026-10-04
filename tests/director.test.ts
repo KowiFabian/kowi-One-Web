@@ -19,19 +19,21 @@ test('Director binds verified owner approval, idempotent internal execution, ten
  insert into organizations(id,owner_id,name,slug) values ('${oa}','${a}','Fixture A','fixture-a'),('${ob}','${b}','Fixture B','fixture-b');
  insert into organization_members(organization_id,user_id,role) values ('${oa}','${viewer}','viewer');
  insert into agent_installations(id,organization_id,name,config,status) values ('${agent}','${oa}','Local SQL fixture','{}','draft');
+ insert into conversations(id,user_id,agent,organization_id,agent_installation_id,title) values('dddddddd-dddd-4ddd-8ddd-dddddddddddd','${a}','business','${oa}','${agent}','Local SQL fixture');
+ insert into agent_metrics(organization_id,agent_id,conversation_id,request_id,model,provider_request_id) values('${oa}','${agent}','dddddddd-dddd-4ddd-8ddd-dddddddddddd','eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee','sql-fixture','fixture-not-a-provider-execution');
  update agent_installations set last_verified_at=now() where id='${agent}';update agent_installations set status='active' where id='${agent}';`);
  async function as(user:string){await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);}
  async function propose(kind='operations'){const id=crypto.randomUUID();await db.query("select propose_director_order($1,$2,$3,$4,'Objetivo local de prueba',array['europe'],'Europe/Madrid')",[oa,agent,id,kind]);return id;}
  await as(a);
  const id=await propose();
- await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,id]),/permission denied/);
- await assert.rejects(db.query("update director_orders set status='approved' where id=$1",[id]),/permission denied/);
+ await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,id]),/permission denied|insufficient_privilege/);
+ await assert.rejects(db.query("update director_orders set status='approved' where id=$1",[id]),/permission denied|insufficient_privilege/);
  await as(b);
  assert.equal((await db.query('select * from director_orders')).rows.length,0);
- await assert.rejects(db.query("select decide_director_order($1,$2,'approve')",[oa,id]),/permission denied/);
+ await assert.rejects(db.query("select decide_director_order($1,$2,'approve')",[oa,id]),/permission denied|insufficient_privilege/);
  await as(viewer);
  assert.equal((await db.query('select * from director_orders')).rows.length,1);
- await assert.rejects(db.query("select decide_director_order($1,$2,'approve')",[oa,id]),/permission denied/);
+ await assert.rejects(db.query("select decide_director_order($1,$2,'approve')",[oa,id]),/permission denied|insufficient_privilege/);
  await as(a);
  await db.query("select decide_director_order($1,$2,'approve')",[oa,id]);
  const result=(await db.query<{result:{results:unknown[];external_execution:boolean;objective_achieved:boolean}}>('select execute_director_order($1,$2) as result',[oa,id])).rows[0].result;
@@ -47,20 +49,20 @@ test('Director binds verified owner approval, idempotent internal execution, ten
  assert.equal((await db.query('select * from foundation_group_members where withdrawn_at is null')).rows.length,1);
  await db.query('select foundation_group_consent($1,$2,false)',[oa,groups[0].id]);
  assert.equal((await db.query('select * from foundation_group_members where withdrawn_at is null')).rows.length,0);
- await as(b);await assert.rejects(db.query('select foundation_group_consent($1,$2,true)',[oa,groups[0].id]),/permission denied/);
+ await as(b);await assert.rejects(db.query('select foundation_group_consent($1,$2,true)',[oa,groups[0].id]),/permission denied|insufficient_privilege/);
  await as(a);
  const paused=await propose('commercial');await db.query("select decide_director_order($1,$2,'approve')",[oa,paused]);
  await db.query("update agent_installations set status='paused' where id=$1",[agent]);
  assert.equal((await db.query<{status:string}>('select status from director_orders where id=$1',[paused])).rows[0].status,'cancelled');
- await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,paused]),/permission denied/);
+ await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,paused]),/permission denied|insufficient_privilege/);
  assert.equal((await db.query('select * from tasks')).rows.length,6);
  await db.query("update agent_installations set status='active' where id=$1",[agent]);
  const expired=await propose();await db.query("select decide_director_order($1,$2,'approve')",[oa,expired]);
  await db.exec('reset role');await db.query("update director_orders set expires_at=now()-interval '1 second' where id=$1",[expired]);
- await as(a);await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,expired]),/permission denied/);
+ await as(a);await assert.rejects(db.query('select execute_director_order($1,$2)',[oa,expired]),/permission denied|insufficient_privilege/);
  await db.exec('reset role');
  await db.query("update auth.users set email_confirmed_at=null where id=$1",[a]);
- await as(a);await assert.rejects(propose(),/permission denied/);
+ await as(a);await assert.rejects(propose(),/permission denied|insufficient_privilege/);
  await db.exec('reset role');await db.query('update auth.users set email_confirmed_at=now() where id=$1',[a]);
  // Choose a real timezone whose current local hour is 12 to test collection,
  // without changing production clocks or asserting a provider execution.
@@ -69,6 +71,6 @@ test('Director binds verified owner approval, idempotent internal execution, ten
  assert.equal((await db.query<{count:number}>('select private.capture_director_midday_reports() as count')).rows[0].count,1);
  assert.equal((await db.query<{count:number}>('select private.capture_director_midday_reports() as count')).rows[0].count,0);
  await as(b);assert.equal((await db.query('select * from director_daily_reports')).rows.length,0);
- await db.exec('set role anon');await assert.rejects(db.query('select * from director_orders'),/permission denied/);
+ await db.exec('set role anon');await assert.rejects(db.query('select * from director_orders'),/permission denied|insufficient_privilege/);
  }finally{await db.close();}
 });

@@ -11,7 +11,7 @@ test('Controlled email requires saved AI evidence, owner/admin scope and consent
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
  create function auth.role() returns text language sql stable as $$select current_setting('role',true)$$;
  grant usage on schema auth to authenticated,anon,service_role;grant execute on function auth.uid(),auth.role() to authenticated,anon,service_role;`);
- for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()){if(['20261003000700_security_report_schedule.sql','20261003001100_job_timeout_schedule.sql'].includes(file))continue;await db.exec(await readFile('supabase/migrations/'+file,'utf8'));}
+ for(const file of (await readdir('supabase/migrations')).filter(f=>f.endsWith('.sql')).sort()){if(['20261003000700_security_report_schedule.sql','20261003001100_job_timeout_schedule.sql','20261004000700_director_midday_schedule.sql'].includes(file))continue;await db.exec(await readFile('supabase/migrations/'+file,'utf8'));}
  await db.exec(`insert into auth.users(id,email,email_confirmed_at) values ('${a}','self@example.test',now()),('${b}','other@example.test',now()),('${viewer}','viewer@example.test',now());
  insert into organizations(id,owner_id,name,slug) values ('${org}','${a}','Fixture A','fixture-a'),('${other}','${b}','Fixture B','fixture-b');
  insert into organization_members(organization_id,user_id,role) values ('${org}','${viewer}','viewer');

@@ -16,10 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # A PR observes the current production version; new routes are tested locally.
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && 'main' || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Wait for this production commit
+        if: github.event_name == 'push'
+        run: node scripts/wait-for-production.mjs
       - name: Check public HTTP and unauthenticated APIs
         run: node scripts/production-smoke.mjs > production-smoke.json
       - name: Show HTTP evidence

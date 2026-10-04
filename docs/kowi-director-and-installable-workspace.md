@@ -8,7 +8,7 @@ Una orden comercial guarda mercados para preparar país, idioma, moneda, oferta,
 
 ## Permisos y límites
 Únicamente Company Owner con correo verificado propone, decide y ejecuta. Admin, Configurator, Operator y Viewer pueden leer según pertenencia, pero no conceder ese aval. No se inventa Platform Owner.
-- Agente ACTIVE, last_verified_at registrado y sin marca synthetic.
+- Agente ACTIVE, last_verified_at y agent_metrics backend registrados en los últimos 7 días y sin marca synthetic.
 - Máximo 10 órdenes por organización en 24 horas, con bloqueo transaccional.
 - Plan pendiente 7 días; aprobación válida 24 horas.
 - Ejecución atómica e idempotente, sin efectos externos.
@@ -17,7 +17,7 @@ Una orden comercial guarda mercados para preparar país, idioma, moneda, oferta,
 - Trabajo interno creado no significa objetivo cumplido: objective_achieved=false.
 
 ## Decisiones de mediodía
-La primera orden configura una zona IANA de la organización. pg_cron revisa cada 5 minutos; durante la hora local 12 guarda una instantánea diaria única. Maneja horario de verano mediante PostgreSQL. Datos observados, interpretación y recomendación aparecen separados. No se envía el informe a nadie. Consultar cron.job_run_details verifica ejecución técnica; cero informes antes de configurar una organización es un estado válido. Cambiar zona posteriormente requiere una configuración administrativa pendiente de UI.
+La primera orden configura una zona IANA de la organización. pg_cron revisa cada 5 minutos; desde la hora local 12 guarda una instantánea diaria única. Maneja horario de verano mediante PostgreSQL y recupera el informe del día si una ejecución falla antes. Datos observados, interpretación y recomendación aparecen separados. No se envía el informe a nadie. Consultar cron.job_run_details verifica ejecución técnica; cero informes antes de configurar una organización es un estado válido. Cambiar zona posteriormente requiere una configuración administrativa pendiente de UI.
 
 ## Grupos Fundación
 Una orden aprobada crea grupos privados de investigación/verificación, educación y bienestar. No se inscribe a nadie. Cada miembro autenticado y verificado de la organización acepta individualmente o retira participación. Se conserva versión, fecha y retirada; no se publican identidades ni se autoriza marketing o donaciones. La inscripción pública y acuerdos de una fundación legal siguen pendientes.

@@ -64,7 +64,7 @@ declare actor uuid;steps jsonb;existing public.director_orders;begin
  actor:=private.require_director_owner(p_org);
  if p_request is null or p_kind is null or p_kind not in ('operations','commercial','foundation') or p_objective is null or length(btrim(p_objective)) not between 5 and 1000 or p_markets is null or cardinality(p_markets)>8 or exists(select 1 from unnest(p_markets) m where m is null or m not in ('national','europe','asia','africa','north_america','south_america','indonesia','oceania')) or p_timezone is null or not exists(select 1 from pg_catalog.pg_timezone_names where name=p_timezone) then raise invalid_parameter_value;end if;
  perform 1 from public.organizations where id=p_org for update;
- if not exists(select 1 from public.agent_installations where id=p_agent and organization_id=p_org and status='active' and last_verified_at is not null and coalesce(config->>'synthetic','false')<>'true') then raise exception 'Verified active agent required' using errcode='42501';end if;
+ if not exists(select 1 from public.agent_installations where id=p_agent and organization_id=p_org and status='active' and last_verified_at>=now()-interval '7 days' and coalesce(config->>'synthetic','false')<>'true' and exists(select 1 from public.agent_metrics metric where metric.agent_id=public.agent_installations.id and metric.organization_id=p_org and metric.created_at>=now()-interval '7 days')) then raise exception 'Verified active agent required' using errcode='42501';end if;
  select * into existing from public.director_orders where id=p_request;
  if found then
  if existing.organization_id<>p_org or existing.agent_id<>p_agent or existing.requester_id<>actor or existing.kind<>p_kind or existing.objective<>btrim(p_objective) or existing.markets<>p_markets then raise invalid_parameter_value;end if;
@@ -86,12 +86,15 @@ grant execute on function public.propose_director_order(uuid,uuid,uuid,text,text
 create function public.decide_director_order(p_org uuid,p_order uuid,p_decision text) returns text language plpgsql security definer set search_path='' as $$
 declare actor uuid;job public.director_orders;begin
  actor:=private.require_director_owner(p_org);
+ select * into job from public.director_orders where id=p_order and organization_id=p_org;
+ if not found then raise insufficient_privilege;end if;
+ perform 1 from public.agent_installations where id=job.agent_id and organization_id=p_org for update;
  select * into job from public.director_orders where id=p_order and organization_id=p_org for update;
  if not found then raise insufficient_privilege;end if;
  if p_decision is null or p_decision not in ('approve','reject') then raise invalid_parameter_value;end if;
  if job.status not in ('pending_approval','approved') or (p_decision='approve' and job.status<>'pending_approval') then raise exception 'Decision unavailable' using errcode='40001';end if;
  if p_decision='approve' then
- if job.expires_at<=now() or not exists(select 1 from public.agent_installations where id=job.agent_id and organization_id=p_org and status='active' and last_verified_at is not null and coalesce(config->>'synthetic','false')<>'true') then raise insufficient_privilege;end if;
+ if job.expires_at<=now() or not exists(select 1 from public.agent_installations where id=job.agent_id and organization_id=p_org and status='active' and last_verified_at>=now()-interval '7 days' and coalesce(config->>'synthetic','false')<>'true' and exists(select 1 from public.agent_metrics metric where metric.agent_id=public.agent_installations.id and metric.organization_id=p_org and metric.created_at>=now()-interval '7 days')) then raise insufficient_privilege;end if;
  update public.director_orders set status='approved',approved_by=actor,approved_at=now(),expires_at=now()+interval '24 hours' where id=p_order;
  else update public.director_orders set status='rejected' where id=p_order;end if;
  insert into public.director_events(organization_id,order_id,event,actor_id,evidence) values(p_org,p_order,p_decision,actor,jsonb_build_object('plan_version',1,'external_execution',false));
@@ -103,11 +106,14 @@ grant execute on function public.decide_director_order(uuid,uuid,text) to authen
 create function public.execute_director_order(p_org uuid,p_order uuid) returns jsonb language plpgsql security definer set search_path='' as $$
 declare actor uuid;job public.director_orders;step jsonb;created uuid;results jsonb:='[]';begin
  actor:=private.require_director_owner(p_org);
+ select * into job from public.director_orders where id=p_order and organization_id=p_org;
+ if not found then raise insufficient_privilege;end if;
+ perform 1 from public.agent_installations where id=job.agent_id and organization_id=p_org for update;
  select * into job from public.director_orders where id=p_order and organization_id=p_org for update;
  if not found then raise insufficient_privilege;end if;
  if job.status='completed' then return (select evidence from public.director_events where order_id=p_order and event='completed' limit 1);end if;
  if job.status<>'approved' or job.approved_by<>actor or job.expires_at<=now() then raise insufficient_privilege;end if;
- perform 1 from public.agent_installations where id=job.agent_id and organization_id=p_org and status='active' and last_verified_at is not null and coalesce(config->>'synthetic','false')<>'true' for update;
+ perform 1 from public.agent_installations where id=job.agent_id and organization_id=p_org and status='active' and last_verified_at>=now()-interval '7 days' and coalesce(config->>'synthetic','false')<>'true' and exists(select 1 from public.agent_metrics metric where metric.agent_id=public.agent_installations.id and metric.organization_id=p_org and metric.created_at>=now()-interval '7 days') for update;
  if not found then raise insufficient_privilege;end if;
  for step in select value from jsonb_array_elements(job.plan->'steps') loop
  if step->>'type'='task' then
@@ -145,7 +151,7 @@ create trigger cancel_director_orders after update on public.agent_installations
 
 create function private.capture_director_midday_reports() returns integer language plpgsql security definer set search_path='' as $$
 declare schedule record;captured integer:=0;counts jsonb;begin
- for schedule in select organization_id,timezone,(now() at time zone timezone)::date as local_date from public.director_report_preferences where extract(hour from now() at time zone timezone)=12 loop
+ for schedule in select organization_id,timezone,(now() at time zone timezone)::date as local_date from public.director_report_preferences where extract(hour from now() at time zone timezone)>=12 loop
  select jsonb_build_object('pending_approval',count(*) filter(where status='pending_approval'),'approved',count(*) filter(where status='approved' and expires_at>now()),'internal_work_created',count(*) filter(where status='completed'),'expired_authorizations',count(*) filter(where status in ('pending_approval','approved') and expires_at<=now())) into counts from public.director_orders where organization_id=schedule.organization_id;
  counts:=counts||jsonb_build_object('open_tasks',(select count(*) from public.tasks where organization_id=schedule.organization_id and status='open'),'contacts',(select count(*) from public.contacts where organization_id=schedule.organization_id),'opportunities',(select count(*) from public.opportunities where organization_id=schedule.organization_id),'foundation_groups',(select count(*) from public.foundation_groups where organization_id=schedule.organization_id));
  insert into public.director_daily_reports(organization_id,report_date,timezone,observed,interpretation,recommendation) values(schedule.organization_id,schedule.local_date,schedule.timezone,counts,'Los conteos describen registros internos. No acreditan ventas, comunicaciones ni objetivos alcanzados.','Revisar órdenes pendientes, consentimientos, agenda y evidencias antes de autorizar acciones externas.') on conflict(organization_id,report_date) do nothing;
