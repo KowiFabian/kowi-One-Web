@@ -57,9 +57,15 @@ test('Installable workspace exposes valid icons and only caches the public offli
  await expect(page.getByRole('alert').filter({hasText:/Inicia sesión/}).first()).toBeVisible();
  const cached=await page.evaluate(async()=>{const cache=await caches.open('kowi-public-offline-v1');return(await cache.keys()).map(r=>new URL(r.url).pathname);});
  expect(cached).toEqual(['/offline.html']);
+ let blockedWorkerRequests=0;
+ await context.route('**/*',async route=>{
+  if(route.request().serviceWorker()){blockedWorkerRequests++;await route.abort('internetdisconnected');}
+  else await route.continue();
+ });
  try{
- await context.setOffline(true);await page.goto('/business/agent-chat');
+ await page.goto('/business/agent-chat?offline_probe=controlled');
  await expect(page.getByRole('heading',{name:'Recupera la conexión para continuar.'})).toBeVisible();
  await expect(page.getByText(/Este aviso no confirma/)).toBeVisible();
- }finally{await context.setOffline(false);}
+ expect(blockedWorkerRequests).toBeGreaterThan(0);
+ }finally{await context.unroute('**/*');}
 });
