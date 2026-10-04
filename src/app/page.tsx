@@ -10,13 +10,13 @@ const paths = [
 const products = [
   { name:'Kowi One', detail:'Tu intención, un objetivo y un plan para actuar.', href:'/kowi', state:'Piloto activo', icon:'◎' },
   { name:'Kowi Business', detail:'Agente configurable, conversación real y CRM con aprobación humana.', href:'/business', state:'Piloto activo', icon:'▣' },
-  { name:'Kowi Pro', detail:'Orquestador y agentes especializados con permisos, aprobación y trazabilidad.', href:'/pro', state:'Agentes disponibles', icon:'✦' },
+  { name:'Kowi Pro', detail:'Orquestador y agentes especializados con permisos, aprobación y trazabilidad.', href:'/pro', state:'Catálogo y ejecución interna', icon:'✦' },
   { name:'Kowi Proyectos', detail:'Ideas convertidas en fases, tareas y avances.', href:'/proyectos', state:'Piloto activo', icon:'◇' },
   { name:'Kowi School', detail:'Aprendizaje aplicado a proyectos y nuevas capacidades.', href:'/school', state:'En desarrollo', icon:'✧' },
   { name:'Kowi Comunidad', detail:'Personas y saberes conectados para ayudarse a avanzar.', href:'/comunidad', state:'En desarrollo', icon:'◌' },
 ];
 const navigation = [
-  { label: 'Inicio', href: '/' }, { label: 'KOWI One', href: '/kowi' },
+  { label: 'Mi espacio', href: '/app' }, { label: 'KOWI One', href: '/kowi' },
   { label: 'Business', href: '/business' }, { label: 'Projects', href: '/proyectos' },
   { label: 'School', href: '/school' }, { label: 'Organización', href: '/organizacion' },
   { label: 'Foundation', href: '/fundacion' },

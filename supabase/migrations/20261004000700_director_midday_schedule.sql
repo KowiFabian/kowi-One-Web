@@ -1,0 +1,1 @@
+select cron.schedule('kowi-director-midday-reports','*/5 * * * *','select private.capture_director_midday_reports();');

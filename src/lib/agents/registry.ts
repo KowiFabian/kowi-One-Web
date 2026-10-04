@@ -4,6 +4,8 @@ export type KowiAgent = {
 };
 
 export const kowiAgents: KowiAgent[] = [
+  {id:'director',name:'KOWI Director',role:'Recibe órdenes, prepara planes delimitados y crea tareas y grupos privados con aval del propietario verificado. No ejecuta comunicaciones externas ni alcanza automáticamente el objetivo.',access:'pro',risk:'high',capabilities:['bounded_planning','owner_approval','internal_task_execution','midday_decisions'],requiresApproval:['plan_execution','external_message','permission_change']},
+  {id:'global-commercial-director',name:'Global Commercial Director',role:'Prepara mercados, idiomas, propuestas y seguimiento en el CRM universal. La presencia internacional y los envíos requieren validación y autorización específica.',access:'pro',risk:'high',availability:'proposed',capabilities:['market_planning','localized_proposals','consent_review','pipeline_follow_up'],requiresApproval:['external_message','campaign','contract','ad_spend']},
   {id:'orchestrator',name:'KOWI Orchestrator',role:'Comprende la intención y coordina agentes, herramientas y personas.',access:'core',risk:'medium',capabilities:['routing','planning','handoff'],requiresApproval:['external_action','sensitive_change']},
   {id:'business',name:'Business Agent',role:'Atención, cualificación, ventas y seguimiento comercial.',access:'pro',risk:'medium',capabilities:['customer_service','sales','lead_qualification'],requiresApproval:['external_message','booking','crm_write']},
   {id:'crm',name:'CRM Agent',role:'Organiza oportunidades, pipeline y próximas acciones.',access:'pro',risk:'medium',capabilities:['lead_management','pipeline','follow_up'],requiresApproval:['crm_write','external_message']},
