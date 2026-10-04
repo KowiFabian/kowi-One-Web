@@ -26,7 +26,7 @@ begin
  jsonb_build_object('to',recipient,'subject','Prueba controlada KOWI','body','Este es un mensaje de prueba autorizado de KOWI para verificar aprobación humana, envío y evidencia. No requiere ninguna acción.','controlled_test',true,'test_version',1,'organization_id',p_org,'conversation_id',p_conversation)) returning * into a;
  update private.controlled_email_test_quotas set action_id=a.id where user_id=auth.uid();
  return a;
-end$;
+end$$;
 revoke all on function public.prepare_controlled_email_test(uuid,uuid,boolean) from public,anon,service_role;
 grant execute on function public.prepare_controlled_email_test(uuid,uuid,boolean) to authenticated;
 
