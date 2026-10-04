@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ApiError, apiFailure, authenticate } from '@/lib/server/auth';
 import { executeBusinessAction, BusinessExecutionUncertainError } from '@/lib/server/business-execution';
 
+import { createClient } from '@supabase/supabase-js';
 type Context = { params: Promise<{ id: string }> };
 
 export async function POST(request: Request, context: Context) {
@@ -14,6 +15,20 @@ export async function POST(request: Request, context: Context) {
     if (error) throw new ApiError(503, 'No se pudo recuperar la acción.');
     if (!action) throw new ApiError(404, 'Acción no encontrada.');
     if (action.status !== 'pending_approval') throw new ApiError(409, 'La acción ya fue revisada. Prepara una nueva si procede.');
+    if(!user.email_confirmed_at) throw new ApiError(403,'Verifica tu correo antes de aprobar.');
+    if(action.action_type==='update_lead'){
+      const {data:done,error:localError}=await db.rpc('execute_approved_local_lead_action',{p_id:id});
+      if(localError) throw new ApiError(409,'No se pudo verificar o aplicar la actualización del lead.');
+      return Response.json(done,{headers:{'Cache-Control':'no-store'}});
+    }
+    const serverUrl=process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serverKey=process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if(!serverUrl||!serverKey) throw new ApiError(409,'La ejecución externa requiere configuración segura del backend.');
+    const executionDb=createClient(serverUrl,serverKey,{auth:{persistSession:false,autoRefreshToken:false}});
+    if(action.lead_id){
+      const {data:boundLead,error:boundError}=await db.from('business_leads').select('id').eq('id',action.lead_id).eq('user_id',user.id).maybeSingle();
+      if(boundError||!boundLead) throw new ApiError(409,'El lead no pertenece a tu cuenta.');
+    }
     if (['send_whatsapp','send_email'].includes(action.action_type)) {
       const { data: lead, error: leadError } = await db.from('business_leads').select('id,contact,consent')
         .eq('id', action.lead_id).eq('user_id', user.id).maybeSingle();
@@ -23,17 +38,17 @@ export async function POST(request: Request, context: Context) {
     const { error: approvalError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'approved' });
     if (approvalError) throw new ApiError(409, 'La acción ya no está pendiente.');
     try {
-      const result = await executeBusinessAction(db, action);
-      const { data: done, error: doneError } = await db.rpc('transition_business_action', { p_id: id, p_decision: 'executed' });
+      const result = await executeBusinessAction(executionDb, action);
+      const { data: done, error: doneError } = await executionDb.rpc('transition_business_action', { p_id: id, p_decision: 'executed' });
       if (doneError) throw new BusinessExecutionUncertainError('La ejecución necesita revisión manual; no repitas la operación.');
-      if (action.lead_id) await db.from('business_lead_events').insert({
+      if (action.lead_id) await executionDb.from('business_lead_events').insert({
         user_id: user.id, lead_id: action.lead_id, event_type: 'action',
         detail: { action_id: id, status: 'executed', result },
       });
       return Response.json(done, { headers: { 'Cache-Control': 'no-store' } });
     } catch (executionError) {
       if (!(executionError instanceof BusinessExecutionUncertainError))
-        await db.rpc('transition_business_action', { p_id: id, p_decision: 'failed' });
+        await executionDb.rpc('transition_business_action', { p_id: id, p_decision: 'failed' });
       throw executionError;
     }
   } catch (error) { return apiFailure(error); }

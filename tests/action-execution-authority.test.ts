@@ -1,0 +1,49 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+test('Local approval executes verified changes atomically; provider outcomes remain backend-only',async()=>{
+ const db=new PGlite();
+ const a='11111111-1111-4111-8111-111111111111',b='22222222-2222-4222-8222-222222222222';
+ try{
+ await db.exec(`create schema auth;create role anon nologin;create role authenticated nologin;create role service_role nologin bypassrls;
+ create table auth.users(id uuid primary key,email_confirmed_at timestamptz,deleted_at timestamptz);
+ create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+ create function auth.role() returns text language sql stable as $$select current_setting('role',true)$$;
+ grant usage on schema auth to authenticated,anon,service_role;grant execute on function auth.uid(),auth.role() to authenticated,anon,service_role;
+ insert into auth.users(id,email_confirmed_at) values ('${a}',now()),('${b}',now());`);
+ for(const file of ['202609250001_core.sql','20260928083927_business_agent.sql','20260928123000_business_agent_channels_approvals.sql','20260928181514_public_platform.sql','20260928181706_action_approval_guard.sql','20260928182818_action_ledger_triggers.sql','20261004000100_local_action_execution.sql','20261004000200_backend_action_outcomes.sql'])await db.exec(await readFile('supabase/migrations/'+file,'utf8'));
+ await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
+ const lead=(await db.query<{id:string}>("insert into business_leads(name,contact,consent) values ('Fixture','old@example.test',true) returning id")).rows[0].id;
+ async function propose(type:string,payload:object,leadId=lead){return (await db.query<{id:string}>('insert into business_actions(action_type,summary,payload,lead_id) values ($1,$2,$3,$4) returning id',[type,'Synthetic test only',payload,leadId])).rows[0].id;}
+ const local=await propose('update_lead',{status:'contactado',contact:'new@example.test',next_action:'Seguimiento'});
+ await db.query('select execute_approved_local_lead_action($1)',[local]);
+ assert.equal((await db.query<{status:string}>('select status from business_actions where id=$1',[local])).rows[0].status,'executed');
+ const changed=(await db.query<{status:string;consent:boolean;contact:string}>('select status,consent,contact from business_leads where id=$1',[lead])).rows[0];
+ assert.equal(changed.status,'contactado');assert.equal(changed.contact,'new@example.test');assert.equal(changed.consent,false);
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[local]),/Action unavailable/);
+ const invalid=await propose('update_lead',{status:'invented',notes:'Must roll back'});
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[invalid]),/invalid_parameter_value/);
+ assert.equal((await db.query<{status:string}>('select status from business_actions where id=$1',[invalid])).rows[0].status,'pending_approval');
+ const privilege=await propose('update_lead',{user_id:b});
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[privilege]),/invalid_parameter_value/);
+ const external=await propose('send_email',{to:'new@example.test',body:'Synthetic'});
+ await db.query("select transition_business_action($1,'approved')",[external]);
+ for(const decision of ['executed','failed'])await assert.rejects(db.query('select transition_business_action($1,$2)',[external,decision]),/insufficient_privilege/);
+ await assert.rejects(db.query("insert into business_messages(channel,body,status) values ('email','Forged','sent')"),/permission denied/);
+ await assert.rejects(db.query("insert into business_appointments(title,starts_at,ends_at) values ('Forged',now(),now()+interval '1 hour')"),/permission denied/);
+ await db.query("select set_config('request.jwt.claim.sub',$1,false)",[b]);
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[invalid]),/Action unavailable/);
+ await assert.rejects(db.query("select transition_business_action($1,'rejected')",[invalid]),/Action unavailable/);
+ await db.exec("reset role;set role service_role;select set_config('request.jwt.claim.sub','',false);");
+ await db.query("select transition_business_action($1,'failed')",[external]);
+ await db.exec('reset role');
+ const evidence=(await db.query<{actor_id:string|null;permission:string}>("select actor_id,permission from agent_ledger where evidence->>'action_id'=$1 and result='failed'",[external])).rows[0];
+ assert.equal(evidence.actor_id,null);assert.equal(evidence.permission,'backend_execution');
+ await db.query('update auth.users set email_confirmed_at=null where id=$1',[a]);
+ await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${a}',false);`);
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[invalid]),/insufficient_privilege/);
+ await db.exec('reset role;set role anon');
+ await assert.rejects(db.query('select execute_approved_local_lead_action($1)',[invalid]),/permission denied/);
+ }finally{await db.close();}
+});
