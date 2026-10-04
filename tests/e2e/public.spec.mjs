@@ -86,3 +86,47 @@ test('News distinguishes official facts and editorial context on desktop and mob
  await expect(page.getByRole('heading',{name:'KOWI Director',exact:true})).toBeVisible();
  await expect(page.getByRole('alert').filter({hasText:/Inicia sesión/}).first()).toBeVisible();
 });
+
+test('Business has a direct installable entry and protected overview',async({page})=>{
+ const response=await page.goto('/business/app');
+ expect(response.status()).toBe(200);
+ await expect(page.getByRole('heading',{name:'Tu empresa. Tu agente. Tu control.'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Crear cuenta o entrar',exact:true})).toBeVisible();
+ await expect(page.getByLabel('Correo electrónico')).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Lleva KOWI Business contigo'})).toBeVisible();
+ const manifestLink=await page.locator('link[rel="manifest"]').getAttribute('href');
+ expect(manifestLink).toBe('/business/manifest.webmanifest');
+ const manifest=await (await page.request.get(manifestLink)).json();
+ expect(manifest.start_url).toBe('/business/app');expect(manifest.id).toBe('/business/app');expect(manifest.display).toBe('standalone');
+ const unauthorized=await page.request.get('/api/business/workspace?organization_id=11111111-1111-4111-8111-111111111111');
+ expect(unauthorized.status()).toBe(401);
+ expect(unauthorized.headers()['cache-control']).toContain('no-store');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+});
+
+test('LOCAL UI FIXTURE: Business selection and agenda preserve tenant context',async({page,context,baseURL})=>{
+ test.skip(!baseURL.startsWith('http://127.0.0.1:'),'UI fixture runs locally only; not evidence of production authentication.');
+ const a='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',b='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ await page.addInitScript(()=>{
+  const expires=Math.floor(Date.now()/1000)+3600;
+  const payload=btoa(JSON.stringify({sub:'11111111-1111-4111-8111-111111111111',exp:expires,aud:'authenticated'})).replace(/=/g,'');
+  const user={id:'11111111-1111-4111-8111-111111111111',email:'ui-fixture@example.test',email_confirmed_at:new Date().toISOString(),aud:'authenticated',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};
+  localStorage.setItem('sb-browser-fixture-auth-token',JSON.stringify({access_token:'eyJhbGciOiJIUzI1NiJ9.'+payload+'.fixture-not-a-signature',refresh_token:'fixture-not-a-credential',expires_in:3600,expires_at:expires,token_type:'bearer',user}));
+ });
+ await context.route('**/api/organizations',route=>route.fulfill({json:[{id:a,name:'UI Fixture A'},{id:b,name:'UI Fixture B'}]}));
+ await context.route('**/api/business/workspace?**',route=>{
+  const org=new URL(route.request().url()).searchParams.get('organization_id');
+  return route.fulfill({json:{organization:{id:org,name:org===b?'UI Fixture B':'UI Fixture A'},role:'owner',verifiedAccount:true,counts:{contacts:0,leads:0,opportunities:0,tasks:0,appointments:0,conversations:0},agents:[],tasks:[],appointments:[],observedAt:new Date().toISOString()}});
+ });
+ await context.route('**/api/crm/**',route=>route.fulfill({json:{items:[],role:'viewer'}}));
+ await context.route('**/api/crm-stages?**',route=>route.fulfill({json:{items:[],role:'viewer'}}));
+ await page.goto('/business/app');
+ await expect(page.getByRole('heading',{name:'Gestiona tu negocio con KOWI',exact:true})).toBeVisible();
+ await page.getByLabel('Empresa',{exact:true}).selectOption(b);
+ await expect(page.getByRole('heading',{name:'UI Fixture B',exact:true})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+ await page.getByRole('navigation',{name:'Accesos rápidos del negocio'}).getByRole('link',{name:'Agenda',exact:true}).click();
+ await expect(page).toHaveURL(new RegExp('organization_id='+b+'&entity=appointments'));
+ await expect(page.getByRole('heading',{name:'CRM de tu empresa',exact:true})).toBeVisible();
+ await expect(page.getByRole('alert')).toHaveCount(0);
+});

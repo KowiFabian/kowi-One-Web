@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import InstallKowi from '@/components/InstallKowi';
 const spaces=[
+ ['/business/app','Mi negocio · KOWI Business','Accede directamente a tu empresa, CRM, agenda, tareas y agente.'],
  ['/news','KOWI News','Actualidad tecnológica con fuentes, fechas y próximos pasos Human-First.'],
  ['/kowi','KOWI One','Convierte una intención en un objetivo y un plan personal.'],
  ['/business/agent-chat','Conversación empresarial','Habla con IA y conserva respuestas y evidencia en tu empresa.'],
@@ -15,7 +16,7 @@ const spaces=[
  ['/school','KOWI School','Explora guías abiertas para aprender y verificar.']
 ];
 export default function AppHome(){return <main className="kowi-shell min-h-screen px-5 py-8 text-white md:px-10"><div className="mx-auto max-w-6xl space-y-8">
- <header className="flex flex-wrap items-center justify-between gap-4"><Link href="/" className="text-xl font-semibold tracking-widest text-[#e8b37b]">KOWI</Link><Link href="/business#crear" className="rounded-full border border-white/30 px-5 py-3">Entrar o crear cuenta</Link></header>
+ <header className="flex flex-wrap items-center justify-between gap-4"><Link href="/" className="text-xl font-semibold tracking-widest text-[#e8b37b]">KOWI</Link><Link href="/business/app" className="rounded-full border border-white/30 px-5 py-3">Entrar o crear cuenta</Link></header>
  <section><p className="text-sm uppercase tracking-widest text-[#e8b37b]">HUMAN PURPOSE · AI CAPABILITY</p><h1 className="mt-4 text-4xl font-semibold md:text-6xl">Tu espacio KOWI</h1><p className="mt-5 max-w-3xl text-lg text-[#abc3b4]">Una intención, un siguiente paso y evidencia del resultado. Elige tu herramienta; tú conservas propósito, autoridad y control.</p></section>
  <InstallKowi/>
  <nav aria-label="Espacios KOWI" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{spaces.map(([href,title,description])=><Link key={href} href={href} className="glass rounded-2xl p-6 transition hover:border-[#e8b37b]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#e8b37b]"><h2 className="text-xl font-semibold">{title} ↗</h2><p className="mt-3 text-[#abc3b4]">{description}</p></Link>)}</nav>
