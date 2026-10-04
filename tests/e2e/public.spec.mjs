@@ -140,6 +140,6 @@ test('Voz ID identifies current voice tools and pending delegation honestly',asy
  await expect(page.getByText(/no acreditan identidad ni autorización/)).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
  await page.getByRole('link',{name:'Abrir mi asistente personal ↗'}).click();
- await expect(page).toHaveURL(/\\/kowi$/);
+ await expect(page).toHaveURL(/kowi$/);
  await expect(page.getByRole('heading',{name:'Entrar a Kowi',exact:true})).toBeVisible();
 });
