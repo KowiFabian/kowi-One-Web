@@ -19,7 +19,7 @@ const navigation = [
   { label: 'Mi espacio', href: '/app' }, { label: 'KOWI One', href: '/kowi' },
   { label: 'Business', href: '/business' }, { label: 'Projects', href: '/proyectos' },
   { label: 'School', href: '/school' }, { label: 'Organización', href: '/organizacion' },
-  { label: 'Foundation', href: '/fundacion' },
+  { label: 'Foundation', href: '/fundacion' }, { label: 'News', href: '/news' },
 ];
 function Brand(){return <span className="inline-flex items-center gap-3"><span className="kowi-emblem" aria-hidden="true"/><span className="font-medium tracking-[.31em]">KOWI</span></span>}
 export default function Home() {

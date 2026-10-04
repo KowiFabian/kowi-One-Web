@@ -64,6 +64,13 @@ test('Director binds verified owner approval, idempotent internal execution, ten
  await db.query("update auth.users set email_confirmed_at=null where id=$1",[a]);
  await as(a);await assert.rejects(propose(),/permission denied|insufficient_privilege/);
  await db.exec('reset role');await db.query('update auth.users set email_confirmed_at=now() where id=$1',[a]);
+ await as(a);const communications=await propose('communications');
+ await db.query("select decide_director_order($1,$2,'approve')",[oa,communications]);
+ const editorial=(await db.query<{result:{results:unknown[];external_execution:boolean}}>('select execute_director_order($1,$2) as result',[oa,communications])).rows[0].result;
+ assert.equal(editorial.results.length,6);assert.equal(editorial.external_execution,false);
+ await db.query('select execute_director_order($1,$2)',[oa,communications]);
+ assert.equal((await db.query('select * from tasks')).rows.length,12);
+ await db.exec('reset role');
  // Choose a real timezone whose current local hour is 12 to test collection,
  // without changing production clocks or asserting a provider execution.
  const zone=(await db.query<{name:string}>("select name from pg_timezone_names where extract(hour from now() at time zone name)=12 limit 1")).rows[0]?.name;

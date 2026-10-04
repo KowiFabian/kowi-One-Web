@@ -4,7 +4,7 @@ import {ApiError,apiFailure,limitedJson} from '@/lib/server/auth';
 export const dynamic='force-dynamic';
 const headers={'Cache-Control':'no-store'};
 const market=z.enum(['national','europe','asia','africa','north_america','south_america','indonesia','oceania']);
-const proposal=z.object({operation:z.literal('propose'),request_id:z.string().uuid(),agent_id:z.string().uuid(),kind:z.enum(['operations','commercial','foundation']),objective:z.string().trim().min(5).max(1000),markets:z.array(market).max(8),timezone:z.string().min(1).max(100)}).strict();
+const proposal=z.object({operation:z.literal('propose'),request_id:z.string().uuid(),agent_id:z.string().uuid(),kind:z.enum(['operations','commercial','foundation','communications']),objective:z.string().trim().min(5).max(1000),markets:z.array(market).max(8),timezone:z.string().min(1).max(100)}).strict();
 const decision=z.object({operation:z.enum(['approve','reject','execute']),order_id:z.string().uuid()}).strict();
 const consent=z.object({operation:z.literal('group_consent'),group_id:z.string().uuid(),join:z.boolean()}).strict();
 export async function GET(request:Request){try{
