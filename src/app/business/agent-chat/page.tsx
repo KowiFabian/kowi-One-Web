@@ -2,8 +2,9 @@
 import {useEffect,useRef,useState} from 'react';
 import Link from 'next/link';
 import {api} from '@/lib/api';
+import {businessConfigSchema} from '@/lib/business-schema';
 type Organization={id:string;name:string};
-type Agent={id:string;name:string;status:string;last_verified_at?:string|null};
+type Agent={id:string;name:string;status:string;last_verified_at?:string|null;config?:unknown};
 type Message={role:string;content:string;id?:string};
 type Conversation={id:string;title:string};
 export default function Page(){
@@ -16,12 +17,13 @@ export default function Page(){
  const requestRef=useRef<string|null>(null),captureRef=useRef<string|null>(null);
  useEffect(()=>{let active=true;api<Organization[]>('/api/organizations').then(rows=>{if(active){setOrganizations(rows);const selected=new URLSearchParams(window.location.search).get('organization_id');setOrg(rows.find(o=>o.id===selected)?.id||rows[0]?.id||'');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  useEffect(()=>{if(!org)return;let active=true;setLoading(true);setError('');setAgents([]);setAgentId('');setConversationId('');setMessages([]);setConversations([]);setRole('');requestRef.current=null;captureRef.current=null;
- api<{items:Agent[];role:string}>('/api/organization-agents?organization_id='+org).then(data=>{if(active){setAgents(data.items);setRole(data.role);const selected=new URLSearchParams(window.location.search).get('agent_id');setAgentId(data.items.find(a=>a.id===selected)?.id||data.items[0]?.id||'');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[org]);
+ api<{items:Agent[];role:string}>('/api/organization-agents?organization_id='+org).then(data=>{if(active){setAgents(data.items);setRole(data.role);const selected=new URLSearchParams(window.location.search).get('agent_id');setAgentId(data.items.find(a=>a.id===selected)?.id||data.items.find(a=>businessConfigSchema.safeParse(a.config).success)?.id||data.items[0]?.id||'');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[org]);
  useEffect(()=>{if(!org||!agentId)return;let active=true;setError('');setConversationId('');setMessages([]);setConversations([]);requestRef.current=null;captureRef.current=null;
  api<{items:Conversation[]}>('/api/organization-chat?organization_id='+org+'&agent_id='+agentId).then(data=>{if(active)setConversations(data.items);}).catch(e=>{if(active)setError(e.message);});return()=>{active=false;};},[org,agentId]);
  const agent=agents.find(a=>a.id===agentId);
  const configurer=['owner','admin','configurator'].includes(role);
- const canChat=!!agent&&(['active'].includes(agent.status)||(agent.status==='draft'&&configurer))&&['owner','admin','configurator','operator'].includes(role);
+ const validConfig=businessConfigSchema.safeParse(agent?.config).success;
+ const canChat=validConfig&&!!agent&&(['active'].includes(agent.status)||(agent.status==='draft'&&configurer))&&['owner','admin','configurator','operator'].includes(role);
  async function open(id:string){if(busy)return;setBusy(true);setError('');setNotice('');setMessages([]);requestRef.current=null;captureRef.current=null;
  try{const data=await api<{messages:Message[]}>('/api/organization-chat?organization_id='+org+'&conversation_id='+id);setMessages(data.messages);setConversationId(id);}catch(e){setError(e instanceof Error?e.message:'Historial no disponible.');}finally{setBusy(false);}}
  async function send(event:React.FormEvent){event.preventDefault();if(busy||!canChat||!message.trim())return;setBusy(true);setError('');setNotice('');
@@ -40,7 +42,8 @@ export default function Page(){
  {loading&&<p role="status">Cargando…</p>}{error&&<p role="alert">{error}</p>}{notice&&<p role="status">{notice}</p>}
  {!!organizations.length&&<label className="block">Empresa<select className={field} disabled={busy||loading} value={org} onChange={e=>setOrg(e.target.value)}>{organizations.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select></label>}
  {!!agents.length&&<label className="block">Agente<select className={field} disabled={busy||loading} value={agentId} onChange={e=>setAgentId(e.target.value)}>{agents.map(a=><option key={a.id} value={a.id}>{a.name} · {a.status.toUpperCase()}</option>)}</select></label>}
- {!loading&&org&&!agents.length&&!error&&<Link href={'/business/agents?organization_id='+org} className="inline-block underline">Registrar mi agente</Link>}
+ {!loading&&org&&configurer&&!error&&<Link href={'/business/agents?organization_id='+org} className="inline-block underline">Registrar agente con información autorizada</Link>}
+ {agent&&!validConfig&&<p role="alert">Este agente no tiene una ficha empresarial válida. Registra un agente con datos autorizados antes de probar la IA.</p>}
  {agent&&<>
  <nav className="flex flex-wrap gap-3">{conversations.map(c=><button key={c.id} className="rounded-xl border border-white/20 p-3 text-sm" disabled={busy} onClick={()=>open(c.id)}>{c.title}</button>)}<button className="rounded-xl border border-white/20 p-3" disabled={busy} onClick={()=>{setConversationId('');setMessages([]);setNotice('');requestRef.current=null;captureRef.current=null;}}>Nueva conversación</button></nav>
  <div role="log" aria-label="Conversación empresarial" className="glass max-h-[32rem] space-y-4 overflow-y-auto rounded-xl p-5">{!messages.length&&<p>Pregunta sobre los datos confirmados de tu empresa.</p>}{messages.map((m,index)=><article key={m.id||index} className="rounded-xl border border-white/15 p-4"><h2 className="text-sm font-semibold">{m.role==='assistant'?'KOWI · IA':'Persona'}</h2><p className="mt-2 whitespace-pre-wrap break-words">{m.content}</p></article>)}</div>
