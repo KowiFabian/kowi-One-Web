@@ -1,5 +1,5 @@
 # KOWI execution board
-Observed checkpoint: 2026-10-03 UTC. Status is scoped to the evidence below, not a commercial-readiness declaration.
+Observed checkpoint: 2026-10-04 UTC. Status is scoped to the evidence below, not a commercial-readiness declaration.
 
 | Work | Status | Evidence / limit |
 | --- | --- | --- |
@@ -9,15 +9,15 @@ Observed checkpoint: 2026-10-03 UTC. Status is scoped to the evidence below, not
 | Bounded AI jobs and timeout observer | VERIFIED | PR44; database concurrency/retry/lifecycle tests; actual pg_cron reaper succeeded |
 | Platform authority bootstrap | BLOCKED BY OWNER | PR31; verified founder account identity not established; no Platform Owner assigned |
 | Control Center and Intelligence | DONE | Tenant-scoped routes deployed; observed counts separated from interpretation; no customer E2E yet |
-| Database daily security report | VERIFIED | Manual stored report 6de32e78-37a6-4cc9-89e3-5eb334f55859: ATTENTION, zero tables without RLS, no missing target tables. Daily 07:45 UTC scheduled; first scheduled run not yet observed |
+| Database daily security report | VERIFIED | Actual cron run succeeded on 2026-10-04 at 07:45 UTC, stored report ATTENTION with zero tables without RLS. Coverage remains partial |
 | Production HTTP + public mobile/browser checks | VERIFIED | PR47 workflows 37096039112/37096039099; unauthenticated scope, six Desktop/Pixel browser cases |
-| Production dependency audit | VERIFIED | PR46 verify run 37095981025; 33 tests passed, lint/type/build passed, production npm audit zero |
+| Production dependency audit | VERIFIED | PR46 verify run 37095981025; 34 tests passed in PR50, lint/type/build passed, production npm audit zero |
 | Full development dependency findings | IN PROGRESS | Seven high findings in braces dependency chain; no upstream patched version found at previous audit. Not resolved by production-only audit |
-| Legacy action execution authority | IN PROGRESS | Draft PR14; completion RPC still needs coordinated backend hardening and E2E |
-| Agent authorized product/FAQ configuration | IN PROGRESS | PR48; pending CI and merge |
+| Legacy action execution authority | VERIFIED | PR50 deployed and both migrations applied. Authenticated outcome-forgery probe rejected in a rolled-back production SQL transaction; browser message/appointment writes denied. Existing approved email preserved for manual review. External provider E2E remains blocked |
+| Agent authorized product/FAQ configuration | DONE | PR48 merged after CI and deployed; confirmed products/prices and FAQ input available. Authenticated customer E2E remains unverified |
 | NVIDIA OpenShell runtime | BLOCKED EXTERNAL | Official v0.1.2 researched; Vercel function compatibility not verified. Guard abstraction exists, actual isolated code runtime not installed |
 | Google Calendar / Email / WhatsApp / Voice | BLOCKED EXTERNAL | No end-to-end provider verification; do not declare ACTIVE |
-| KOWI as first real customer | BLOCKED BY OWNER | No organization or agent installation exists at this checkpoint; fictitious legacy pilot remains disabled |
+| KOWI as first real customer | BLOCKED BY OWNER | 100 organizations/installations were created outside this execution; all installations explicitly synthetic=true, with zero agent metrics/messages. They are not real customers or verified provider executions. Founder identity remains unbound |
 
 ## Owner configuration step
 Supabase Kowi One > Settings > API Keys / Legacy API Keys: copy the server service_role key directly into Vercel kowi-One-Web > Settings > Environment Variables > Add SUPABASE_SERVICE_ROLE_KEY, Production; save and redeploy main. Never prefix it NEXT_PUBLIC, commit it, or paste it into chat. Health configuration presence does not verify key validity.
@@ -26,5 +26,5 @@ Founder must authenticate and verify email at https://kowi.one/business#crear. O
 
 ## Verified production references
 PR46 merge fae9a1992c86d208ca00bb4fc63e87487a3c37b8 was live in /api/health at 04:19:11 UTC.
-PR47 merge 2aafd8416432c91237f8a3053b3810137aac4f7e advances verification only; deployment status must be rechecked.
+PR50 merge fcd60a43934c964fa9a40297d9a7e85db51a5ed0 was live in /api/health at 2026-10-04 07:57:32 UTC; server persistence configuration remains absent.
 No production-ready claim, customer, sale, AI cost, actual provider response or external booking is inferred from synthetic database fixtures.

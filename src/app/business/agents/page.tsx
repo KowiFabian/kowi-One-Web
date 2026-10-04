@@ -4,7 +4,7 @@ import Link from 'next/link';
 import {api} from '@/lib/api';
 import {businessConfigSchema} from '@/lib/business-schema';
 type Organization={id:string;name:string};
-type Agent={id:string;name:string;status:string};
+type Agent={id:string;name:string;status:string;config?:{synthetic?:boolean}};
 export default function Page(){
  const [organizations,setOrganizations]=useState<Organization[]>([]),[org,setOrg]=useState('');
  const [agents,setAgents]=useState<Agent[]>([]),[role,setRole]=useState(''),[error,setError]=useState('');
@@ -39,7 +39,7 @@ export default function Page(){
  <fieldset className="space-y-3 md:col-span-2"><legend>Conocimiento autorizado: preguntas frecuentes</legend>{faq.map((item,index)=><div key={index} className="grid gap-3 md:grid-cols-2"><label>Pregunta<input className={field} required maxLength={200} disabled={busy} value={item.question} onChange={e=>setFaq(old=>old.map((row,i)=>i===index?{...row,question:e.target.value}:row))}/></label><label>Respuesta confirmada<textarea className={field} required maxLength={600} disabled={busy} value={item.answer} onChange={e=>setFaq(old=>old.map((row,i)=>i===index?{...row,answer:e.target.value}:row))}/></label><button type="button" disabled={busy} onClick={()=>setFaq(old=>old.filter((_,i)=>i!==index))}>Retirar pregunta {index+1}</button></div>)}<button type="button" className="rounded-xl border border-white/20 p-3" disabled={busy||faq.length>=25} onClick={()=>setFaq(old=>[...old,{question:'',answer:''}])}>Añadir pregunta frecuente</button></fieldset>
  <button className="rounded-xl bg-[#e8b37b] p-3 text-black disabled:opacity-50" disabled={busy}>Registrar agente en DRAFT</button>
  </form>}
- {!loading&&org&&<ul className="space-y-3">{agents.map(agent=><li key={agent.id} className="glass flex flex-wrap items-center justify-between gap-4 rounded-xl p-5"><div><h2 className="font-semibold">{agent.name}</h2><p className="text-sm">{agent.status.toUpperCase()}</p><Link href={'/business/agent-chat?organization_id='+org+'&agent_id='+agent.id} className="mt-2 inline-block underline">Conversación e historial</Link></div>{canWrite&&agent.status!=='terminated'&&<div className="flex gap-3">{agent.status!=='revoked'&&<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'revoked')}>Revocar</button>}<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'terminated')}>Terminar</button></div>}</li>)}</ul>}
+ {!loading&&org&&<ul className="space-y-3">{agents.map(agent=><li key={agent.id} className="glass flex flex-wrap items-center justify-between gap-4 rounded-xl p-5"><div><h2 className="font-semibold">{agent.name}</h2><p className="text-sm">{agent.status.toUpperCase()}</p>{agent.config?.synthetic===true&&<p className="mt-2 text-sm">Registro de prueba sintético. No acredita una conversación de IA ni un cliente real.</p>}<Link href={'/business/agent-chat?organization_id='+org+'&agent_id='+agent.id} className="mt-2 inline-block underline">Conversación e historial</Link></div>{canWrite&&agent.status!=='terminated'&&<div className="flex gap-3">{agent.status!=='revoked'&&<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'revoked')}>Revocar</button>}<button className="rounded-lg border border-white/20 p-3" disabled={busy} onClick={()=>change(agent,'terminated')}>Terminar</button></div>}</li>)}</ul>}
  <Link href="/control-center" className="inline-block underline">Control Center</Link>
  </div></main>;
 }

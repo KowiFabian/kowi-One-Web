@@ -10,9 +10,12 @@ export async function GET(request:Request){
   if(id&&!organization)throw new ApiError(404,'Empresa no disponible.');
   const observations=organization?await Promise.all([
    {table:'organization_members',column:'organization_id',label:'Miembros registrados'},
-   {table:'agent_installations',column:'id',label:'Instalaciones registradas'}
+   {table:'agent_installations',column:'id',label:'Instalaciones registradas'},
+   {table:'agent_installations',column:'id',label:'Instalaciones marcadas como prueba',synthetic:true}
   ].map(async source=>{
-   const {count,error}=await db.from(source.table).select(source.column,{head:true,count:'exact'}).eq('organization_id',organization.id);
+   let query=db.from(source.table).select(source.column,{head:true,count:'exact'}).eq('organization_id',organization.id);
+   if('synthetic' in source&&source.synthetic)query=query.contains('config',{synthetic:true});
+   const {count,error}=await query;
    return {label:source.label,status:error||count===null?'UNOBSERVED':'OBSERVED',count:error?null:count};
   })):[];
   return Response.json({organizations,organization:organization??null,observations,observedAt:new Date().toISOString()},{headers:{'Cache-Control':'no-store'}});
