@@ -132,3 +132,14 @@ test('LOCAL UI FIXTURE: Business selection and agenda preserve tenant context',a
  await expect(page.getByRole('button',{name:'Citas propuestas',exact:true})).toHaveAttribute('aria-pressed','true');
  await expect(page.locator('main [role="alert"]')).toHaveCount(0);
 });
+
+test('Voz ID identifies current voice tools and pending delegation honestly',async({page})=>{
+ const response=await page.goto('/voz-id');expect(response.status()).toBe(200);
+ await expect(page.getByRole('heading',{name:'Voz ID: tu propósito, tu voz, tu control.'})).toBeVisible();
+ await expect(page.getByText(/todavía no están activas/)).toBeVisible();
+ await expect(page.getByText(/no acreditan identidad ni autorización/)).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+ await page.getByRole('link',{name:'Abrir mi asistente personal ↗'}).click();
+ await expect(page).toHaveURL(/\\/kowi$/);
+ await expect(page.getByRole('heading',{name:'Entrar a Kowi',exact:true})).toBeVisible();
+});
