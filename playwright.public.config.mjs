@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+// Playwright 1.56 requires this flag to intercept service-worker-owned requests.
+process.env.PW_EXPERIMENTAL_SERVICE_WORKER_NETWORK_EVENTS='1';
 const baseURL=process.env.KOWI_PUBLIC_TEST_BASE_URL||'https://kowi.one';
 export default defineConfig({
   testDir: './tests/e2e',

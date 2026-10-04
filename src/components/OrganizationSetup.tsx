@@ -20,12 +20,13 @@ export default function OrganizationSetup(){
  const field='mt-2 w-full rounded-xl border border-white/20 bg-[#102b22] p-3 text-white';
  return <section className="glass space-y-4 rounded-[1.7rem] p-6">
   <h2 className="text-2xl font-semibold">Tus empresas</h2>
-  <p className="text-sm text-[#a9c1b3]">Registra tu organización. La configuración y las conversaciones del panel actual conservan su espacio por cuenta; todavía no se vinculan a esta selección.</p>
+  <p className="text-sm text-[#a9c1b3]">Selecciona tu organización y utiliza los accesos de esta sección para trabajar con su agente, CRM, director y evidencias. La conversación empresarial de estos accesos queda vinculada a la empresa seleccionada.</p>
   {loading&&<p role="status">Cargando empresas…</p>}
   {error&&<p role="alert">{error}</p>}
   {!!rows.length&&<label className="block">Empresa<select className={field} value={selected} disabled={busy||loading} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
   {!loading&&!rows.length&&!error&&<p>Aún no hay empresas registradas.</p>}
   <form onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
+  {selected&&<div className="flex flex-wrap gap-3"><Link href={'/business/agent-chat?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black">Conversación IA de esta empresa ↗</Link><Link href={'/business/director?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl border border-[#e8b37b] px-5 py-3">Abrir KOWI Director</Link><Link href="/app" className="inline-block rounded-xl border border-white/30 px-5 py-3">Mi espacio instalable</Link></div>}
   {selected&&<Link href={'/business/crm-org?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Abrir CRM de esta empresa</Link>}
   {selected&&<><Link href={'/business/agents?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Agentes</Link><Link href={'/business/intelligence?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Intelligence</Link></>}
   {selected&&<Link href={'/business/jobs?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Trabajos y evidencias</Link>}
