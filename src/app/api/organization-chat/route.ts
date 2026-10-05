@@ -9,7 +9,6 @@ import {modelResponseSchema,responseFormat} from '@/lib/chat-schema';
 export const runtime='nodejs';export const dynamic='force-dynamic';export const maxDuration=60;
 const headers={'Cache-Control':'no-store'};
 const requestSchema=z.object({agentId:z.string().uuid(),conversationId:z.string().uuid().optional(),requestId:z.string().uuid(),userMessage:z.string().trim().min(1).max(2000)}).strict();
-const usageSchema=z.object({prompt_tokens:z.number().int().min(0).max(1000000).optional(),completion_tokens:z.number().int().min(0).max(1000000).optional()}).passthrough();
 export async function GET(request:Request){try{
  const {db,organizationId}=await requireOrganization(request);
  const conversation=new URL(request.url).searchParams.get('conversation_id');
