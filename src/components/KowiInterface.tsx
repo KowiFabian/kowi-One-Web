@@ -4,7 +4,8 @@ import Link from 'next/link';
 import MessageList from './MessageList';
 import GoalPanel from './GoalPanel';
 import { Message, ConversationState } from '@/types';
-import { api } from '@/lib/api';
+import { api, apiBlob } from '@/lib/api';
+import { voiceLocales, voiceProfiles, voiceTones, type VoiceProfile, type VoiceTone } from '@/lib/voice-config';
 
 type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
 type BrowserRecognizer = { lang: string; onresult: ((event: SpeechResult) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; abort: () => void };
@@ -24,11 +25,27 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceProfile, setVoiceProfile] = useState<VoiceProfile>('legacy');
+  const [voiceTone, setVoiceTone] = useState<VoiceTone>('natural');
+  const [voiceLocale, setVoiceLocale] = useState('auto');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<BrowserRecognizer|null>(null);
+  const audioPlayer = useRef<HTMLAudioElement|null>(null);
+  const audioUrl = useRef<string|null>(null);
   const dictationConsent = useRef(false);
   const lock = useRef(false);
-  useEffect(() => () => { const active=recognizer.current; if(active){active.onresult=null;active.onerror=null;active.onend=null;try{active.abort();}catch{}} window.speechSynthesis?.cancel(); }, []);
+
+  function stopAudio(){
+    audioPlayer.current?.pause();
+    audioPlayer.current = null;
+    if(audioUrl.current){ URL.revokeObjectURL(audioUrl.current); audioUrl.current=null; }
+    window.speechSynthesis?.cancel();
+  }
+  useEffect(() => () => {
+    const active=recognizer.current;
+    if(active){active.onresult=null;active.onerror=null;active.onend=null;try{active.abort();}catch{}}
+    stopAudio();
+  }, []);
   function stopListening(){const active=recognizer.current;recognizer.current=null;if(active){active.onresult=null;active.onerror=null;active.onend=null;try{active.abort();}catch{}}setListening(false);}
   const retry = useRef<{ text: string; id: string; conversation: string } | null>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -38,7 +55,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   async function load(id: string) {
-    stopListening();
+    stopListening(); stopAudio();
     const data = await api<{ turns: Turn[] }>(`/api/conversations/${id}`);
     setConversationId(id);
     setMessages(data.turns.length ? data.turns.flatMap(t => [
@@ -58,7 +75,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
 
   function fresh() {
     if (lock.current) return;
-    stopListening();
+    stopListening(); stopAudio();
     setConversationId(null); setMessages(welcome); setGoal(null); setDraft(''); setNotice('');
     setConfirmDelete(false); retry.current = null;
   }
@@ -67,19 +84,53 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     const browser = window as VoiceWindow;
     const Recognition = browser.SpeechRecognition ?? browser.webkitSpeechRecognition;
     if (!Recognition) { setNotice('El dictado no está disponible en este navegador. Puedes escribir tu mensaje.'); return; }
-    if(!dictationConsent.current){if(!window.confirm('El dictado utiliza el reconocimiento de voz de tu navegador, que puede procesar audio con su proveedor. El texto queda en borrador: no autoriza gestiones ni se envía hasta que pulses Enviar. ¿Activar el micrófono?'))return;dictationConsent.current=true;}
-    const recognition = new Recognition(); recognizer.current=recognition; recognition.lang = navigator.language || 'es-ES'; setListening(true);
+    if(!dictationConsent.current){
+      if(!window.confirm('El dictado utiliza el reconocimiento de voz de tu navegador, que puede procesar audio con su proveedor. El texto queda en borrador: no autoriza gestiones ni se envía hasta que pulses Enviar. ¿Activar el micrófono?')) return;
+      dictationConsent.current=true;
+    }
+    const recognition = new Recognition(); recognizer.current=recognition;
+    recognition.lang = voiceLocale === 'auto' ? (navigator.language || 'es-ES') : voiceLocale;
+    setListening(true);
     recognition.onresult = event => setDraft(previous => [previous, event.results[0]?.[0]?.transcript ?? ''].filter(Boolean).join(' ').slice(0, 2000));
     recognition.onerror = () => { setListening(false); setNotice('No se pudo escuchar. Comprueba el permiso del micrófono.'); };
     recognition.onend = () => { if(recognizer.current===recognition)recognizer.current=null;setListening(false); };
     try { recognition.start(); } catch { setListening(false); setNotice('No se pudo iniciar el micrófono.'); }
   }
 
-  function speak(response: string) {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  function browserFallback(response:string){
+    if(!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(response); utterance.lang = navigator.language || 'es-ES'; utterance.rate = 1;
+    const utterance = new SpeechSynthesisUtterance(response);
+    utterance.lang = voiceLocale === 'auto' ? (navigator.language || 'es-ES') : voiceLocale;
+    utterance.rate = voiceTone === 'calm' ? 0.92 : voiceTone === 'energetic' ? 1.08 : 1;
     window.speechSynthesis.speak(utterance);
+  }
+
+  async function speak(response: string, id:string) {
+    if (!voiceEnabled) return;
+    stopAudio();
+    try {
+      const blob = await apiBlob('/api/voice/speech', {
+        method:'POST',
+        body:JSON.stringify({ conversationId:id, text:response, profile:voiceProfile, tone:voiceTone, locale:voiceLocale, approved:true }),
+      });
+      if(!voiceEnabled) return;
+      const url=URL.createObjectURL(blob); audioUrl.current=url;
+      const player=new Audio(url); audioPlayer.current=player;
+      const release=()=>{ if(audioPlayer.current===player)audioPlayer.current=null; if(audioUrl.current===url){URL.revokeObjectURL(url);audioUrl.current=null;} };
+      player.onended=release; player.onerror=release;
+      await player.play();
+    } catch(error) {
+      const message=error instanceof Error?error.message:'No se pudo generar la voz.';
+      setNotice(`${message} Se usará la lectura disponible en este dispositivo.`);
+      browserFallback(response);
+    }
+  }
+
+  function toggleVoice(){
+    if(voiceEnabled){ stopAudio(); setVoiceEnabled(false); return; }
+    const accepted=window.confirm('Voz ID genera audio con IA. Al activarla autorizas reproducir únicamente las respuestas guardadas de esta conversación con el perfil de voz seleccionado. No autoriza mensajes externos ni nuevas declaraciones en tu nombre. ¿Activar Voz ID?');
+    if(accepted) setVoiceEnabled(true);
   }
 
   async function send(event: React.FormEvent) {
@@ -102,7 +153,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         { id: retry.current!.id + '-a', type: 'assistant', content: result.response, timestamp: new Date() },
       ]);
       if (result.goal) setGoal(result.goal);
-      speak(result.response);
+      void speak(result.response,id);
       setDraft(''); retry.current = null; await refresh();
     });
   }
@@ -155,8 +206,27 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} maxLength={2000} rows={3}
               placeholder="¿Qué quieres hacer realidad?"
               className="w-full resize-none bg-transparent p-3 text-base text-white outline-none placeholder:text-[#6f8f7e]" />
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><div className="flex flex-wrap items-center gap-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span><button type="button" onClick={listening?stopListening:listen} disabled={busy&&!listening} className="rounded-full border border-white/20 px-3 py-2 text-sm disabled:opacity-50" aria-label={listening?'Detener dictado':'Dictar mensaje'}>{listening ? 'Detener micrófono' : '🎙 Dictar'}</button><button type="button" onClick={() => { if (voiceEnabled) window.speechSynthesis?.cancel(); setVoiceEnabled(!voiceEnabled); }} aria-pressed={voiceEnabled} className="rounded-full border border-white/20 px-3 py-2 text-sm">{voiceEnabled ? '🔊 Voz activada' : '🔇 Escuchar respuestas'}</button></div>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><div className="flex flex-wrap items-center gap-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span><button type="button" onClick={listening?stopListening:listen} disabled={busy&&!listening} className="rounded-full border border-white/20 px-3 py-2 text-sm disabled:opacity-50" aria-label={listening?'Detener dictado':'Dictar mensaje'}>{listening ? 'Detener micrófono' : '🎙 Dictar'}</button><button type="button" onClick={toggleVoice} aria-pressed={voiceEnabled} className="rounded-full border border-white/20 px-3 py-2 text-sm">{voiceEnabled ? '🔊 Voz ID activa' : '🔇 Activar Voz ID'}</button></div>
               <button disabled={busy || !draft.trim()} className="rounded-full bg-[#e8b37b] px-6 py-3 font-semibold text-[#17121a] disabled:opacity-40">{busy ? 'Pensando…' : 'Enviar ↗'}</button></div>
+
+            {voiceEnabled && <div className="mt-3 grid gap-2 border-t border-white/10 px-2 pt-3 text-xs sm:grid-cols-3">
+              <label className="grid gap-1 text-[#9bb3a5]">Perfil
+                <select value={voiceProfile} onChange={e=>setVoiceProfile(e.target.value as VoiceProfile)} className="rounded-xl border border-white/15 bg-[#0b1b16] px-3 py-2 text-white">
+                  {voiceProfiles.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-1 text-[#9bb3a5]">Tono
+                <select value={voiceTone} onChange={e=>setVoiceTone(e.target.value as VoiceTone)} className="rounded-xl border border-white/15 bg-[#0b1b16] px-3 py-2 text-white">
+                  {voiceTones.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}
+                </select>
+              </label>
+              <label className="grid gap-1 text-[#9bb3a5]">Idioma / acento
+                <select value={voiceLocale} onChange={e=>setVoiceLocale(e.target.value)} className="rounded-xl border border-white/15 bg-[#0b1b16] px-3 py-2 text-white">
+                  {voiceLocales.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+                </select>
+              </label>
+              <p className="sm:col-span-3 text-[#789887]">Voz generada por IA · solo reproduce respuestas guardadas de esta conversación · no autoriza comunicaciones externas.</p>
+            </div>}
           </form>
 
           {conversationId && <div className="mt-5 flex flex-wrap gap-4 text-xs text-[#8da899]">
