@@ -15,6 +15,10 @@ export async function POST(request:Request){try{
  const {db,organizationId}=await requireOrganization(request,writers);
  const input=z.object({name:z.string().trim().min(2).max(120),config:businessConfigSchema}).strict().safeParse(await limitedJson(request,20000));
  if(!input.success)throw new ApiError(400,'Revisa la configuración del agente.');
+ const {data:existing,error:existingError}=await db.from('agent_installations').select('id,name,status,config').eq('organization_id',organizationId).eq('name',input.data.name).in('status',['draft','active','paused']).order('created_at',{ascending:false}).limit(20);
+ if(existingError)throw new ApiError(503,'No se pudo comprobar el registro.');
+ const duplicate=existing?.find(item=>JSON.stringify(item.config)===JSON.stringify(input.data.config));
+ if(duplicate)return Response.json(duplicate,{status:200,headers});
  const {count,error:countError}=await db.from('agent_installations').select('id',{head:true,count:'exact'}).eq('organization_id',organizationId);
  if(countError||count===null)throw new ApiError(503,'No se pudo comprobar el registro.');
  if(count>=20)throw new ApiError(429,'Límite de instalaciones alcanzado.');
