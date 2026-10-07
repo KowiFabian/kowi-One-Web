@@ -1,0 +1,1 @@
+export const schoolCopy={es:{goal:'¿Qué quieres aprender o conseguir?',continue:'Continuar aprendiendo',proof:'Demuestra lo que puedes hacer.'},en:{goal:'What do you want to learn or achieve?',continue:'Continue learning',proof:'Prove what you can do.'}} as const;export type SchoolLocale=keyof typeof schoolCopy;
