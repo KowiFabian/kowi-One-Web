@@ -22,7 +22,7 @@ export default function OrganizationSetup(){
   <h2 className="text-2xl font-semibold">Tus empresas</h2>
   <p className="text-sm text-[#a9c1b3]">Selecciona tu organización y utiliza los accesos de esta sección para trabajar con su agente, CRM, director y evidencias. La conversación empresarial de estos accesos queda vinculada a la empresa seleccionada.</p>
   {loading&&<p role="status">Cargando empresas…</p>}
-  {error&&<p role="alert">{error}</p>}
+  {error&&<div role="alert" aria-live="assertive" className="rounded-xl border-2 border-red-400 bg-red-950/80 p-4 text-red-100 shadow-lg"><p className="font-bold">⚠ No se pudo completar la operación</p><p className="mt-1">{error}</p><p className="mt-2 text-sm">Comprueba tu sesión, la verificación del correo y el límite de 20 empresas por cuenta. Si continúa, contacta con soporte.</p></div>}
   {!!rows.length&&<label className="block">Empresa<select className={field} value={selected} disabled={busy||loading} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
   {!loading&&!rows.length&&!error&&<p>Aún no hay empresas registradas.</p>}
   <form onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
