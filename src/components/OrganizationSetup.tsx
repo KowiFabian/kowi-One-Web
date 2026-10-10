@@ -10,22 +10,24 @@ export default function OrganizationSetup(){
  const [error,setError]=useState('');
  const [loading,setLoading]=useState(true);
  const [busy,setBusy]=useState(false);
+ const [notice,setNotice]=useState('');
  useEffect(()=>{let active=true;api<OrganizationSummary[]>('/api/organizations').then(data=>{if(active){setRows(data);setSelected(data[0]?.id||'');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  async function create(event:React.FormEvent){
-  event.preventDefault();if(busy)return;
-  const parsed=organizationSchema.safeParse({name});if(!parsed.success){setError('Revisa el nombre de tu empresa.');return;}
+  event.preventDefault();if(busy)return;setNotice('');
+  const parsed=organizationSchema.safeParse({name});if(!parsed.success){setError(name.trim().length<2?'Falta el nombre de la empresa. Escribe al menos 2 caracteres.':'El nombre de la empresa no es válido. Revisa los caracteres y la longitud máxima de 120.');return;}
   setBusy(true);setError('');
-  try{const row=await api<OrganizationSummary>('/api/organizations',{method:'POST',body:JSON.stringify(parsed.data)});setRows(old=>[...old,row]);setSelected(row.id);setName('');}catch(e){setError(e instanceof Error?e.message:'No se pudo crear la empresa.');}finally{setBusy(false);}
+  try{const row=await api<OrganizationSummary>('/api/organizations',{method:'POST',body:JSON.stringify(parsed.data)});setRows(old=>[...old,row]);setSelected(row.id);setName('');setNotice('Empresa creada correctamente.');}catch(e){setError(e instanceof Error?e.message:'No se pudo crear la empresa.');}finally{setBusy(false);}
  }
  const field='mt-2 w-full rounded-xl border border-white/20 bg-[#102b22] p-3 text-white';
  return <section className="glass space-y-4 rounded-[1.7rem] p-6">
   <h2 className="text-2xl font-semibold">Tus empresas</h2>
   <p className="text-sm text-[#a9c1b3]">Selecciona tu organización y utiliza los accesos de esta sección para trabajar con su agente, CRM, director y evidencias. La conversación empresarial de estos accesos queda vinculada a la empresa seleccionada.</p>
   {loading&&<p role="status">Cargando empresas…</p>}
-  {error&&<p role="alert">{error}</p>}
+  {notice&&<p role="status" className="rounded-xl border border-emerald-400 bg-emerald-950/80 p-4 text-emerald-100">{notice}</p>}
+  {error&&<div role="alert" aria-live="assertive" className="rounded-xl border-2 border-red-400 bg-red-950/80 p-4 text-red-100 shadow-lg"><p className="font-bold">⚠ No se pudo completar la operación</p><p className="mt-1">{error}</p><p className="mt-2 text-sm">Comprueba tu sesión, la verificación del correo y el límite de 20 empresas por cuenta. Si continúa, contacta con soporte.</p></div>}
   {!!rows.length&&<label className="block">Empresa<select className={field} value={selected} disabled={busy||loading} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
   {!loading&&!rows.length&&!error&&<p>Aún no hay empresas registradas.</p>}
-  <form onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
+  <form noValidate onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} aria-invalid={!!error} aria-describedby="organization-name-help" value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/><span id="organization-name-help" className="mt-1 block text-xs text-[#a9c1b3]">Escribe al menos 2 caracteres. El navegador mostrará si falta completar este campo.</span></label><button type="submit" disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
   {selected&&<div className="flex flex-wrap gap-3"><Link href={'/business/agent-chat?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black">Conversación IA de esta empresa ↗</Link><Link href={'/business/director?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl border border-[#e8b37b] px-5 py-3">Abrir KOWI Director</Link><Link href="/app" className="inline-block rounded-xl border border-white/30 px-5 py-3">Mi espacio instalable</Link></div>}
   {selected&&<Link href={'/business/crm-org?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Abrir CRM de esta empresa</Link>}
   {selected&&<><Link href={'/business/agents?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Agentes</Link><Link href={'/business/intelligence?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Intelligence</Link></>}
