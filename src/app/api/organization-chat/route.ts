@@ -76,10 +76,10 @@ export async function POST(request:Request){try{
  let response:string,promptTokens:number|null=null,completionTokens:number|null=null,usedModel=model,providerId='';
  try{
   const completion=await upstream.json();
-  if(completion?.status!=='completed'||typeof completion.id!=='string'||!completion.id.trim()||completion.id.length>200)throw new Error();providerId=completion.id;
+  if(completion?.status!=='completed'){console.error('organization-chat response incomplete',{status:completion?.status??'missing',reason:completion?.incomplete_details?.reason??'unknown',model});throw new Error();}if(typeof completion.id!=='string'||!completion.id.trim()||completion.id.length>200)throw new Error();providerId=completion.id;
   const outputText=(completion.output||[]).flatMap((item:any)=>Array.isArray(item?.content)?item.content:[]).find((part:any)=>part?.type==='output_text'&&typeof part?.text==='string')?.text;
-  if(typeof outputText!=='string')throw new Error();
-  const result=modelResponseSchema.parse(JSON.parse(outputText));if(result.goal!==null)throw new Error();response=result.response;
+  if(typeof outputText!=='string'){console.error('organization-chat missing output text',{model,outputTypes:Array.isArray(completion.output)?completion.output.map((item:any)=>item?.type).slice(0,6):[]});throw new Error();}
+  const result=modelResponseSchema.safeParse(JSON.parse(outputText));if(!result.success){console.error('organization-chat schema mismatch',{model,issues:result.error.issues.map(issue=>issue.path.join('.')).slice(0,6)});throw new Error();}if(result.data.goal!==null){console.error('organization-chat unexpected goal',{model});throw new Error();}response=result.data.response;
   const usage=z.object({input_tokens:z.number().int().min(0).optional(),output_tokens:z.number().int().min(0).optional()}).passthrough().safeParse(completion.usage||{});
   if(usage.success){promptTokens=usage.data.input_tokens??null;completionTokens=usage.data.output_tokens??null;}
   if(typeof completion.model!=='string'||!completion.model.trim()||completion.model.length>100)throw new Error();usedModel=completion.model;
