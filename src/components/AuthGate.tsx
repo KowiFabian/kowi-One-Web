@@ -62,27 +62,27 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
     setSession(null);
   }} />;
 
-  return <main className="kowi-shell grid min-h-screen place-items-center px-6 py-12">
+  return <main className="kowi-shell kowi-auth grid min-h-screen place-items-center px-4 py-6 sm:px-6 sm:py-12">
     <div className="kowi-grid pointer-events-none absolute inset-0 opacity-40"/>
     <section className="glass relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] md:grid-cols-[1.05fr_.95fr]">
-      <div className="relative min-h-[420px] border-b border-white/10 p-8 md:border-b-0 md:border-r md:p-10">
-        <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-9 w-9 rounded-full"/><span className="text-sm font-bold tracking-[.26em]">{isBusiness?'KOWI BUSINESS':'KOWI ONE'}</span></Link>
-        <div className="mt-16 max-w-md">
+      <div className="relative flex flex-col gap-8 border-b border-white/10 p-6 sm:p-8 md:min-h-[420px] md:border-b-0 md:border-r md:p-10">
+        <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-9 w-9 rounded-full"/><span className="text-sm font-bold tracking-[.26em] text-[#f3f6f3]">{isBusiness?'KOWI BUSINESS':'KOWI ONE'}</span></Link>
+        <div className="mt-4 max-w-md md:mt-12">
           <p className="text-xs font-bold uppercase tracking-[.2em] text-[#e8b37b]">Tu espacio Human‑First</p>
-          <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] md:text-5xl">{isBusiness ? 'Tu empresa. Tu agente. Tu control.' : 'Una intención. Un camino. Una acción.'}</h1>
-          <p className="mt-5 leading-relaxed text-[#abc3b4]">{isBusiness?'Entra para gestionar tu empresa, contactos, oportunidades, agenda y tareas. Tu agente trabaja con información confirmada y bajo tu control.':'Entra para crear objetivos, conservar tus planes y continuar donde lo dejaste. Kowi te guía sin sustituir tus decisiones.'}</p>
+          <h1 className="mt-5 text-4xl font-semibold tracking-[-.04em] text-white md:text-5xl">{isBusiness ? 'Tu empresa. Tu agente. Tu control.' : 'Una intención. Un camino. Una acción.'}</h1>
+          <p className="mt-5 leading-relaxed text-[#e0eae3]">{isBusiness?'Entra para gestionar tu empresa, contactos, oportunidades, agenda y tareas. Tu agente trabaja con información confirmada y bajo tu control.':'Entra para crear objetivos, conservar tus planes y continuar donde lo dejaste. Kowi te guía sin sustituir tus decisiones.'}</p>
         </div>
-        <div className="absolute bottom-8 left-8 right-8 rounded-2xl border border-[#e8b37b]/15 bg-[#e8b37b]/5 p-4 text-sm text-[#b8cebf]">Tus acciones sensibles siguen bajo tu autorización.</div>
+        <div className="mt-auto rounded-2xl border border-[#e8b37b]/25 bg-[#e8b37b]/10 p-4 text-sm text-[#edf4ee]">Tus acciones sensibles siguen bajo tu autorización.</div>
       </div>
 
-      <div className="p-8 md:p-10">
-          <h2 className="text-2xl font-semibold">{sent ? 'Introduce tu código' : isBusiness ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Revisa el correo indicado: introduce el código de acceso o abre el enlace si lo incluye.' : 'Usa tu correo. No necesitas contraseña.'}</p>
+      <div className="p-6 sm:p-8 md:p-10">
+          <h2 className="text-2xl font-semibold text-white">{sent ? 'Introduce tu código' : isBusiness ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-[#d1ded6]">{sent ? 'Revisa el correo indicado: introduce el código de acceso o abre el enlace si lo incluye.' : 'Usa tu correo. No necesitas contraseña.'}</p>
         {!configured ? <p role="status" className="mt-6 rounded-xl border border-amber-300/20 bg-amber-100/5 p-4 text-sm text-amber-100">El acceso todavía no está configurado.</p> :
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm text-[#c9dbcf]">Correo electrónico
             <input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || sent}
-              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#e8b37b]/50" />
+              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/25 bg-white/10 p-3.5 text-white outline-none focus:border-[#e8b37b] focus:ring-2 focus:ring-[#e8b37b]/30" />
           </label>
           {sent && <label className="block text-sm text-[#c9dbcf]">Código de acceso
             <input autoComplete="one-time-code" inputMode="numeric" required maxLength={10} value={token}
@@ -95,7 +95,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
         </form>}
         {notice && <p role="status" className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-[#cde1d4]">{notice}</p>}
         {mode==='workspace'&&<div className="mt-6"><InstallKowi business/></div>}
-        <p className="mt-6 text-xs leading-relaxed text-[#809d8d]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
+        <p className="mt-6 text-xs leading-relaxed text-[#c9d9d0]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
       </div>
     </section>
   </main>;
