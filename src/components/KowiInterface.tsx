@@ -165,16 +165,20 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
 
-          <div className="mb-6 flex flex-col items-center gap-3 text-center" aria-label="Control central de conversación por voz">
+          <div className="mb-5 flex flex-col items-center gap-2 text-center" aria-label="Control central de conversación por voz">
+            <style>{`@keyframes kowiOrbitA{to{transform:rotate(360deg)}}@keyframes kowiOrbitB{to{transform:rotate(-360deg)}}@keyframes kowiPulse{50%{filter:drop-shadow(0 0 9px #eab57e)}}@media(prefers-reduced-motion:reduce){.kowi-orbit{animation:none!important}}`}</style>
             <button type="button" disabled={busy && !listening}
               onClick={() => { if (listening) { stopListening(); return; } setVoiceEnabled(true); listen(); }}
-              aria-label={listening ? 'Detener micrófono' : 'Hablar con KOWI'}
+              aria-label={listening ? 'Detener escucha de KOWI' : 'Hablar con KOWI'}
               aria-pressed={listening}
-              className={`flex h-24 w-24 items-center justify-center rounded-full border-4 text-4xl shadow-xl transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#e8b37b] disabled:opacity-50 ${listening ? 'animate-pulse border-red-300 bg-red-700 text-white' : 'border-[#e8b37b]/70 bg-[#e8b37b] text-[#17121a] hover:scale-105'}`}>
-              <span aria-hidden="true">{listening ? '■' : '🎙'}</span>
+              className="relative flex h-28 w-28 items-center justify-center rounded-full transition hover:scale-105 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#eab57e] disabled:opacity-50">
+              <span aria-hidden="true" className="relative block h-24 w-24">
+                <span className="kowi-orbit absolute left-[7px] top-[7px] h-[76px] w-[76px] rounded-full border-[3px] border-[#eab57e]" style={{ animation: `kowiOrbitA ${listening ? '2.4s' : '9s'} linear infinite, kowiPulse ${listening ? '1s' : '4s'} ease-in-out infinite`, transformOrigin: '54% 50%' }} />
+                <span className="kowi-orbit absolute left-[23px] top-[17px] h-[65px] w-[65px] rounded-full border-[3px] border-[#eab57e]" style={{ animation: `kowiOrbitB ${listening ? '1.8s' : '7s'} linear infinite`, transformOrigin: '43% 50%' }} />
+              </span>
             </button>
-            <p className="font-semibold">{listening ? 'Escuchando… Pulsa para detener' : 'Pulsa para hablar con KOWI'}</p>
-            <p className="max-w-md text-xs text-[#a9c3b3]">Tu voz se transcribe como borrador. Pulsa Enviar para compartir el mensaje; las respuestas pueden escucharse con la voz femenina de KOWI.</p>
+            <p role="status" className="text-sm font-semibold text-[#e9f4ed]">{listening ? 'KOWI escucha… toca los anillos para detener' : busy ? 'KOWI está pensando…' : 'Toca los anillos para hablar'}</p>
+            <p className="max-w-md text-xs text-[#a9c3b3]">Tu voz se transcribe en un borrador. Revisa y pulsa Enviar; KOWI puede responder con voz femenina.</p>
           </div>
 
           <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
