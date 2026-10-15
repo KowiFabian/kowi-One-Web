@@ -24,6 +24,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceProfile, setVoiceProfile] = useState<'browser' | 'founder'>('browser');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<BrowserRecognizer|null>(null);
   const dictationConsent = useRef(false);
@@ -77,6 +78,11 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
 
   function speak(response: string) {
     if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    // Founder voice remains unavailable until a provider voice ID and consent are verified.
+    if (voiceProfile === 'founder') {
+      setNotice('La voz personalizada del fundador aún no está activada. Utiliza la voz del navegador mientras se valida el perfil.');
+      return;
+    }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(response); utterance.lang = navigator.language || 'es-ES'; utterance.rate = 1;
     window.speechSynthesis.speak(utterance);
@@ -149,6 +155,8 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
           </div>
 
           {notice && <p role="alert" className="mt-4 rounded-2xl border border-amber-200/15 bg-amber-100/5 p-3 text-sm text-amber-50">{notice}</p>}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#b9ccbf]"><label htmlFor="voice-profile">Voz de respuestas:</label><select id="voice-profile" value={voiceProfile} onChange={e => setVoiceProfile(e.target.value as 'browser' | 'founder')} className="rounded-lg border border-white/20 bg-[#071612] px-3 py-2"><option value="browser">Voz del dispositivo</option><option value="founder" disabled>Voz del fundador · pendiente de activación</option></select></div>
 
           <form onSubmit={send} className="glass mt-4 rounded-[1.6rem] p-3">
             <label htmlFor="message" className="sr-only">Tu mensaje</label>
