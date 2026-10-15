@@ -5,6 +5,7 @@ import MessageList from './MessageList';
 import GoalPanel from './GoalPanel';
 import { Message, ConversationState } from '@/types';
 import { api } from '@/lib/api';
+import { browserSupabase } from '@/lib/supabase-browser';
 
 type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
 type BrowserRecognizer = { lang: string; onresult: ((event: SpeechResult) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; abort: () => void };
@@ -80,7 +81,9 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     if (!voiceEnabled) return;
     if (voiceProfile === 'female') {
       try {
-        const res = await fetch('/api/voice/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: response }) });
+        const session = (await browserSupabase()?.auth.getSession())?.data.session;
+        if (!session) throw new Error('Sesión caducada');
+        const res = await fetch('/api/voice/speak', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ text: response }) });
         if (!res.ok) throw new Error('No se pudo generar la voz femenina.');
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
