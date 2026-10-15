@@ -24,7 +24,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [voiceProfile, setVoiceProfile] = useState<'browser' | 'founder'>('browser');
+  const [voiceProfile, setVoiceProfile] = useState<'browser' | 'female' | 'founder'>('female');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<BrowserRecognizer|null>(null);
   const dictationConsent = useRef(false);
@@ -76,8 +76,22 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     try { recognition.start(); } catch { setListening(false); setNotice('No se pudo iniciar el micrófono.'); }
   }
 
-  function speak(response: string) {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  async function speak(response: string) {
+    if (!voiceEnabled) return;
+    if (voiceProfile === 'female') {
+      try {
+        const res = await fetch('/api/voice/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: response }) });
+        if (!res.ok) throw new Error('No se pudo generar la voz femenina.');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onerror = () => { URL.revokeObjectURL(url); setNotice('No se pudo reproducir el audio.'); };
+        await audio.play();
+      } catch { setNotice('La voz femenina no está disponible. Comprueba el servicio de audio o activa la voz del dispositivo.'); }
+      return;
+    }
+    if (!('speechSynthesis' in window)) { setNotice('Tu navegador no admite síntesis de voz.'); return; }
     // Founder voice remains unavailable until a provider voice ID and consent are verified.
     if (voiceProfile === 'founder') {
       setNotice('La voz personalizada del fundador aún no está activada. Utiliza la voz del navegador mientras se valida el perfil.');
@@ -156,7 +170,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
 
           {notice && <p role="alert" className="mt-4 rounded-2xl border border-amber-200/15 bg-amber-100/5 p-3 text-sm text-amber-50">{notice}</p>}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#b9ccbf]"><label htmlFor="voice-profile">Voz de respuestas:</label><select id="voice-profile" value={voiceProfile} onChange={e => setVoiceProfile(e.target.value as 'browser' | 'founder')} className="rounded-lg border border-white/20 bg-[#071612] px-3 py-2"><option value="browser">Voz del dispositivo</option><option value="founder" disabled>Voz del fundador · pendiente de activación</option></select></div>
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#b9ccbf]"><label htmlFor="voice-profile">Voz de respuestas:</label><select id="voice-profile" value={voiceProfile} onChange={e => setVoiceProfile(e.target.value as 'browser' | 'female' | 'founder')} className="rounded-lg border border-white/20 bg-[#071612] px-3 py-2"><option value="female">Voz femenina cálida · KOWI</option><option value="browser">Voz del dispositivo</option><option value="founder" disabled>Voz del fundador · pendiente de activación</option></select></div>
 
           <form onSubmit={send} className="glass mt-4 rounded-[1.6rem] p-3">
             <label htmlFor="message" className="sr-only">Tu mensaje</label>
