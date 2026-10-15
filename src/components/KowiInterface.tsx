@@ -5,6 +5,7 @@ import MessageList from './MessageList';
 import GoalPanel from './GoalPanel';
 import { Message, ConversationState } from '@/types';
 import { api } from '@/lib/api';
+import { browserSupabase } from '@/lib/supabase-browser';
 
 type SpeechResult = { results: ArrayLike<ArrayLike<{ transcript: string }>> };
 type BrowserRecognizer = { lang: string; onresult: ((event: SpeechResult) => void) | null; onerror: (() => void) | null; onend: (() => void) | null; start: () => void; abort: () => void };
@@ -24,6 +25,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [voiceProfile, setVoiceProfile] = useState<'browser' | 'female' | 'founder'>('female');
   const [listening, setListening] = useState(false);
   const recognizer = useRef<BrowserRecognizer|null>(null);
   const dictationConsent = useRef(false);
@@ -75,8 +77,29 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     try { recognition.start(); } catch { setListening(false); setNotice('No se pudo iniciar el micrófono.'); }
   }
 
-  function speak(response: string) {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+  async function speak(response: string) {
+    if (!voiceEnabled) return;
+    if (voiceProfile === 'female') {
+      try {
+        const session = (await browserSupabase()?.auth.getSession())?.data.session;
+        if (!session) throw new Error('Sesión caducada');
+        const res = await fetch('/api/voice/speak', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` }, body: JSON.stringify({ text: response }) });
+        if (!res.ok) throw new Error('No se pudo generar la voz femenina.');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onerror = () => { URL.revokeObjectURL(url); setNotice('No se pudo reproducir el audio.'); };
+        await audio.play();
+      } catch { setNotice('La voz femenina no está disponible. Comprueba el servicio de audio o activa la voz del dispositivo.'); }
+      return;
+    }
+    if (!('speechSynthesis' in window)) { setNotice('Tu navegador no admite síntesis de voz.'); return; }
+    // Founder voice remains unavailable until a provider voice ID and consent are verified.
+    if (voiceProfile === 'founder') {
+      setNotice('La voz personalizada del fundador aún no está activada. Utiliza la voz del navegador mientras se valida el perfil.');
+      return;
+    }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(response); utterance.lang = navigator.language || 'es-ES'; utterance.rate = 1;
     window.speechSynthesis.speak(utterance);
@@ -142,6 +165,22 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
 
+          <div className="mb-5 flex flex-col items-center gap-2 text-center" aria-label="Control central de conversación por voz">
+            <style>{`@keyframes kowiOrbitA{to{transform:rotate(360deg)}}@keyframes kowiOrbitB{to{transform:rotate(-360deg)}}@keyframes kowiPulse{50%{filter:drop-shadow(0 0 9px #eab57e)}}@media(prefers-reduced-motion:reduce){.kowi-orbit{animation:none!important}}`}</style>
+            <button type="button" disabled={busy && !listening}
+              onClick={() => { if (listening) { stopListening(); return; } setVoiceEnabled(true); listen(); }}
+              aria-label={listening ? 'Detener escucha de KOWI' : 'Hablar con KOWI'}
+              aria-pressed={listening}
+              className="relative flex h-28 w-28 items-center justify-center rounded-full transition hover:scale-105 focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#eab57e] disabled:opacity-50">
+              <span aria-hidden="true" className="relative block h-24 w-24">
+                <span className="kowi-orbit absolute left-[7px] top-[7px] h-[76px] w-[76px] rounded-full border-[3px] border-[#eab57e]" style={{ animation: `kowiOrbitA ${listening ? '2.4s' : '9s'} linear infinite, kowiPulse ${listening ? '1s' : '4s'} ease-in-out infinite`, transformOrigin: '54% 50%' }} />
+                <span className="kowi-orbit absolute left-[23px] top-[17px] h-[65px] w-[65px] rounded-full border-[3px] border-[#eab57e]" style={{ animation: `kowiOrbitB ${listening ? '1.8s' : '7s'} linear infinite`, transformOrigin: '43% 50%' }} />
+              </span>
+            </button>
+            <p role="status" className="text-sm font-semibold text-[#e9f4ed]">{listening ? 'KOWI escucha… toca los anillos para detener' : busy ? 'KOWI está pensando…' : 'Toca los anillos para hablar'}</p>
+            <p className="max-w-md text-xs text-[#a9c3b3]">Tu voz se transcribe en un borrador. Revisa y pulsa Enviar; KOWI puede responder con voz femenina.</p>
+          </div>
+
           <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
             <div className="max-h-[52vh] min-h-[300px] overflow-y-auto pr-1" role="log" aria-label="Mensajes">
               <MessageList messages={messages} loading={busy}/><div ref={end}/>
@@ -149,6 +188,8 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
           </div>
 
           {notice && <p role="alert" className="mt-4 rounded-2xl border border-amber-200/15 bg-amber-100/5 p-3 text-sm text-amber-50">{notice}</p>}
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#b9ccbf]"><label htmlFor="voice-profile">Voz de respuestas:</label><select id="voice-profile" value={voiceProfile} onChange={e => setVoiceProfile(e.target.value as 'browser' | 'female' | 'founder')} className="rounded-lg border border-white/20 bg-[#071612] px-3 py-2"><option value="female">Voz femenina cálida · KOWI</option><option value="browser">Voz del dispositivo</option><option value="founder" disabled>Voz del fundador · pendiente de activación</option></select></div>
 
           <form onSubmit={send} className="glass mt-4 rounded-[1.6rem] p-3">
             <label htmlFor="message" className="sr-only">Tu mensaje</label>

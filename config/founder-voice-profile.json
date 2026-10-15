@@ -1,0 +1,39 @@
+{
+  "id": "kowi-founder-voice",
+  "displayName": "KOWI — Voz del fundador",
+  "status": "pending_source_audio_and_provider_enrollment",
+  "language": "es-ES",
+  "sourceRecordings": [
+    {
+      "filename": "Nueva grabación 27.m4a",
+      "recordedOn": "2026-10-05",
+      "durationSeconds": 31.744,
+      "sha256": "8e766f3fdeed8daa56cef0505ac078126cfee87196404a6617c55d44974d57a3"
+    },
+    {
+      "filename": "Nueva grabación 26.m4a",
+      "status": "previously_provided_not_available_for_analysis"
+    }
+  ],
+  "consent": {
+    "document": "Declaracion_titularidad_voz_Fabian_Garay.docx",
+    "recordedOn": "2026-10-05",
+    "type": "private_declaration",
+    "providerAcceptance": "unverified"
+  },
+  "constraints": {
+    "privateStorage": true,
+    "noPublicVoiceSamples": true,
+    "explicitSyntheticVoiceDisclosure": true,
+    "noImpersonation": true,
+    "noSensitiveActionAuthorization": true,
+    "providerVoiceId": null
+  },
+  "nextSteps": [
+    "Recover original audio files",
+    "Verify SHA-256 of third recording",
+    "Inspect signal quality and select clean voiced passages",
+    "Validate provider enrollment and consent requirements",
+    "Create private model and test playback before enabling UI"
+  ]
+}
