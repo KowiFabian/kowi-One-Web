@@ -165,6 +165,18 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
 
+          <div className="mb-6 flex flex-col items-center gap-3 text-center" aria-label="Control central de conversación por voz">
+            <button type="button" disabled={busy && !listening}
+              onClick={() => { if (listening) { stopListening(); return; } setVoiceEnabled(true); listen(); }}
+              aria-label={listening ? 'Detener micrófono' : 'Hablar con KOWI'}
+              aria-pressed={listening}
+              className={`flex h-24 w-24 items-center justify-center rounded-full border-4 text-4xl shadow-xl transition focus-visible:outline focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-[#e8b37b] disabled:opacity-50 ${listening ? 'animate-pulse border-red-300 bg-red-700 text-white' : 'border-[#e8b37b]/70 bg-[#e8b37b] text-[#17121a] hover:scale-105'}`}>
+              <span aria-hidden="true">{listening ? '■' : '🎙'}</span>
+            </button>
+            <p className="font-semibold">{listening ? 'Escuchando… Pulsa para detener' : 'Pulsa para hablar con KOWI'}</p>
+            <p className="max-w-md text-xs text-[#a9c3b3]">Tu voz se transcribe como borrador. Pulsa Enviar para compartir el mensaje; las respuestas pueden escucharse con la voz femenina de KOWI.</p>
+          </div>
+
           <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
             <div className="max-h-[52vh] min-h-[300px] overflow-y-auto pr-1" role="log" aria-label="Mensajes">
               <MessageList messages={messages} loading={busy}/><div ref={end}/>
