@@ -4,9 +4,9 @@ import KowiDemoWidget from '@/components/KowiDemoWidget';
 
 export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'KOWI', statusBarStyle: 'default' },
-  title: 'Kowi One | Ideas que se convierten en acción',
-  description: 'Kowi conecta ideas, personas y agentes de IA. Explora Kowi Business o convierte tu intención en un plan concreto.',
+  appleWebApp: { capable: true, title: 'KOWI IA', statusBarStyle: 'default' },
+  title: 'KOWI IA | Inteligencia artificial para convertir ideas en acción',
+  description: 'KOWI IA conecta personas, ideas y agentes de inteligencia artificial. Aprende, crea, emprende y transforma tus objetivos en acciones.',
 };
 
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#071612' };
