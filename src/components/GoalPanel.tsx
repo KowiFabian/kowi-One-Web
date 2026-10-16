@@ -28,7 +28,7 @@ export default function GoalPanel({ goal, onNewConversation }: GoalPanelProps) {
     {goal.plan && goal.plan.length > 0 && <section className="glass rounded-[1.4rem] p-5">
       <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#e8b37b]">Plan de 30 días</p>
       <div className="mt-4 space-y-4">{goal.plan.map((week, idx) => <div key={idx} className="border-l border-[#e8b37b]/30 pl-4">
-        <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#7fa690]">Bloque {idx + 1}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[.12em] text-[#c3d0ca]">Bloque {idx + 1}</p>
         <p className="mt-1 text-sm leading-relaxed text-[#c9dbcf]">{week}</p>
       </div>)}</div>
     </section>}
