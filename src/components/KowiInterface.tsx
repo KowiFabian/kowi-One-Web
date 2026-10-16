@@ -24,7 +24,16 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   const [notice, setNotice] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState('');
   const [listening, setListening] = useState(false);
+  useEffect(() => {
+    if (!('speechSynthesis' in window)) return;
+    const updateVoices = () => setAvailableVoices(window.speechSynthesis.getVoices().filter(v => v.lang.toLowerCase().startsWith('es')));
+    updateVoices();
+    window.speechSynthesis.addEventListener('voiceschanged', updateVoices);
+    return () => window.speechSynthesis.removeEventListener('voiceschanged', updateVoices);
+  }, []);
   const recognizer = useRef<BrowserRecognizer|null>(null);
   const dictationConsent = useRef(false);
   const lock = useRef(false);
@@ -79,6 +88,8 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     if (!voiceEnabled || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(response); utterance.lang = navigator.language || 'es-ES'; utterance.rate = 1;
+    const voice = availableVoices.find(v => v.voiceURI === selectedVoice) ?? availableVoices.find(v => /female|mujer|monica|mónica|paulina|lucia|lucía|helena|sofia|sofía/i.test(v.name)) ?? availableVoices[0];
+    if (voice) { utterance.voice = voice; utterance.lang = voice.lang; }
     window.speechSynthesis.speak(utterance);
   }
 
@@ -118,7 +129,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
   return <main className="kowi-shell min-h-screen text-[#eef8ef]">
     <div className="kowi-grid pointer-events-none fixed inset-0 opacity-30"/>
     <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#071612]/80 px-5 py-4 backdrop-blur-xl md:px-8">
-      <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-8 w-8 rounded-full"/><span className="text-sm font-bold tracking-[.24em]">KOWI ONE</span></Link>
+      <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-8 w-8 rounded-full"/><span className="text-sm font-bold tracking-[.24em]">KOWI ONE IA</span></Link>
       <div className="flex items-center gap-4 text-sm text-[#aec5b7]"><span className="hidden md:inline">Human‑First workspace</span><Link href="/proyectos" className="hover:text-[#e8b37b]">Proyectos</Link><Link href="/business/app">Business</Link><Link href="/voz-id">Voz ID</Link><Link href="/privacidad">Privacidad</Link>
         <button disabled={busy} onClick={() => run(onSignOut)} className="rounded-full border border-white/10 px-4 py-2 hover:bg-white/5">Salir</button></div>
     </header>
@@ -134,12 +145,12 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         </li>)}</ul>
       </aside>
 
-      <section className="min-w-0 p-4 md:p-8 lg:p-10" aria-label="Chat con Kowi">
+      <section className="min-w-0 p-4 md:p-8 lg:p-10" aria-label="Chat con KOWI IA">
         <div className="mx-auto max-w-4xl">
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#e8b37b]/15 bg-[#e8b37b]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#e8b37b]"><span className="signal-dot"/>Kowi activo</div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#e8b37b]/15 bg-[#e8b37b]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#e8b37b]"><span className="signal-dot"/>KOWI IA activo</div>
             <h1 className="mt-4 text-3xl font-semibold tracking-[-.035em] md:text-4xl">De la intención a la acción.</h1>
-            <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
+            <p className="mt-2 text-sm text-[#92ad9d]">KOWI IA pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
 
           <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
@@ -150,6 +161,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
 
           {notice && <p role="alert" className="mt-4 rounded-2xl border border-amber-200/15 bg-amber-100/5 p-3 text-sm text-amber-50">{notice}</p>}
 
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-sm"><label htmlFor="kowi-voice">Voz de KOWI IA</label><select id="kowi-voice" value={selectedVoice} onChange={e => setSelectedVoice(e.target.value)} className="max-w-full rounded-xl border border-white/20 bg-[#10251c] p-2 text-white"><option value="">Voz española disponible (automática)</option>{availableVoices.map(v => <option key={v.voiceURI} value={v.voiceURI}>{v.name} ({v.lang})</option>)}</select><button type="button" onClick={() => { if (!('speechSynthesis' in window)) { setNotice('Tu navegador no permite reproducir voz.'); return; } window.speechSynthesis.cancel(); const demo = new SpeechSynthesisUtterance('Hola, soy KOWI IA. Estoy aquí para escucharte, ayudarte a aprender y convertir tus ideas en acciones. ¿Qué te gustaría lograr hoy?'); const v = availableVoices.find(v => v.voiceURI === selectedVoice) ?? availableVoices.find(v => /female|mujer|monica|mónica|paulina|lucia|lucía|helena|sofia|sofía/i.test(v.name)) ?? availableVoices[0]; if (v) { demo.voice=v; demo.lang=v.lang; } else demo.lang='es-ES'; window.speechSynthesis.speak(demo); }} className="rounded-full border border-[#e8b37b]/50 px-4 py-2">▶ Probar voz</button><span className="text-xs text-[#92ad9d]">Voces del dispositivo; la voz femenina no está garantizada.</span></div>
           <form onSubmit={send} className="glass mt-4 rounded-[1.6rem] p-3">
             <label htmlFor="message" className="sr-only">Tu mensaje</label>
             <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} maxLength={2000} rows={3}
@@ -179,7 +191,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
         <div className="glass mt-4 rounded-[1.5rem] p-5">
           <div className="hero-orb mb-5 h-12 w-12 rounded-full"/>
           <h2 className="text-lg font-semibold">Tu objetivo aparecerá aquí.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-[#90aa9b]">Cuando Kowi tenga suficiente contexto, convertirá tu intención en un objetivo, un plan de 30 días y una primera acción.</p>
+          <p className="mt-3 text-sm leading-relaxed text-[#90aa9b]">Cuando KOWI IA tenga suficiente contexto, convertirá tu intención en un objetivo, un plan de 30 días y una primera acción.</p>
           <div className="mt-5 space-y-2 text-xs text-[#88a493]"><p>01 · intención</p><p>02 · objetivo</p><p>03 · plan</p><p>04 · acción</p></div>
         </div>}
       </aside>
