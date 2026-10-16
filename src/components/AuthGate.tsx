@@ -62,7 +62,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
     setSession(null);
   }} />;
 
-  return <main className="kowi-shell grid min-h-screen place-items-center px-6 py-12">
+  return <main className="kowi-shell kowi-readable grid min-h-screen text-[#f4f3f2] place-items-center px-6 py-12">
     <div className="kowi-grid pointer-events-none absolute inset-0 opacity-40"/>
     <section className="glass relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] md:grid-cols-[1.05fr_.95fr]">
       <div className="relative min-h-[420px] border-b border-white/10 p-8 md:border-b-0 md:border-r md:p-10">
@@ -82,11 +82,11 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm text-[#c9dbcf]">Correo electrónico
             <input type="email" autoComplete="email" required maxLength={254} value={email} disabled={busy || sent}
-              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#e8b37b]/50" />
+              onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-[#8da99b] bg-[#10251e] p-3.5 text-white outline-none focus:border-[#f5c795]" />
           </label>
           {sent && <label className="block text-sm text-[#c9dbcf]">Código de acceso
             <input autoComplete="one-time-code" inputMode="numeric" required maxLength={10} value={token}
-              onChange={e => setToken(e.target.value.trim())} className="mt-2 w-full rounded-xl border border-white/10 bg-white/5 p-3.5 text-white outline-none focus:border-[#e8b37b]/50" />
+              onChange={e => setToken(e.target.value.trim())} className="mt-2 w-full rounded-xl border border-[#8da99b] bg-[#10251e] p-3.5 text-white outline-none focus:border-[#f5c795]" />
           </label>}
           <button disabled={busy} className="w-full rounded-xl bg-[#e8b37b] p-3.5 font-semibold text-[#17121a] disabled:opacity-50">
             {busy ? 'Procesando…' : sent ? 'Entrar a Kowi' : 'Recibir código'}
@@ -95,7 +95,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
         </form>}
         {notice && <p role="status" className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-[#cde1d4]">{notice}</p>}
         {mode==='workspace'&&<div className="mt-6"><InstallKowi business/></div>}
-        <p className="mt-6 text-xs leading-relaxed text-[#809d8d]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
+        <p className="mt-6 text-xs leading-relaxed text-[#c3d0ca]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
       </div>
     </section>
   </main>;

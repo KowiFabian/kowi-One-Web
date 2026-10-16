@@ -134,3 +134,11 @@ button, input, textarea { font: inherit; }
 .kowi-halo { width:220px;height:220px;border-radius:50%;border:3px solid #eec194;transform:rotate(-18deg);box-shadow:0 0 18px #ffd4a7, inset 0 0 18px #ffbb82, 0 0 65px #da874f88;display:grid;place-items:center; }
 .kowi-halo-inner { width:145px;height:145px;border:2px solid #eec194;border-radius:50%;box-shadow:0 0 24px #f6c192; }
 @media(max-width:767px){ .kowi-cosmos h1{overflow-wrap:break-word;} }
+
+/* Explicit foregrounds and focus indicators on KOWI One's dark surfaces. */
+.kowi-readable { background-color: #071612; color: #f4f3f2; }
+.kowi-readable :is(a, button, input, textarea, summary):focus-visible {
+  outline: 3px solid #f5c795;
+  outline-offset: 3px;
+}
+.kowi-readable textarea::placeholder { opacity: 1; }

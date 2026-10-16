@@ -115,7 +115,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  return <main className="kowi-shell min-h-screen text-[#eef8ef]">
+  return <main className="kowi-shell kowi-readable min-h-screen text-[#eef8ef]">
     <div className="kowi-grid pointer-events-none fixed inset-0 opacity-30"/>
     <header className="relative z-20 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#071612]/80 px-5 py-4 backdrop-blur-xl md:px-8">
       <Link href="/" className="flex items-center gap-3"><span className="hero-orb h-8 w-8 rounded-full"/><span className="text-sm font-bold tracking-[.24em]">KOWI ONE</span></Link>
@@ -126,7 +126,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
     <div className="relative z-10 mx-auto grid max-w-[1500px] lg:grid-cols-[260px_minmax(0,1fr)_340px]">
       <aside className="border-b border-white/10 bg-white/[.015] p-4 lg:min-h-[calc(100vh-73px)] lg:border-b-0 lg:border-r" aria-label="Conversaciones guardadas">
         <button disabled={busy} onClick={fresh} className="w-full rounded-2xl bg-[#e8b37b] p-3.5 font-semibold text-[#17121a] disabled:opacity-50">＋ Nueva intención</button>
-        <div className="mt-6 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.18em] text-[#789887]">Memoria</h2><button disabled={busy} onClick={() => run(async () => { await refresh(); if (conversationId) await load(conversationId); })} className="text-xs text-[#b5cabc]">Actualizar</button></div>
+        <div className="mt-6 flex items-center justify-between"><h2 className="text-[11px] font-bold uppercase tracking-[.18em] text-[#c3d0ca]">Memoria</h2><button disabled={busy} onClick={() => run(async () => { await refresh(); if (conversationId) await load(conversationId); })} className="text-xs text-[#b5cabc]">Actualizar</button></div>
         <ul className="mt-3 max-h-52 space-y-1 overflow-y-auto lg:max-h-[72vh]">{conversations.map(c => <li key={c.id}>
           <button disabled={busy} aria-current={conversationId === c.id ? 'true' : undefined}
             onClick={() => run(async () => { await load(c.id); setDraft(''); retry.current = null; setConfirmDelete(false); })}
@@ -139,7 +139,7 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#e8b37b]/15 bg-[#e8b37b]/5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.18em] text-[#e8b37b]"><span className="signal-dot"/>Kowi activo</div>
             <h1 className="mt-4 text-3xl font-semibold tracking-[-.035em] md:text-4xl">De la intención a la acción.</h1>
-            <p className="mt-2 text-sm text-[#92ad9d]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
+            <p className="mt-2 text-sm text-[#c3d0ca]">Kowi pregunta lo necesario, estructura tu objetivo y propone el siguiente paso. Tú conservas la decisión.</p>
           </div>
 
           <div className="glass min-h-[360px] rounded-[1.8rem] p-4 md:p-6">
@@ -154,12 +154,12 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
             <label htmlFor="message" className="sr-only">Tu mensaje</label>
             <textarea id="message" value={draft} onChange={e => setDraft(e.target.value)} disabled={busy} maxLength={2000} rows={3}
               placeholder="¿Qué quieres hacer realidad?"
-              className="w-full resize-none bg-transparent p-3 text-base text-white outline-none placeholder:text-[#6f8f7e]" />
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><div className="flex flex-wrap items-center gap-3"><span className="text-xs text-[#789887]">{draft.length}/2000 · revisa antes de actuar</span><button type="button" onClick={listening?stopListening:listen} disabled={busy&&!listening} className="rounded-full border border-white/20 px-3 py-2 text-sm disabled:opacity-50" aria-label={listening?'Detener dictado':'Dictar mensaje'}>{listening ? 'Detener micrófono' : '🎙 Dictar'}</button><button type="button" onClick={() => { if (voiceEnabled) window.speechSynthesis?.cancel(); setVoiceEnabled(!voiceEnabled); }} aria-pressed={voiceEnabled} className="rounded-full border border-white/20 px-3 py-2 text-sm">{voiceEnabled ? '🔊 Voz activada' : '🔇 Escuchar respuestas'}</button></div>
+              className="w-full resize-none bg-transparent p-3 text-base text-white outline-none placeholder:text-[#c3d0ca]" />
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-2 pt-3"><div className="flex flex-wrap items-center gap-3"><span className="text-xs text-[#c3d0ca]">{draft.length}/2000 · revisa antes de actuar</span><button type="button" onClick={listening?stopListening:listen} disabled={busy&&!listening} className="rounded-full border border-[#8da99b] bg-[#10251e] px-3 py-2 text-sm disabled:opacity-50" aria-label={listening?'Detener dictado':'Dictar mensaje'}>{listening ? 'Detener micrófono' : '🎙 Dictar'}</button><button type="button" onClick={() => { if (voiceEnabled) window.speechSynthesis?.cancel(); setVoiceEnabled(!voiceEnabled); }} aria-pressed={voiceEnabled} className="rounded-full border border-[#8da99b] bg-[#10251e] px-3 py-2 text-sm">{voiceEnabled ? '🔊 Voz activada' : '🔇 Escuchar respuestas'}</button></div>
               <button disabled={busy || !draft.trim()} className="rounded-full bg-[#e8b37b] px-6 py-3 font-semibold text-[#17121a] disabled:opacity-40">{busy ? 'Pensando…' : 'Enviar ↗'}</button></div>
           </form>
 
-          {conversationId && <div className="mt-5 flex flex-wrap gap-4 text-xs text-[#8da899]">
+          {conversationId && <div className="mt-5 flex flex-wrap gap-4 text-xs text-[#c3d0ca]">
             <button disabled={busy} onClick={() => run(exportConversation)} className="underline underline-offset-4">Exportar conversación</button>
             <button disabled={busy} onClick={() => setConfirmDelete(true)} className="text-[#d6a7a7] underline underline-offset-4">Eliminar</button>
             {confirmDelete && <div role="alert" className="w-full rounded-2xl border border-red-200/15 bg-red-100/5 p-4 text-sm">
@@ -174,13 +174,13 @@ export default function KowiInterface({ onSignOut }: { onSignOut: () => Promise<
       </section>
 
       <aside className="border-t border-white/10 bg-white/[.015] p-5 lg:min-h-[calc(100vh-73px)] lg:border-l lg:border-t-0">
-        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#789887]">Mapa de progreso</p>
+        <p className="text-[11px] font-bold uppercase tracking-[.18em] text-[#c3d0ca]">Mapa de progreso</p>
         {goal ? <div className="mt-4"><GoalPanel goal={goal} onNewConversation={fresh}/></div> :
         <div className="glass mt-4 rounded-[1.5rem] p-5">
           <div className="hero-orb mb-5 h-12 w-12 rounded-full"/>
           <h2 className="text-lg font-semibold">Tu objetivo aparecerá aquí.</h2>
-          <p className="mt-3 text-sm leading-relaxed text-[#90aa9b]">Cuando Kowi tenga suficiente contexto, convertirá tu intención en un objetivo, un plan de 30 días y una primera acción.</p>
-          <div className="mt-5 space-y-2 text-xs text-[#88a493]"><p>01 · intención</p><p>02 · objetivo</p><p>03 · plan</p><p>04 · acción</p></div>
+          <p className="mt-3 text-sm leading-relaxed text-[#c3d0ca]">Cuando Kowi tenga suficiente contexto, convertirá tu intención en un objetivo, un plan de 30 días y una primera acción.</p>
+          <div className="mt-5 space-y-2 text-xs text-[#c3d0ca]"><p>01 · intención</p><p>02 · objetivo</p><p>03 · plan</p><p>04 · acción</p></div>
         </div>}
       </aside>
     </div>
