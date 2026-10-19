@@ -30,7 +30,7 @@ export async function POST(request:Request){
  const messages=parseMetaMessages(payload).filter(m=>m.phoneNumberId===phoneId);
  if(!messages.length)return Response.json({received:true,stored:0},{headers:{'Cache-Control':'no-store'}});
  try{
-  const db=serviceDb().schema('private');
+  const db=serviceDb();
   const {data:binding,error:bindingError}=await db.from('whatsapp_pilot_bindings').select('organization_id')
    .eq('phone_number_id',phoneId).eq('organization_id',organizationId).eq('enabled',true).maybeSingle();
   if(bindingError||!binding)return new Response('Test binding unavailable',{status:503});
