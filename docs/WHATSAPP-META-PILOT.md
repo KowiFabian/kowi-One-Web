@@ -6,7 +6,7 @@ This test branch is based on the current main rather than the stale feature/what
 - GET webhook verification with a private verify token.
 - POST webhook HMAC-SHA256 validation on raw body and a 256 KiB limit.
 - Parse text messages only; ignore statuses/unsupported messages.
-- Persist authenticated incoming text in the private Supabase inbox with a unique Meta message ID; duplicate delivery is ignored.
+- Persist authenticated incoming text in the server-only Supabase inbox with a unique Meta message ID; duplicate delivery is ignored.
 - Enforce a **single explicitly bound test organization** and exact Meta test phone number.
 - Authenticated owner/admin can read test messages and explicitly approve ONE outgoing reply per incoming message. A unique outbox row prevents automatic retries if delivery is uncertain.
 - Server-side send to Meta returns and stores the provider message ID.
@@ -19,7 +19,7 @@ No AI auto-replies, confirmed calendar reservations, billing, or background proc
 1. In Meta Developers > KOWI > WhatsApp > API setup locate test Phone Number ID and a temporary access token. Add YOUR WhatsApp as an allowed test recipient only if you consent. Do not migrate any personal or customer number.
 2. In Vercel **Preview** configure the variables below. Secrets must not enter GitHub or chat. No NEXT_PUBLIC prefix.
 3. After reviewing/applying `20261020000000_whatsapp_meta_test_pilot.sql` to a disposable/approved database, bind the test number to an existing verified KOWI organization using a privileged DB admin:
-`insert into private.whatsapp_pilot_bindings(phone_number_id,organization_id,enabled) values ('<META_TEST_PHONE_NUMBER_ID>','<VERIFIED_KOWI_ORG_UUID>',true) on conflict(phone_number_id) do update set organization_id=excluded.organization_id,enabled=true;`
+`insert into public.whatsapp_pilot_bindings(phone_number_id,organization_id,enabled) values ('<META_TEST_PHONE_NUMBER_ID>','<VERIFIED_KOWI_ORG_UUID>',true) on conflict(phone_number_id) do update set organization_id=excluded.organization_id,enabled=true;`
 4. Deploy preview and configure Meta Webhook Callback URL:
 `https://<preview-host>/api/integrations/whatsapp/webhook`
 Use the EXACT `META_WHATSAPP_VERIFY_TOKEN` value and subscribe to **messages**. Never use the custom protected preview hostname unless Meta can reach it publicly over HTTPS.
