@@ -17,7 +17,7 @@ async function context(request:Request){
  const phone=process.env.META_WHATSAPP_TEST_PHONE_NUMBER_ID;
  if(!phone||process.env.KOWI_WHATSAPP_TEST_ORGANIZATION_ID!==organizationId)
   throw new ApiError(403,'Esta empresa no corresponde al número de prueba.');
- const db=serviceDb().schema('private');
+ const db=serviceDb();
  const {data:binding,error}=await db.from('whatsapp_pilot_bindings').select('organization_id')
   .eq('phone_number_id',phone).eq('organization_id',organizationId).eq('enabled',true).maybeSingle();
  if(error||!binding)throw new ApiError(503,'La conexión Meta de prueba no está verificada.');
