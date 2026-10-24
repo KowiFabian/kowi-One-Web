@@ -104,5 +104,5 @@ export function makeEvidenceDossier(input:EvidenceReview, now=new Date()):string
   'Revision humana: PENDIENTE',
   ''
  ];
- return lines.join('\\n');
+ return lines.join(String.fromCharCode(10));
 }
