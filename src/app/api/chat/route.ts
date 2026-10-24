@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       messages: [{ role: 'system', content: conversation.agent === 'business' ? businessPrompt : conversation.agent === 'education' ? educationPrompt : systemPrompt }, ...messages, { role: 'user', content: userMessage }],
       response_format: responseFormat,
       max_tokens: 2500,
-    },process.env.OPENAI_API_KEY!);
+    },process.env.OPENAI_API_KEY!) as {choices?:Array<{finish_reason?:string;message?:{refusal?:unknown;content?:string}}>};
 
     let result;
     try {
