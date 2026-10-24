@@ -93,7 +93,7 @@ test('malformed model output and refusal are not saved',async () => {
   }
 });
 test('provider errors never expose secrets',async () => {
-  mock({providerError:true}); const r=await POST(request()); assert.equal(r.status,502); assert.ok(!(await r.text()).includes('server-test-secret'));
+  mock({providerError:true}); const r=await POST(request()); assert.equal(r.status,429); assert.ok(!(await r.text()).includes('server-test-secret'));
 });
 
 test('stored plan survives beyond the recent dialogue window as unprivileged context', async () => {
