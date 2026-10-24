@@ -36,4 +36,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add package.json package-lock.json
           git diff --staged --quiet || git commit -m "fix(security): patch Next.js and Zod and regenerate lockfile"
+          git fetch origin feat/kowi-verifica-editorial-20261024
+          git rebase origin/feat/kowi-verifica-editorial-20261024
           git push origin HEAD:feat/kowi-verifica-editorial-20261024
