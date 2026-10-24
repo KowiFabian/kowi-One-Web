@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import {useMemo,useState} from 'react';
-import {assessEvidence,type EvidenceKind} from '@/lib/news-verifier';
+import {assessEvidence,makeEvidenceDossier,type EvidenceKind} from '@/lib/news-verifier';
 
 type Entry={url:string;excerpt:string;kind:EvidenceKind;originalLocated:boolean;derivedFrom:string};
 const initial=():Entry=>({url:'',excerpt:'',kind:'independent_report',originalLocated:false,derivedFrom:''});
@@ -20,6 +20,12 @@ export default function VerifyNewsPage(){
  const [show,setShow]=useState(false);
  const report=useMemo(()=>assessEvidence({claim,claimDate,sources}),[claim,claimDate,sources]);
  function edit(i:number,patch:Partial<Entry>){setSources(sources.map((s,j)=>i===j?{...s,...patch}:s));setShow(false);}
+ function downloadDossier(){
+  const evidence=makeEvidenceDossier({claim,claimDate,sources});
+  const url=URL.createObjectURL(new Blob([evidence],{type:'text/plain;charset=utf-8'}));
+  const link=document.createElement('a');link.href=url;link.download='kowi-verifica-dossier-no-confirmado.txt';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+ }
  return <main className="kowi-cosmos min-h-screen px-5 py-9 text-[#f4f3f2] md:px-10"><div className="mx-auto max-w-4xl space-y-8">
   <Link href="/news" className="underline">← Volver a noticias</Link>
   <header className="space-y-3"><p className="kowi-eyebrow">HOLA SOY TU IA · KOWI.ONE</p><h1 className="text-4xl font-semibold">KOWI Verifica</h1>
@@ -42,7 +48,7 @@ export default function VerifyNewsPage(){
    <h2 className="text-2xl">{report.readiness==='blocked'?'Bloqueado: evidencia insuficiente':'Pendiente de verificación humana'}</h2>
    <p>{report.validSourceCount} evidencias con datos mínimos · {report.independentSourceCount} orígenes declarados distintos.</p>
    {report.reasons.length?<ul className="list-disc space-y-2 pl-6">{report.reasons.map(r=><li key={r}>{r}</li>)}</ul>:<p>Requisitos declarados suficientes para investigar. Una persona debe abrir las fuentes originales, comprobar lo que dicen, buscar contradicciones y autorizar la versión exacta antes de publicarla.</p>}
-   <p className="font-semibold">Publicación autorizada: NO.</p>
+   <p className="font-semibold">Publicación autorizada: NO.</p><button type="button" onClick={downloadDossier} className="rounded-full border border-white/30 px-5 py-3">Descargar dossier NO CONFIRMADO</button>
   </section>}
   <section className="cosmos-panel space-y-3 rounded-2xl p-6"><h2 className="text-2xl">Faltan verificaciones humanas</h2>
    <p className="text-[#bdc4cf]">Confirmar autoría, fechas, fuentes independientes y correcciones. Para testimonios: identidad, contexto, grabación original, consentimiento y lugar. Para imágenes o vídeos: primera publicación, búsqueda inversa y posibles alteraciones. Los metadatos C2PA ayudan a rastrear el origen, pero no garantizan la verdad de lo representado.</p></section>
