@@ -66,3 +66,43 @@ export function assessEvidence(input: EvidenceReview, now = new Date()): Evidenc
   return { readiness: reasons.length ? 'blocked' : 'human_review_required', publicationAuthorized: false,
     reasons, validSourceCount: valid.length, independentSourceCount: unique.size };
 }
+
+
+/** Downloadable human investigation checklist; never a verification certificate. */
+export function makeEvidenceDossier(input:EvidenceReview, now=new Date()):string{
+ const outcome=assessEvidence(input,now);
+ const checkedAt=now.toISOString();
+ const lines=[
+  'KOWI VERIFICA — DOSSIER NO CONFIRMADO',
+  'HOLA SOY TU IA · kowi.one',
+  'Generado: '+checkedAt,
+  'Estado: '+(outcome.readiness==='blocked'?'BLOQUEADO':'PENDIENTE DE REVISION HUMANA'),
+  'Publicacion autorizada: NO',
+  '',
+  'AFIRMACION EN REVISION',
+  input.claim.trim(),
+  'Fecha declarada del hecho: '+(input.claimDate||'NO INDICADA'),
+  '',
+  'EVIDENCIAS DECLARADAS (NO COMPROBADAS POR LA APLICACION)',
+  ...input.sources.flatMap((source,i)=>[
+   'Fuente '+(i+1)+': '+source.url,
+   'Tipo declarado: '+source.kind,
+   'Texto/observacion aportada: '+source.excerpt,
+   'Original localizado (declarado): '+(source.originalLocated?'SI':'NO'),
+   'Origen compartido/reimpresion (declarado): '+(source.derivedFrom||'NO INDICADO'),''
+  ]),
+  'REQUISITOS PENDIENTES',
+  ...(outcome.reasons.length?outcome.reasons:['Revisar manualmente que las fuentes sean reales, pertinentes e independientes.']),
+  '',
+  'COMPROBACIONES HUMANAS OBLIGATORIAS',
+  '1. Abrir cada fuente, autor, fechas y contenido original; buscar correcciones y contradicciones.',
+  '2. Comprobar que cada fragmento respalda la afirmacion literal y que los medios no copian el mismo origen.',
+  '3. Para testimonios y material audiovisual: procedencia, contexto, identidad/consentimiento y edicion.',
+  '4. Documentar decision del editor, version exacta aprobada y responsabilidad.',
+  '5. Nunca publicar la afirmacion como confirmada basandose solo en este dossier.',
+  'Editor responsable: PENDIENTE',
+  'Revision humana: PENDIENTE',
+  ''
+ ];
+ return lines.join('\\n');
+}
