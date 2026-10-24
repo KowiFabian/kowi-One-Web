@@ -12,7 +12,7 @@ permissions:
   contents: read
 jobs:
   public-browser:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
       KOWI_PUBLIC_TEST_BASE_URL: ${{ github.event_name == 'pull_request' && 'http://127.0.0.1:3000' || 'https://kowi.one' }}
