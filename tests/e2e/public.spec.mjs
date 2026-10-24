@@ -28,7 +28,7 @@ test('Privacy information and mobile navigation remain reachable', async ({ page
 });
 
 test('Private business surfaces fit the viewport and reject unauthenticated access', async ({page})=>{
- for(const [path,title] of [['/control-center','KOWI Control Center'],['/business/crm-org','CRM de tu empresa'],['/business/intelligence','KOWI Intelligence'],['/business/agents','Agentes de tu empresa'],['/business/pipeline','Configurar pipeline'],['/business/agent-chat','Conversación empresarial con IA'],['/business/jobs','Trabajos y evidencias del agente'],['/test-email','Prueba de correo KOWI'],['/business/director','KOWI Director']]){
+ for(const [path,title] of [['/control-center','KOWI Control Center'],['/business/crm-org','CRM de tu empresa'],['/business/intelligence','KOWI Intelligence'],['/business/agents','Agentes de tu empresa'],['/business/pipeline','Configurar pipeline'],['/business/jobs','Trabajos y evidencias del agente'],['/test-email','Prueba de correo KOWI'],['/business/director','KOWI Director']]){
   const response=await page.goto(path);
   expect(response.status()).toBe(200);
   await expect(page.getByRole('heading',{name:title,exact:true})).toBeVisible();
@@ -150,7 +150,7 @@ test('KOWI Verifica blocks weak evidence and discloses limits',async({page})=>{
  await page.getByRole('button',{name:'Comprobar requisitos'}).click();
  await expect(page.getByRole('heading',{name:'Bloqueado: evidencia insuficiente'})).toBeVisible();
  await expect(page.getByText('Publicación autorizada: NO.')).toBeVisible();
- await page.getByRole('button',{name:'Descargar dossier NO CONFIRMADO'}).toBeVisible();
+ await expect(page.getByRole('button',{name:'Descargar dossier NO CONFIRMADO'})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
 });
 
@@ -170,5 +170,13 @@ test('Public ecosystem is honest about product availability',async({page})=>{
  await expect(page.getByRole('heading',{name:'Informar, aprender, construir y transformar.'})).toBeVisible();
  await expect(page.getByText(/No acredita funcionalidades no desplegadas/)).toBeVisible();
  await expect(page.getByRole('link',{name:'Abrir KOWI Verifica ↗'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+});
+
+test('Business chat keeps accessible UI and shows unauthenticated error without revealing private data',async({page})=>{
+ const response=await page.goto('/business/agent-chat');expect(response.status()).toBe(200);
+ await expect(page.getByRole('heading',{name:'KOWI · Business',exact:true})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Abrir menú de KOWI'})).toBeVisible();
+ await expect(page.getByRole('log',{name:'Conversación empresarial'})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
 });
