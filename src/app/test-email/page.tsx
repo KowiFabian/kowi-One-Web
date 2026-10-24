@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import Link from 'next/link';
 import {api} from '@/lib/api';
 import {CONTROLLED_EMAIL_SUBJECT,CONTROLLED_EMAIL_BODY} from '@/lib/controlled-email-test';
+import {emailDeliveryState,emailDeliveryLabels} from '@/lib/email-delivery';
 type Organization={id:string;name:string};
 type Action={id:string;status:string;payload:{to:string;subject:string;body:string;organization_id:string;conversation_id:string};approved_at:string|null;executed_at:string|null};
 type Snapshot={recipient:string;sender:string|null;emailConfigured:boolean;tenantPersistenceConfigured:boolean;action:Action|null;events:{event_type:string;external_id:string;created_at:string}[]|null;receipt:{external_id:string;status:string}|null};
@@ -17,6 +18,7 @@ export default function Page(){
  async function reload(){if(busy)return;setBusy(true);setError('');try{await refresh();}catch(e){setError(e instanceof Error?e.message:'No se pudo consultar.');}finally{setBusy(false);}}
  const field='mt-2 w-full rounded-xl border border-white/20 bg-[#102b22] p-3';
  const ready=snapshot?.emailConfigured&&snapshot.tenantPersistenceConfigured;
+ const emailEvidenceState=emailDeliveryState(snapshot?.events,Boolean(snapshot?.receipt?.external_id));
  return <main className="kowi-shell min-h-screen p-5 text-white md:p-10"><div className="mx-auto max-w-3xl space-y-6">
  <Link href="/business#crear" className="underline">KOWI Business · Entrar</Link><h1 className="text-3xl">Prueba de correo KOWI</h1>
  <p>Recorrido controlado: conversación de IA guardada → propuesta → Human Approval → envío → evidencia. El mensaje se limita al correo verificado de tu propia cuenta. No activa un canal comercial.</p>
@@ -33,7 +35,7 @@ export default function Page(){
  <button className="rounded-xl border border-white/20 p-3 disabled:opacity-50" disabled={busy||!ready||!consent}>Preparar propuesta · no envía correo</button>
  <p className="text-sm">Máximo una propuesta cada 24 horas. No se envía nada al abrir la página.</p>
  </form>
- {snapshot.action&&<section className="glass space-y-4 rounded-xl p-5"><h2 className="text-xl">Human Approval · HIGH</h2><p className="break-all">Acción: {snapshot.action.id}. Estado: {snapshot.action.status}.</p><p>Destinatario de esta acción: {snapshot.action.payload.to}</p><p>Asunto: {snapshot.action.payload.subject}</p><p>{snapshot.action.payload.body}</p>
+ {snapshot.action&&<section className="glass space-y-4 rounded-xl p-5"><h2 className="text-xl">Human Approval · HIGH</h2><p className="break-all">Acción: {snapshot.action.id}. Estado: {snapshot.action.status}.</p><p>Destinatario de esta acción: {snapshot.action.payload.to}</p><p role="status" aria-live="polite" className="rounded-xl border border-white/25 p-3">Estado del correo: {emailDeliveryLabels[emailEvidenceState]}.</p><p>Asunto: {snapshot.action.payload.subject}</p><p>{snapshot.action.payload.body}</p>
  {snapshot.action.status==='pending_approval'&&<><label className="block"><input type="checkbox" checked={approval} disabled={busy} onChange={e=>setApproval(e.target.checked)}/> Autorizo enviar exactamente este mensaje una vez al destinatario mostrado.</label><button className="rounded-xl bg-[#e8b37b] p-3 text-black disabled:opacity-50" disabled={busy||!approval||!ready} onClick={send}>Autorizar y enviar una prueba</button></>}
  {snapshot.action.status==='approved'&&<p>La acción requiere revisión del resultado. No repitas el envío hasta comprobar su evidencia y el proveedor.</p>}
  {snapshot.receipt&&<p className="break-all">Proveedor aceptó el mensaje. Identificador: {snapshot.receipt.external_id}. Esto no prueba entrega.</p>}
