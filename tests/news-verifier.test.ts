@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessEvidence,type EvidenceReview} from '../src/lib/news-verifier';
+import {assessEvidence,makeEvidenceDossier,type EvidenceReview} from '../src/lib/news-verifier';
 
 const good:EvidenceReview={claim:'La compañía anunció una nueva plataforma el 22 de octubre de 2026.',sources:[
  {url:'https://example.org/press/launch',kind:'primary',excerpt:'Comunicado oficial, fechado y firmado, sobre el lanzamiento.',originalLocated:true},
@@ -25,4 +25,13 @@ test('testimony needs actual human verification',()=>{
 test('future date and URL shortener are blocked',()=>{
  const x=assessEvidence({...good,claimDate:'2030-01-01',sources:[{...good.sources[0],url:'https://bit.ly/abc'},good.sources[1]]},new Date('2026-10-24'));
  assert.equal(x.readiness,'blocked');
+});
+
+test('exported dossier explicitly denies verification or permission to publish',()=>{
+ const dossier=makeEvidenceDossier(good,new Date('2026-10-24T00:00:00Z'));
+ assert.match(dossier,/DOSSIER NO CONFIRMADO/);
+ assert.match(dossier,/Publicacion autorizada: NO/);
+ assert.match(dossier,/Revisar manualmente/);
+ assert.match(dossier,/Fuente 1:/);
+ assert.ok(dossier.split(String.fromCharCode(10)).length>15);
 });
