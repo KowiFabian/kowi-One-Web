@@ -13,7 +13,7 @@ export default function OrganizationSetup(){
  useEffect(()=>{let active=true;api<OrganizationSummary[]>('/api/organizations').then(data=>{if(active){setRows(data);setSelected(data[0]?.id||'');}}).catch(e=>{if(active)setError(e.message);}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
  async function create(event:React.FormEvent){
   event.preventDefault();if(busy)return;
-  const parsed=organizationSchema.safeParse({name});if(!parsed.success){setError('Revisa el nombre de tu empresa.');return;}
+  const parsed=organizationSchema.safeParse({name});if(!parsed.success){setError('Escribe un nombre válido de entre 2 y 120 caracteres para tu empresa.');return;}
   setBusy(true);setError('');
   try{const row=await api<OrganizationSummary>('/api/organizations',{method:'POST',body:JSON.stringify(parsed.data)});setRows(old=>[...old,row]);setSelected(row.id);setName('');}catch(e){setError(e instanceof Error?e.message:'No se pudo crear la empresa.');}finally{setBusy(false);}
  }
@@ -25,7 +25,7 @@ export default function OrganizationSetup(){
   {error&&<p role="alert">{error}</p>}
   {!!rows.length&&<label className="block">Empresa<select className={field} value={selected} disabled={busy||loading} onChange={e=>setSelected(e.target.value)}>{rows.map(row=><option key={row.id} value={row.id}>{row.name}</option>)}</select></label>}
   {!loading&&!rows.length&&!error&&<p>Aún no hay empresas registradas.</p>}
-  <form onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
+  <form noValidate onSubmit={create} className="flex flex-col gap-3 md:flex-row md:items-end"><label className="flex-1">Nombre de la empresa<input className={field} required minLength={2} maxLength={120} value={name} disabled={busy||loading} onChange={e=>setName(e.target.value)}/></label><button disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Creando…':'Crear empresa'}</button></form>
   {selected&&<div className="flex flex-wrap gap-3"><Link href={'/business/agent-chat?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black">Conversación IA de esta empresa ↗</Link><Link href={'/business/director?organization_id='+encodeURIComponent(selected)} className="inline-block rounded-xl border border-[#e8b37b] px-5 py-3">Abrir KOWI Director</Link><Link href="/app" className="inline-block rounded-xl border border-white/30 px-5 py-3">Mi espacio instalable</Link></div>}
   {selected&&<Link href={'/business/crm-org?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Abrir CRM de esta empresa</Link>}
   {selected&&<><Link href={'/business/agents?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Agentes</Link><Link href={'/business/intelligence?organization_id='+encodeURIComponent(selected)} className="mr-5 inline-block underline">Intelligence</Link></>}

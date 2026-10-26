@@ -180,3 +180,63 @@ test('Business chat keeps accessible UI and shows unauthenticated error without 
  await expect(page.getByRole('log',{name:'Conversación empresarial'})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
 });
+
+// Local fixtures exercise UI failures only; they do not prove provider connectivity.
+test('Business chat exposes initialization failure outside the closed menu',async({page})=>{
+ await page.goto('/business/agent-chat');
+ await expect(page.locator('main').getByRole('alert').filter({hasText:/Inicia sesión/})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Abrir menú de KOWI'})).toHaveAttribute('aria-expanded','false');
+});
+
+test('LOCAL UI FIXTURE: agent validation is explicit and duplicate registration stays unique',async({page,context,baseURL})=>{
+ test.skip(!baseURL.startsWith('http://127.0.0.1:'),'Local fixture only; not production evidence.');
+ const org='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ await page.addInitScript(()=>{
+  const expires=Math.floor(Date.now()/1000)+3600;
+  const user={id:'11111111-1111-4111-8111-111111111111',email:'ui-fixture@example.test',aud:'authenticated',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};
+  localStorage.setItem('sb-browser-fixture-auth-token',JSON.stringify({access_token:'eyJhbGciOiJIUzI1NiJ9.'+btoa(JSON.stringify({sub:user.id,exp:expires,aud:'authenticated'}))+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));
+ });
+ await context.route('**/api/organizations',route=>route.fulfill({json:[{id:org,name:'Fixture'}]}));
+ let posts=0;
+ await context.route('**/api/organization-agents?**',route=>{
+  if(route.request().method()==='POST'){posts++;return route.fulfill({json:{id,name:'KOWI Comercial',status:'draft'}});}
+  return route.fulfill({json:{items:[],role:'owner'}});
+ });
+ await page.goto('/business/agents');
+ const submit=page.getByRole('button',{name:'Registrar agente en DRAFT',exact:true});
+ await expect(submit).toBeVisible();
+ await page.getByLabel('Nombre del agente').fill(' ');await submit.click();
+ await expect(page.locator('main').getByRole('alert')).toContainText('Falta el nombre del agente');expect(posts).toBe(0);
+ await page.getByLabel('Nombre del agente').fill('KOWI Comercial');
+ await page.getByRole('button',{name:'Añadir producto o servicio',exact:true}).click();await submit.click();
+ await expect(page.locator('main').getByRole('alert')).toContainText('Falta el nombre del producto o servicio 1');expect(posts).toBe(0);
+ await page.getByRole('button',{name:'Retirar producto 1',exact:true}).click();
+ await submit.click();await expect(page.getByRole('status')).toContainText('registrado correctamente');
+ await submit.click();await expect.poll(()=>posts).toBe(2);
+ await expect(page.getByRole('heading',{name:'KOWI Comercial',exact:true})).toHaveCount(1);
+});
+
+test('LOCAL UI FIXTURE: saved chat remains successful when agent refresh fails',async({page,context,baseURL})=>{
+ test.skip(!baseURL.startsWith('http://127.0.0.1:'),'Local UI fixture only.');
+ const org='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',agent='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',conversation='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
+ await page.addInitScript(()=>{
+  const expires=Math.floor(Date.now()/1000)+3600;
+  const user={id:'11111111-1111-4111-8111-111111111111',email:'ui-fixture@example.test',aud:'authenticated',app_metadata:{},user_metadata:{},created_at:new Date().toISOString()};
+  localStorage.setItem('sb-browser-fixture-auth-token',JSON.stringify({access_token:'eyJhbGciOiJIUzI1NiJ9.'+btoa(JSON.stringify({sub:user.id,exp:expires,aud:'authenticated'}))+'.fixture',refresh_token:'fixture',expires_at:expires,expires_in:3600,token_type:'bearer',user}));
+ });
+ await context.route('**/api/organizations',route=>route.fulfill({json:[{id:org,name:'Fixture'}]}));
+ let reads=0,posts=0;
+ const config={name:'Fixture',sector:'otro',services:[],hours:'',team:'',faq:[],policies:'',tone:'',automaticActions:[]};
+ await context.route('**/api/organization-agents?**',route=>++reads===1?route.fulfill({json:{items:[{id:agent,name:'Fixture Agent',status:'draft',config}],role:'owner'}}):route.fulfill({status:503,json:{error:'Refresh unavailable'}}));
+ await context.route('**/api/organization-chat?**',route=>{
+  if(route.request().method()==='POST'){posts++;return route.fulfill({json:{conversationId:conversation,response:'Respuesta de prueba guardada'}});}
+  return route.fulfill({json:{items:[]}});
+ });
+ await page.goto('/business/agent-chat');
+ await page.getByLabel('Mensaje',{exact:true}).fill('Consulta de prueba');
+ await page.getByRole('button',{name:'Enviar mensaje a KOWI'}).click();
+ await expect(page.getByRole('log')).toContainText('Respuesta de prueba guardada');
+ await expect(page.getByRole('status')).toContainText('Respuesta y evidencia guardadas. No se pudo actualizar');
+ await expect(page.locator('main').getByRole('alert')).toHaveCount(0);
+ await expect(page.getByLabel('Mensaje',{exact:true})).toHaveValue('');expect(posts).toBe(1);
+});
