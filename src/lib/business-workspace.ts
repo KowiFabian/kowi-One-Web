@@ -24,6 +24,7 @@ export const businessTools=[
  {title:'Tareas',description:'Trabajo pendiente y seguimiento.',path:'/business/crm-org',entity:'tasks'},
  {title:'Conversación IA',description:'Conversación privada, historial y captura en CRM.',path:'/business/agent-chat'},
  {title:'Agentes',description:'Información confirmada, configuración y verificación.',path:'/business/agents'},
+ {title:'KOWI Builders Studio',description:'Plantillas sectoriales, simulación y registro de agentes en borrador.',path:'/business/builders'},
  {title:'Director',description:'Órdenes, aval del propietario y evidencias.',path:'/business/director'},
  {title:'Intelligence',description:'Datos observados y recomendaciones.',path:'/business/intelligence'},
  {title:'Evidencias',description:'Trabajos, resultados técnicos y límites.',path:'/business/jobs'},
