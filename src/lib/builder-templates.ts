@@ -103,6 +103,13 @@ export function previewBuilderReply(config:BusinessConfig,question:string):strin
     return config.contact?'Contacto publicado por el negocio: '+config.contact:
       'No hay un contacto público confirmado. '+(config.escalation||'Te derivaremos al equipo.');
   }
+  if(/\b(precio|cuanto|cuesta|coste|costar|valor)\b/.test(q)){
+    const priced=config.services.find(s=>normalized(s.name).length>=4&&q.includes(normalized(s.name)));
+    if(priced)return priced.price
+      ? priced.name+': '+priced.price+'. Confirma cualquier condición con el equipo.'
+      : 'No tengo un precio confirmado de '+priced.name+'. '+config.escalation;
+    return 'No tengo una tarifa confirmada para esa consulta. '+config.escalation;
+  }
   for(const item of config.faq){
     const words=normalized(item.question).split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>=5 && !['puedo','tienen','teneis','vuestra','vuestro','hacer','sobre','quiero'].includes(w));
     if(words.some(w=>q.includes(w)))return item.answer;
