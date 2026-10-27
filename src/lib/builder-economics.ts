@@ -8,6 +8,7 @@ export const BUILDER_ECONOMICS = {
   partnerShare: 0.15,
   builderShare: 0.20,
   cardEEAFeeRate: 0.015,
+  illustrativeSpainVAT: 0.21,
   cardEEAFixedFee: 0.25,
   commissionDurationMonths: 12,
 } as const;
@@ -39,7 +40,7 @@ export function calculateBuilderEconomics(input:BuilderEconomicsInput):BuilderEc
   const partner=input.hasPartner?billed*BUILDER_ECONOMICS.partnerShare:0;
   const builder=input.hasBuilder?billed*BUILDER_ECONOMICS.builderShare:0;
   const platformBeforeCosts=billed-partner-builder;
-  const cardProcessingEstimate=clients*(BUILDER_ECONOMICS.monthlyFee*BUILDER_ECONOMICS.cardEEAFeeRate+BUILDER_ECONOMICS.cardEEAFixedFee);
+  const cardProcessingEstimate=clients*(BUILDER_ECONOMICS.monthlyFee*(1+BUILDER_ECONOMICS.illustrativeSpainVAT)*BUILDER_ECONOMICS.cardEEAFeeRate+BUILDER_ECONOMICS.cardEEAFixedFee);
   const operatingCostAssumption=clients*cost;
   const platformContributionBeforeFixedCostsAndTaxes=platformBeforeCosts-cardProcessingEstimate-operatingCostAssumption;
   const n=BUILDER_ECONOMICS.commissionDurationMonths;
