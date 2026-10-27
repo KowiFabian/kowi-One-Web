@@ -1,29 +1,46 @@
 import Link from 'next/link';
 
-const routes = [
-  { id: 'partners', name: 'KOWI Partners', title: 'Conecta negocios con soluciones.', description: 'Para profesionales comerciales, consultores e implementadores que quieren acompañar a una empresa desde su necesidad hasta una solución útil.', steps: ['Aprender el producto y sus límites.', 'Preparar una demostración con datos ficticios.', 'Definir con el cliente el alcance y sus autorizaciones.', 'Acompañar la implantación y comprobar el resultado.'], href: '/business/demo', cta: 'Explorar la demo comercial', pending: 'El alta de colaboradores, la atribución de ventas y las comisiones todavía no están habilitadas.' },
-  { id: 'builders', name: 'KOWI Builders', title: 'Convierte conocimiento en soluciones.', description: 'Para creadores y desarrolladores que quieren transformar una necesidad en un agente, una aplicación o un proyecto verificable.', steps: ['Aprender y definir una necesidad concreta.', 'Organizar objetivo, tareas y evidencias.', 'Configurar una plantilla y probar respuestas simuladas con datos ficticios.', 'Solicitar revisión antes de instalarlo para un cliente.'], href: '/builders', cta: 'Abrir KOWI Builders Studio', pending: 'El constructor de plantillas está disponible para explorar y registrar borradores en empresas autorizadas. La distribución de plantillas entre cuentas, la revisión de código, la aprobación como Builder profesional y el marketplace aún no están habilitados.' },
+const tracks=[
+  {
+    id:'partners',label:'01 · KOWI PARTNERS',title:'Ayuda a negocios a descubrir KOWI.',
+    description:'Un Partner identifica necesidades, demuestra el producto real y acompaña el proceso comercial. No necesita escribir código.',
+    activities:['Conoce el producto en KOWI School y con la demo.','Obtiene autorización para registrar un contacto comercial.','Presenta al negocio una oferta real, con límites claros.','KOWI valida contrato, cobro y atribución antes de calcular una comisión.'],
+    href:'/business/demo',cta:'Probar la demo Business',
+    economics:'Comisión orientativa: 15 % de mensualidades elegibles, durante un máximo propuesto de 12 meses. No hay programa de liquidaciones activo.',
+  },
+  {
+    id:'builders',label:'02 · KOWI BUILDERS',title:'Crea agentes que resuelven problemas reales.',
+    description:'Un Builder prepara soluciones por sector, configura datos autorizados, prueba respuestas y mantiene agentes verificados.',
+    activities:['Elige una de las seis plantillas actuales.','Define servicios, horarios, políticas y respuestas comprobadas.','Prueba el agente con datos de ejemplo; registra un DRAFT autorizado.','La empresa y KOWI revisan antes de activar funciones sensibles.'],
+    href:'/builders',cta:'Abrir Builders Studio',
+    economics:'Participación orientativa: 20 % en clientes asignados con implantación y mantenimiento verificables, hasta 12 meses propuestos. No hay cobros ni marketplace automatizados.',
+  },
 ];
-
-export default function PartnersBuildersPage() {
-  return <main className="kowi-cosmos min-h-screen text-[#f4f3f2]">
-    <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6">
-      <Link href="/" className="font-semibold tracking-[.2em] text-[#f5c795]">KOWI</Link>
-      <nav aria-label="Partners y Builders" className="flex flex-wrap gap-5 text-sm"><Link href="/business">Business</Link><Link href="/school">School</Link><Link href="/proyectos">Projects</Link></nav>
-    </header>
-    <section className="mx-auto max-w-6xl px-6 pb-16 pt-12">
-      <p className="text-sm font-semibold text-[#f5c795]">HUMAN-FIRST AI · PARTNERS & BUILDERS</p>
-      <h1 className="mt-5 max-w-4xl text-4xl font-semibold leading-tight md:text-6xl">Aprende. Crea. Ayuda a otros a avanzar.</h1>
-      <p className="mt-6 max-w-2xl text-lg leading-relaxed text-[#d3dce5]">Dos caminos conectados con KOWI School y Business: acompañar a negocios o construir soluciones para necesidades reales.</p>
-      <p className="mt-6 rounded-xl border border-[#d6ad7d] bg-[#211b15] p-4 text-sm text-[#ffe2bd]">Vista previa del programa. Puedes explorar los recorridos y acceder a las herramientas existentes. La inscripción y la gestión comercial del programa están pendientes de implementación.</p>
-      <div className="mt-8 flex flex-wrap gap-3"><a href="#partners" className="kowi-gold-btn rounded-full px-6 py-3 font-semibold">Quiero comercializar</a><a href="#builders" className="rounded-full border border-[#94a3b8] px-6 py-3 font-semibold">Quiero crear</a></div>
-      <div className="mt-12 grid gap-6 lg:grid-cols-2">{routes.map(route => <article id={route.id} key={route.id} className="scroll-mt-6 rounded-3xl border border-[#617086] bg-[#101b2b] p-6 md:p-8">
-        <p className="font-semibold text-[#f5c795]">{route.name}</p><h2 className="mt-4 text-3xl font-semibold">{route.title}</h2><p className="mt-4 leading-relaxed text-[#d3dce5]">{route.description}</p>
-        <ol className="mt-6 list-decimal space-y-3 pl-5 text-[#e3e9f0]">{route.steps.map(step => <li key={step}>{step}</li>)}</ol>
-        <Link href={route.href} className="kowi-gold-btn mt-8 inline-block rounded-full px-5 py-3 font-semibold">{route.cta} ↗</Link>
-        <details className="mt-6 border-t border-[#617086] pt-4"><summary className="cursor-pointer font-semibold text-[#f5c795]">Qué falta para activar este programa</summary><p className="mt-3 text-sm leading-relaxed text-[#d3dce5]">{route.pending}</p></details>
-      </article>)}</div>
-    </section>
-    <section className="border-t border-[#617086] bg-[#0b1421] px-6 py-12"><div className="mx-auto max-w-6xl"><h2 className="text-3xl font-semibold">Aprendizaje gratuito. Responsabilidad compartida.</h2><p className="mt-4 max-w-3xl leading-relaxed text-[#d3dce5]">School es el punto de entrada para aprender a utilizar la IA con criterio. Las instalaciones requieren autorización del negocio y las soluciones deben revisarse antes de publicarse. Los acuerdos económicos y las comisiones no están activos; no se garantizan ingresos.</p><Link href="/school" className="mt-6 inline-block font-semibold text-[#f5c795] underline underline-offset-4">Explorar KOWI School ↗</Link></div></section>
-  </main>;
+export default function PartnersBuildersPage(){
+ return <main className="min-h-screen bg-[#f8f9fa] px-4 py-8 text-[#202327] sm:px-8"><div className="mx-auto max-w-6xl space-y-8">
+   <header className="flex flex-wrap items-center justify-between gap-4"><Link href="/" className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#eef0f2] text-2xl">◎</span><span><strong className="block text-xl">KOWI IA</strong><small className="text-[#70757e]">Human-First AI · Colaboradores</small></span></Link>
+     <nav aria-label="KOWI" className="flex flex-wrap gap-4 text-sm"><Link href="/business">Business</Link><Link href="/builders">Builders Studio</Link><Link href="/school">School</Link><Link href="/builders/ingresos">Ingresos</Link></nav>
+   </header>
+   <section className="rounded-[28px] border border-[#e6e8eb] bg-white px-5 py-10 sm:px-8">
+     <span className="rounded-full bg-[#eef0f1] px-3 py-1 text-xs font-semibold">RED DE COLABORACIÓN · PILOTO</span>
+     <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-tight md:text-5xl">Vende soluciones. Construye agentes. Crece con KOWI.</h1>
+     <p className="mt-5 max-w-3xl text-lg leading-relaxed text-[#646b74]">Los negocios contratan KOWI Business; los Partners consiguen clientes; los Builders configuran y mantienen soluciones. KOWI aporta la tecnología, la supervisión humana y el control de la plataforma.</p>
+     <div className="mt-7 flex flex-wrap gap-3"><Link href="/builders/ingresos" className="rounded-full bg-[#202328] px-6 py-3 text-sm font-semibold text-white">Ver cómo repartimos ingresos</Link><Link href="/builders" className="rounded-full border border-[#d9dde1] px-6 py-3 text-sm font-semibold">Crear un agente de prueba</Link></div>
+     <p className="mt-5 max-w-3xl rounded-xl border border-[#e4e7eb] bg-[#f7f8f9] p-4 text-sm text-[#666d75]">La plataforma de creación de borradores existe; las altas profesionales, la gestión de referidos, contratos, distribución de plantillas y pagos a colaboradores todavía no están activados. Las cifras son propuestas para estudio.</p>
+   </section>
+   <div className="grid gap-4 lg:grid-cols-2">{tracks.map(t=><article id={t.id} key={t.id} className="scroll-mt-6 rounded-3xl border border-[#e5e7e9] bg-white p-6 sm:p-8">
+     <p className="text-xs font-semibold tracking-widest text-[#707780]">{t.label}</p><h2 className="mt-4 text-2xl font-semibold">{t.title}</h2><p className="mt-3 text-sm leading-relaxed text-[#656c76]">{t.description}</p>
+     <ol className="mt-6 list-decimal space-y-3 pl-5 text-sm leading-relaxed">{t.activities.map(a=><li key={a}>{a}</li>)}</ol>
+     <p className="mt-6 rounded-xl bg-[#f4f5f6] p-4 text-sm leading-relaxed text-[#545d66]">{t.economics}</p>
+     <Link href={t.href} className="mt-6 inline-block rounded-full bg-[#202328] px-5 py-3 text-sm font-semibold text-white">{t.cta}</Link>
+   </article>)}</div>
+   <section className="rounded-3xl border border-[#e5e7e9] bg-white p-6 sm:p-8">
+     <h2 className="text-2xl font-semibold">Requisitos para trabajar con KOWI</h2>
+     <div className="mt-5 grid gap-4 md:grid-cols-3">
+       {[['Aprender','Comprender el alcance comercial, las limitaciones del producto y la atención responsable.'],['Autorizar','Cada empresa controla sus datos y aprueba la configuración, integraciones y acciones sensibles.'],['Verificar','Probar funcionamiento real, documentar evidencias y mantener trazabilidad antes de publicar.']].map(([a,b])=><div key={a} className="rounded-xl border border-[#e9eaeb] p-4"><h3 className="font-semibold">{a}</h3><p className="mt-2 text-sm text-[#656c76]">{b}</p></div>)}
+     </div>
+     <div className="mt-6 flex flex-wrap gap-4"><Link href="/school" className="text-sm font-semibold underline">Conocer KOWI School</Link><Link href="/builders/ingresos" className="text-sm font-semibold underline">Simular reparto de ingresos</Link><Link href="/privacidad" className="text-sm font-semibold underline">Privacidad</Link></div>
+   </section>
+   <footer className="border-t border-[#e4e6e9] py-6 text-sm text-[#676f78]">KOWI IA · Human-First AI. No se garantizan ingresos ni se conceden autorizaciones para acceder a datos de otros clientes.</footer>
+ </div></main>;
 }
