@@ -40,7 +40,7 @@ export default function BuildersStudio(){
  const selectedCompany=orgs.find(o=>o.id===org);
  const canSave=['owner','admin','configurator'].includes(role);
  const validated=validateBuilderConfig({...config,name:selectedCompany?.name||config.name});
- const change=<K extends keyof BusinessConfig>(key:K,value:BusinessConfig[K])=>{setConfig(c=>({...c,[key]:value}));setNotice('');};
+ function change<K extends keyof BusinessConfig>(key:K,value:BusinessConfig[K]){setConfig(c=>({...c,[key]:value}));setNotice('');}
 
  useEffect(()=>{let live=true;
    api<Organization[]>('/api/organizations').then(rows=>{
