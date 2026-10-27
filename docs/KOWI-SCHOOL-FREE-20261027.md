@@ -48,3 +48,11 @@ School → Comenzar a aprender → Diagnóstico → tres respuestas → ruta rec
 ## Go/no-go
 
 Preview del aula local solamente. No declarar School integral terminada. Bloquean lanzamiento integral: esquema/RLS corregido y probado, identidad/transparencia legal del titular, tutor con cuota y prueba real, currículo restante, CMS y comunidad moderada. Planes de pago sin activar. Próximo paso: validar el aula Free y preparar persistencia segura en entorno aislado antes de matricular alumnos.
+
+## Evidencia de esta entrega
+
+- `npm ci`: correcto. `npm test`: 62/62. `npm run type-check`, `npm run lint`, `npm run build`: correctos. `npm audit --omit=dev`: 0 vulnerabilidades.
+- Playwright focalizado: 4/4 (recorrido completo y almacenamiento bloqueado, escritorio y móvil). Fixtures de Business no se confunden con una conexión IA real.
+- Comprobación adicional de render: 1440×1000, 768×1024, 390×844, sin overflow horizontal ni errores JavaScript. No es auditoría WCAG ni lector de pantalla real.
+- Revisión visual detectó demo flotante superpuesta; excluida solamente en `/school/aprender` y protegida con test.
+- PR #101; se mantiene borrador y fuera de producción hasta cerrar los bloqueos relevantes. La comprobación HTTP de Preview autenticada no sustituye prueba de integración remota ni persistencia de alumno.

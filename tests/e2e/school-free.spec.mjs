@@ -2,6 +2,7 @@ import {test,expect} from '@playwright/test';
 test('School Free: diagnosis, practice, feedback, persistence and export',async({page})=>{
  await page.goto('/school/aprender');
  await expect(page.getByRole('heading',{name:'De tu primera pregunta a un proyecto seguro.'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Ver demo ilustrativa',exact:true})).toHaveCount(0);
  await page.getByRole('button',{name:'Diagnóstico',exact:true}).click();
  await page.getByRole('button',{name:'Recomendar mi ruta'}).click();
  await expect(page.locator('main').getByRole('alert')).toContainText('Responde las tres');
