@@ -99,7 +99,7 @@ export default function BuildersStudio(){
        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f1f2] text-2xl font-bold">◎</span>
        <span><strong className="block text-2xl tracking-tight">KOWI IA</strong><small className="text-[#777b81]">Human-First AI · Builders Studio</small></span>
      </Link>
-     <span className="rounded-full bg-[#eeeeef] px-3 py-1 text-xs font-semibold">PILOTO</span>
+     <div className="flex flex-wrap items-center gap-2"><Link href="/builders/ingresos" className="rounded-full border border-[#dadddf] bg-white px-4 py-2 text-sm font-medium hover:bg-[#f0f1f2]">Cómo ganan los Builders</Link><span className="rounded-full bg-[#eeeeef] px-3 py-1 text-xs font-semibold">PILOTO</span></div>
    </header>
    <div className="mt-7 rounded-[28px] border border-[#e7e7e8] bg-white p-4 shadow-sm sm:p-6">
      <nav aria-label="Explorar KOWI" className="flex flex-wrap gap-2 border-b border-[#eeeeef] pb-5">
@@ -108,7 +108,7 @@ export default function BuildersStudio(){
      <section className="mt-7">
        <p className="text-xs font-semibold uppercase tracking-[.14em] text-[#73777d]">KOWI BUILDERS · ESPACIO DE CREACIÓN</p>
        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Crea un agente que conozca tu negocio.</h1>
-       <p className="mt-4 max-w-3xl leading-relaxed text-[#686e76]">Elige una plantilla, personaliza información confirmada, prueba respuestas en una simulación y registra un borrador en tu empresa. Sin código, sin inventar reservas y sin enviar mensajes a terceros.</p>
+       <p className="mt-4 max-w-3xl leading-relaxed text-[#686e76]">Elige una plantilla, personaliza información confirmada, prueba respuestas en una simulación y registra un borrador en tu empresa. Sin código, sin inventar reservas y sin enviar mensajes a terceros.</p><Link href="/builders/ingresos" className="mt-4 inline-block text-sm font-semibold underline underline-offset-4">Descubre el modelo de ingresos de KOWI, Partners y Builders ↗</Link>
      </section>
      <section className="mt-8">
        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">1. Elige una plantilla sectorial</h2><span className="text-xs text-[#6f737a]">Las plantillas contienen únicamente datos ficticios</span></div>
