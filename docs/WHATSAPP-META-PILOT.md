@@ -37,3 +37,7 @@ Use the EXACT `META_WHATSAPP_VERIFY_TOKEN` value and subscribe to **messages**. 
 
 ## Safety
 Do not enable on the production domain for real customers. Test data retention is seven days by policy; the `expires_at` column **does not delete data automatically**. Schedule secure deletion/retention cleanup before external users. Only owner/admin can approve sends, no unattended auto-replies. If outbox says `uncertain`, inspect Meta before any new attempt to avoid duplicate messages.
+
+## Lista explícita de destinatarios de prueba
+
+Antes de activar el piloto, define en **Preview**, solo del lado servidor, `META_WHATSAPP_TEST_RECIPIENTS` con los teléfonos de prueba autorizados en Meta, en formato internacional sin `+`, separados por comas. El webhook descarta mensajes de remitentes no autorizados y el envío manual falla cerrado si el destinatario no aparece en la lista. No uses teléfonos de clientes ni números personales/Manhattan. No registres los teléfonos en GitHub. El webhook confirma `accepted` (procesados con deduplicación), no un recuento ficticio de filas nuevas.
