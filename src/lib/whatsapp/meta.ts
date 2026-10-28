@@ -30,8 +30,18 @@ export function parseMetaMessages(payload:unknown):MetaMessage[]{
  }
  return messages;
 }
+// Test recipients are explicitly registered in the Meta sandbox and
+// separately allowlisted on our server. No arbitrary third-party replies.
+export function isAllowedMetaTestRecipient(phone:string,allowlist:string|undefined):boolean{
+ if(!/^\d{6,16}$/.test(phone)||!allowlist)return false;
+ const allowed=allowlist.split(',').map(value=>value.trim()).filter(value=>/^\d{6,16}$/.test(value));
+ return allowed.includes(phone);
+}
+
 export async function sendMetaText(to:string,body:string,phoneNumberId:string):Promise<string>{
  if(!/^\d{6,16}$/.test(to)||!/^\d{6,30}$/.test(phoneNumberId)||!body.trim()||body.length>1000)throw new Error('Invalid WhatsApp reply');
+ if(!isAllowedMetaTestRecipient(to,process.env.META_WHATSAPP_TEST_RECIPIENTS))
+  throw new Error('Recipient not authorized for Meta test pilot');
  const token=process.env.META_WHATSAPP_ACCESS_TOKEN;
  const permitted=process.env.META_WHATSAPP_TEST_PHONE_NUMBER_ID;
  if(process.env.META_WHATSAPP_PILOT_ENABLED!=='true'||!token||!permitted||permitted!==phoneNumberId)throw new Error('WhatsApp test pilot not configured');
