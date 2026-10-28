@@ -60,8 +60,8 @@ export default function BusinessWorkspace({onSignOut}:{onSignOut:()=>Promise<voi
      <button type="submit" disabled={busy||loading} className="rounded-xl bg-[#e8b37b] px-5 py-3 font-semibold text-black disabled:opacity-50">{busy?'Comprobando registro…':'Crear empresa'}</button>
    </div>
    {createError&&<p id="organization-create-error" role="alert" aria-live="assertive" className="rounded-xl border border-red-400 bg-red-950/80 p-3 text-sm font-medium text-red-100">{createError}</p>}
-   {createNotice&&<p role="status" className="rounded-xl border border-emerald-400/50 bg-emerald-950/60 p-3 text-sm text-emerald-100">{createNotice}</p>}
  </form></details>
+ {createNotice&&<p role="status" className="rounded-xl border border-emerald-400/50 bg-emerald-950/60 p-3 text-sm text-emerald-100">{createNotice}</p>}
  {overview&&<>
  <section className="glass rounded-2xl p-6"><div className="flex flex-wrap justify-between gap-3"><h2 className="text-2xl">{overview.organization.name}</h2><button disabled={busy||loading} onClick={()=>setRefresh(n=>n+1)} className="underline">Actualizar negocio</button></div><p className="mt-3 text-sm">Permiso: {overview.role}. Consulta: {format(overview.observedAt)}.</p>
  {!overview.verifiedAccount&&<p className="mt-3">Verifica tu cuenta antes de configurar agentes o autorizar órdenes.</p>}
