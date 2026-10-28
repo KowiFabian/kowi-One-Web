@@ -18,3 +18,11 @@ test('Company creation errors appear next to the input, in red and accessible',a
  assert.match(source,/bg-red-950\/80/);
  assert.match(source,/Comprobando registro…/);
 });
+
+test('Second business organization form also verifies persistence and shows inline errors',async()=>{
+ const source=await readFile('src/components/OrganizationSetup.tsx','utf8');
+ assert.match(source,/const fresh=await api<OrganizationSummary\[]>\('\/api\/organizations'\)/);
+ assert.match(source,/fresh\.some\(item=>item\.id===row\.id\)/);
+ assert.match(source,/id="setup-create-error" role="alert" aria-live="assertive"/);
+ assert.match(source,/bg-red-950\/80/);
+});
