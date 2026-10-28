@@ -1,4 +1,4 @@
-import {parseMetaMessages,verifyMetaSignature} from '@/lib/whatsapp/meta';
+import {isAllowedMetaTestRecipient,parseMetaMessages,verifyMetaSignature} from '@/lib/whatsapp/meta';
 import {serviceDb} from '@/lib/server/business-embed';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -27,7 +27,8 @@ export async function POST(request:Request){
  const phoneId=process.env.META_WHATSAPP_TEST_PHONE_NUMBER_ID;
  const organizationId=process.env.KOWI_WHATSAPP_TEST_ORGANIZATION_ID;
  if(!phoneId||!organizationId)return new Response('Pilot configuration incomplete',{status:503});
- const messages=parseMetaMessages(payload).filter(m=>m.phoneNumberId===phoneId);
+ const messages=parseMetaMessages(payload).filter(m=>m.phoneNumberId===phoneId&&
+   isAllowedMetaTestRecipient(m.from,process.env.META_WHATSAPP_TEST_RECIPIENTS));
  if(!messages.length)return Response.json({received:true,stored:0},{headers:{'Cache-Control':'no-store'}});
  try{
   const db=serviceDb();
@@ -39,7 +40,7 @@ export async function POST(request:Request){
    sender_e164:m.from,message_text:m.text,
   })),{onConflict:'phone_number_id,meta_message_id',ignoreDuplicates:true});
   if(error)throw error;
-  return Response.json({received:true,stored:messages.length},{headers:{'Cache-Control':'no-store'}});
+  return Response.json({received:true,accepted:messages.length,deduplicated:true},{headers:{'Cache-Control':'no-store'}});
  }catch{
   // Request retry instead of acknowledging a message that may not be durable.
   return new Response('Temporary storage error',{status:503});
