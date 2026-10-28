@@ -26,3 +26,11 @@ test('Second business organization form also verifies persistence and shows inli
  assert.match(source,/id="setup-create-error" role="alert" aria-live="assertive"/);
  assert.match(source,/bg-red-950\/80/);
 });
+
+test('Business login and OTP failures are red alerts, not success notices',async()=>{
+ const source=await readFile('src/components/AuthGate.tsx','utf8');
+ assert.match(source,/const \[noticeError,setNoticeError\] = useState\(false\)/);
+ assert.match(source,/role=\{noticeError\?'alert':'status'\}/);
+ assert.match(source,/bg-red-950\/80/);
+ assert.match(source,/catch \(error\) \{ setNoticeError\(true\)/);
+});
