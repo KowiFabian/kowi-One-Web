@@ -18,6 +18,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState('');
+  const [noticeError,setNoticeError] = useState(false);
   const [configured, setConfigured] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
     if (!client) { setConfigured(false); setReady(true); return; }
     let active = true;
     client.auth.getSession().then(({ data }) => { if (active) { setSession(data.session); setReady(true); } })
-      .catch(() => { if (active) { setNotice('No se pudo recuperar la sesión.'); setReady(true); } });
+      .catch(() => { if (active) { setNotice('No se pudo recuperar la sesión.'); setNoticeError(true); setReady(true); } });
     const { data } = client.auth.onAuthStateChange((_event, next) => { if (active) setSession(next); });
     return () => { active = false; data.subscription.unsubscribe(); };
   }, []);
@@ -36,18 +37,20 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
     event.preventDefault();
     const client = browserSupabase();
     if (!client || busy) return;
-    setBusy(true); setNotice('');
+    setBusy(true); setNotice('');setNoticeError(false);
     try {
       if (sent) {
         const { error } = await client.auth.verifyOtp({ email, token, type: 'email' });
         if (error) throw new Error('Código no válido o caducado. Solicita uno nuevo.');
         setToken('');
       } else {
-        const { error } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: new URL(isBusiness ? '/business' : '/kowi', window.location.origin).toString() } });
+        const redirectOrigin = process.env.NEXT_PUBLIC_KOWI_AUTH_REDIRECT_ORIGIN || window.location.origin;
+        const emailRedirectTo = new URL(isBusiness ? '/business' : '/kowi', redirectOrigin).toString();
+        const { error } = await client.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo } });
         if (error) throw new Error('No se pudo enviar el código. Vuelve a intentarlo.');
-        setSent(true); setNotice('Revisa tu correo. Introduce el código o abre el enlace de acceso si tu correo lo incluye.');
+        setSent(true); setNotice('Comprueba el correo: pulsa el enlace de confirmación si aparece. Introduce un código únicamente si el mensaje contiene uno.');
       }
-    } catch (error) { setNotice(error instanceof Error ? error.message : 'No se pudo iniciar sesión.'); }
+    } catch (error) { setNoticeError(true);setNotice(error instanceof Error ? error.message : 'No se pudo iniciar sesión.'); }
     finally { setBusy(false); }
   }
 
@@ -76,8 +79,8 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
       </div>
 
       <div className="p-8 md:p-10">
-          <h2 className="text-2xl font-semibold">{sent ? 'Introduce tu código' : isBusiness ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
-        <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Revisa el correo indicado: introduce el código de acceso o abre el enlace si lo incluye.' : 'Usa tu correo. No necesitas contraseña.'}</p>
+          <h2 className="text-2xl font-semibold">{sent ? 'Revisa tu correo' : isBusiness ? 'Crear cuenta o entrar' : 'Entrar a Kowi'}</h2>
+        <p className="mt-3 text-sm leading-relaxed text-[#9fb9aa]">{sent ? 'Si recibes un enlace, pulsa el botón del correo. Si recibes un código numérico, escríbelo aquí.' : 'Usa tu correo. No necesitas contraseña.'}</p>
         {!configured ? <p role="status" className="mt-6 rounded-xl border border-amber-300/20 bg-amber-100/5 p-4 text-sm text-amber-100">El acceso todavía no está configurado.</p> :
         <form onSubmit={submit} className="mt-7 space-y-4">
           <label className="block text-sm text-[#c9dbcf]">Correo electrónico
@@ -91,9 +94,10 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
           <button disabled={busy} className="w-full rounded-xl bg-[#e8b37b] p-3.5 font-semibold text-[#17121a] disabled:opacity-50">
             {busy ? 'Procesando…' : sent ? 'Entrar a Kowi' : 'Recibir código'}
           </button>
-          {sent && <button type="button" disabled={busy} onClick={() => { setSent(false); setToken(''); setNotice(''); }} className="text-sm text-[#b9ccbf] underline underline-offset-4">Cambiar correo</button>}
+          {sent && <button type="button" disabled={busy} onClick={() => { setSent(false); setToken(''); setNotice('');setNoticeError(false); }} className="text-sm text-[#b9ccbf] underline underline-offset-4">Cambiar correo</button>}
         </form>}
-        {notice && <p role="status" className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-[#cde1d4]">{notice}</p>}
+        {notice && <p role={noticeError?'alert':'status'} aria-live={noticeError?'assertive':'polite'}
+          className={noticeError?'mt-4 rounded-xl border border-red-400 bg-red-950/80 p-3 text-sm font-medium text-red-100':'mt-4 rounded-xl border border-white/10 bg-white/5 p-3 text-sm text-[#cde1d4]'}>{notice}</p>}
         {mode==='workspace'&&<div className="mt-6"><InstallKowi business/></div>}
         <p className="mt-6 text-xs leading-relaxed text-[#c3d0ca]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
       </div>
