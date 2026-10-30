@@ -1,4 +1,4 @@
-import {isAllowedMetaTestRecipient,parseMetaMessages,verifyMetaSignature} from '@/lib/whatsapp/meta';
+import {isAllowedMetaTestRecipient,parseMetaMessages,readLimitedMetaWebhookBody,verifyMetaSignature} from '@/lib/whatsapp/meta';
 import {serviceDb} from '@/lib/server/business-embed';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -16,8 +16,12 @@ export async function POST(request:Request){
  if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))
   return new Response('Unsupported Media Type',{status:415});
  if(Number(request.headers.get('content-length')||0)>262144)return new Response('Payload too large',{status:413});
- const raw=await request.text();
- if(Buffer.byteLength(raw,'utf8')>262144)return new Response('Payload too large',{status:413});
+ let raw:string;
+ try{
+  const body=await readLimitedMetaWebhookBody(request.body);
+  if(body.tooLarge)return new Response('Payload too large',{status:413});
+  raw=body.raw;
+ }catch{return new Response('Invalid request body',{status:400});}
  if(!verifyMetaSignature(raw,request.headers.get('x-hub-signature-256'),process.env.META_APP_SECRET||''))
   return new Response('Unauthorized',{status:401});
  let payload:unknown;
