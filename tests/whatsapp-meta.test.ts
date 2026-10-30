@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createHmac} from 'node:crypto';
-import {verifyMetaSignature,parseMetaMessages,isAllowedMetaTestRecipient} from '../src/lib/whatsapp/meta';
+import {verifyMetaSignature,parseMetaMessages,isAllowedMetaTestRecipient,readLimitedMetaWebhookBody} from '../src/lib/whatsapp/meta';
 
 const good={object:'whatsapp_business_account',entry:[{changes:[{value:{
  metadata:{phone_number_id:'123456789012345'},messages:[{id:'wamid.demo123',from:'34600111222',type:'text',text:{body:'Quiero reservar una cita'}}],
@@ -35,4 +35,22 @@ test('Meta sandbox recipients must be explicitly allowlisted; no fallback to arb
  assert.equal(isAllowedMetaTestRecipient('34600111222','+34600111222'),false);
  assert.equal(isAllowedMetaTestRecipient('34600111222','346001112220'),false);
  assert.equal(isAllowedMetaTestRecipient('abc','34600111222'),false);
+});
+
+
+test('Meta webhook stream enforces a byte limit even without Content-Length',async()=>{
+ const enc=new TextEncoder();
+ const exact=new ReadableStream<Uint8Array>({start(controller){
+  controller.enqueue(enc.encode('abc'));
+  controller.enqueue(enc.encode('def'));
+  controller.close();
+ }});
+ assert.deepEqual(await readLimitedMetaWebhookBody(exact,6),{raw:'abcdef',tooLarge:false});
+ const oversized=new ReadableStream<Uint8Array>({start(controller){
+  controller.enqueue(enc.encode('abc'));
+  controller.enqueue(enc.encode('defg'));
+  controller.close();
+ }});
+ assert.deepEqual(await readLimitedMetaWebhookBody(oversized,6),{raw:'',tooLarge:true});
+ assert.deepEqual(await readLimitedMetaWebhookBody(null,6),{raw:'',tooLarge:false});
 });
