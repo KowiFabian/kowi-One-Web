@@ -38,6 +38,29 @@ export function isAllowedMetaTestRecipient(phone:string,allowlist:string|undefin
  return allowed.includes(phone);
 }
 
+// Bound the request stream BEFORE reading it into memory. The Content-Length
+// header cannot be trusted and may be absent on chunked webhook requests.
+export async function readLimitedMetaWebhookBody(
+ stream:ReadableStream<Uint8Array>|null,maxBytes=262144,
+):Promise<{raw:string;tooLarge:boolean}>{
+ if(!stream)return {raw:'',tooLarge:false};
+ const reader=stream.getReader();
+ const chunks:Uint8Array[]=[];
+ let size=0;
+ try{
+  while(true){
+   const {done,value}=await reader.read();
+   if(done)break;
+   if(value.byteLength>maxBytes-size){
+    await reader.cancel().catch(()=>{});
+    return {raw:'',tooLarge:true};
+   }
+   if(value.byteLength){chunks.push(value);size+=value.byteLength;}
+  }
+  return {raw:Buffer.concat(chunks.map(chunk=>Buffer.from(chunk)),size).toString('utf8'),tooLarge:false};
+ }finally{reader.releaseLock();}
+}
+
 export async function sendMetaText(to:string,body:string,phoneNumberId:string):Promise<string>{
  if(!/^\d{6,16}$/.test(to)||!/^\d{6,30}$/.test(phoneNumberId)||!body.trim()||body.length>1000)throw new Error('Invalid WhatsApp reply');
  if(!isAllowedMetaTestRecipient(to,process.env.META_WHATSAPP_TEST_RECIPIENTS))
