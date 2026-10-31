@@ -38,6 +38,18 @@ export function isAllowedMetaTestRecipient(phone:string,allowlist:string|undefin
  return allowed.includes(phone);
 }
 
+// Fail closed BEFORE reserving an outbox row. An unauthorized recipient or
+// invalid/expired timestamp must not consume the single allowed send attempt.
+export function metaPilotReplyEligibility(
+ sender:string,allowlist:string|undefined,receivedAt:string,expiresAt:string,now=Date.now(),
+):'ok'|'recipient_not_allowed'|'window_expired'{
+ if(!isAllowedMetaTestRecipient(sender,allowlist))return 'recipient_not_allowed';
+ const received=Date.parse(receivedAt),expires=Date.parse(expiresAt);
+ if(!Number.isFinite(received)||!Number.isFinite(expires)||expires<=now||
+    received>now+60000||now-received>23*3600000)return 'window_expired';
+ return 'ok';
+}
+
 // Bound the request stream BEFORE reading it into memory. The Content-Length
 // header cannot be trusted and may be absent on chunked webhook requests.
 export async function readLimitedMetaWebhookBody(
