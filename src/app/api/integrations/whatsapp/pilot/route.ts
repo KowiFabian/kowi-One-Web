@@ -2,7 +2,7 @@ import {z} from 'zod';
 import {requireOrganization} from '@/lib/server/organization-access';
 import {serviceDb} from '@/lib/server/business-embed';
 import {ApiError,apiFailure,limitedJson} from '@/lib/server/auth';
-import {sendMetaText} from '@/lib/whatsapp/meta';
+import {metaPilotReplyEligibility,sendMetaText} from '@/lib/whatsapp/meta';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -51,8 +51,12 @@ export async function POST(request:Request){
    .eq('organization_id',organizationId).eq('phone_number_id',phone).maybeSingle();
   if(error)throw new ApiError(503,'No se pudo comprobar el mensaje.');
   if(!inbox)throw new ApiError(404,'Mensaje de prueba no encontrado.');
-  if(Date.parse(inbox.expires_at)<Date.now()||Date.now()-Date.parse(inbox.received_at)>23*3600000)
-   throw new ApiError(409,'La ventana de respuesta ha caducado. No se enviará ningún mensaje.');
+  const eligibility=metaPilotReplyEligibility(inbox.sender_e164,process.env.META_WHATSAPP_TEST_RECIPIENTS,
+   inbox.received_at,inbox.expires_at);
+  if(eligibility==='recipient_not_allowed')
+   throw new ApiError(403,'El destinatario no está autorizado en el entorno de prueba de Meta. No se ha reservado ningún envío.');
+  if(eligibility==='window_expired')
+   throw new ApiError(409,'La ventana de respuesta ha caducado o es inválida. No se ha reservado ningún envío.');
   // The UNIQUE inbox_id constraint reserves exactly one outbound attempt;
   // an uncertain provider result must be reconciled manually, never retried here.
   const {data:reserved,error:reserveError}=await db.from('whatsapp_pilot_outbox')
