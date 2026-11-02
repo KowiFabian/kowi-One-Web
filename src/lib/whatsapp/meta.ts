@@ -45,7 +45,7 @@ export function metaPilotReplyEligibility(
 ):'ok'|'recipient_not_allowed'|'window_expired'{
  if(!isAllowedMetaTestRecipient(sender,allowlist))return 'recipient_not_allowed';
  const received=Date.parse(receivedAt),expires=Date.parse(expiresAt);
- if(!Number.isFinite(received)||!Number.isFinite(expires)||expires<=now||
+ if(!Number.isFinite(received)||!Number.isFinite(expires)||expires<=now||expires<=received||
     received>now+60000||now-received>23*3600000)return 'window_expired';
  return 'ok';
 }
