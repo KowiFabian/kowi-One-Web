@@ -52,6 +52,9 @@ test('Meta replies are preflighted before consuming a one-shot outbox reservatio
  assert.equal(check(allowed,allowed,received,new Date(now).toISOString()),'window_expired');
  assert.equal(check(allowed,allowed,new Date(now-23*3600000-1).toISOString(),expires),'window_expired');
  assert.equal(check(allowed,allowed,new Date(now+120000).toISOString(),expires),'window_expired');
+ // An inconsistent future expiry must never authorize a reply, even with a short clock skew.
+ assert.equal(check(allowed,allowed,new Date(now+30000).toISOString(),new Date(now+15000).toISOString()),'window_expired');
+ assert.equal(check(allowed,allowed,new Date(now+15000).toISOString(),new Date(now+15000).toISOString()),'window_expired');
 });
 
 test('Meta webhook stream enforces a byte limit even without Content-Length',async()=>{
