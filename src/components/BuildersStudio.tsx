@@ -260,7 +260,17 @@ export default function BuildersStudio({ initialTemplate }: { initialTemplate?: 
        <Section number="03" title="Registrar borrador en tu empresa" description="Solo los roles owner, admin o configurator pueden guardar agentes.">
          {loading?<p role="status" className="text-sm">Comprobando tu sesión…</p>:!signedIn?<div className="space-y-3 text-sm"><p>Entra en KOWI Business para registrar el agente. Puedes conservar la ficha durante el acceso si vuelves a Builders en esta pestaña.</p><button type="button" className={secondary+' mr-2'} onClick={keepDraft}>Guardar ficha en esta pestaña</button><Link href="/business#crear" className={primary+' inline-block'}>Entrar a KOWI Business</Link></div>:orgs.length===0?<div className="space-y-3 text-sm"><p>Todavía no tienes una empresa configurada.</p><Link href="/business/app" className={primary+' inline-block'}>Crear empresa</Link></div>:<form onSubmit={save} className="space-y-4">
            <label className={lbl}>Empresa de destino<select className={field} value={org} disabled={busy} onChange={e=>{setOrg(e.target.value);setConfirmed(false);setNotice('');setError('');}}>{orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
-           <p className="text-sm text-[#666b72]">Rol: {role||'comprobando permisos'}. El agente se guardará en <strong>DRAFT</strong>, no estará activo ni se conectará a WhatsApp.</p>
+           <div className="rounded-xl border border-[#e5e6e7] bg-[#f9fafb] p-4 text-sm">
+             <h3 className="font-semibold">Ficha que se va a registrar</h3>
+             <dl className="mt-3 grid gap-2 break-words">
+               <div><dt className="inline font-medium">Agente · </dt><dd className="inline">{agentName.trim()||'Nombre pendiente'}</dd></div>
+               <div><dt className="inline font-medium">Objetivo · </dt><dd className="inline">{config.description||'Por definir'}</dd></div>
+               <div><dt className="inline font-medium">Capacidades · </dt><dd className="inline">{capabilities.filter(item=>config.automaticActions.includes(item.id)).map(item=>item.label).join(', ')||'Solo revisión humana'}</dd></div>
+               <div><dt className="inline font-medium">Conocimiento · </dt><dd className="inline">{config.services.length} servicios y {config.faq.length} preguntas frecuentes</dd></div>
+               <div><dt className="inline font-medium">Derivación · </dt><dd className="inline">{config.escalation||'Por definir'}</dd></div>
+             </dl>
+           </div>
+           <p className="text-sm text-[#666b72]">Rol: {role||'comprobando permisos'}. El agente se guardará como borrador. Los canales se gestionan en Business.</p>
            {!validated.success&&<p role="alert" className="text-sm text-[#a42727]">Faltan campos válidos. Revisa la configuración antes de guardarla.</p>}
            <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={confirmed} disabled={busy} onChange={e=>setConfirmed(e.target.checked)}/>He revisado la ficha y confirmo que los datos están autorizados para {selectedCompany?.name}.</label>
            <button type="submit" className={primary} disabled={busy||!canSave||!validated.success||!confirmed}>{busy?'Guardando…':'Registrar agente en DRAFT'}</button>
