@@ -21,7 +21,7 @@ export function parseMetaMessages(payload:unknown):MetaMessage[]{
    for(const input of arr(value?.messages)){
     const row=rec(input),body=rec(row?.text)?.body;
     if(row?.type!=='text'||typeof row?.from!=='string'||!/^\d{6,16}$/.test(row.from)||
-       typeof row?.id!=='string'||row.id.length>200||!/^wamid\.[\w.:-]+$/.test(row.id)||
+       typeof row?.id!=='string'||row.id.length>200||!/^wamid\.[A-Za-z0-9._~:/+=-]+$/.test(row.id)||
        typeof body!=='string'||body.trim().length<1||body.length>2000)continue;
     messages.push({id:row.id,from:row.from,phoneNumberId,text:body.trim()});
     if(messages.length>=20)return messages;
