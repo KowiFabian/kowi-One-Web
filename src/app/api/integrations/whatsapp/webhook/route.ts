@@ -52,10 +52,13 @@ async function handleMessage(db:ReturnType<typeof serviceDb>,message:Incoming,or
    .update({status:'uncertain',reply_text:reply,updated_at:new Date().toISOString()})
    .eq('id',reserved.id).eq('status','reserved');
   if(markError)throw markError;
+  console.info('whatsapp_pilot_outbound_attempt');
   const providerId=await sendMetaText(message.from,reply,phoneId);
-  await db.from('whatsapp_pilot_auto_replies')
+  const {error:finalizeError}=await db.from('whatsapp_pilot_auto_replies')
    .update({status:'sent',provider_message_id:providerId,updated_at:new Date().toISOString()})
-   .eq('id',reserved.id);
+   .eq('id',reserved.id).eq('status','uncertain');
+  if(finalizeError)throw new Error('WhatsApp accepted reply but persistence failed');
+  console.info('whatsapp_pilot_outbound_accepted');
   return 'sent';
  }catch(error){
   console.error('whatsapp_pilot_auto_reply_failed',error instanceof Error?error.message:'unknown');
@@ -78,24 +81,35 @@ export async function POST(request:Request){
  let raw:string;
  try{const body=await readLimitedMetaWebhookBody(request.body);if(body.tooLarge)return new Response('Payload too large',{status:413});raw=body.raw;}
  catch{return new Response('Invalid request body',{status:400});}
- if(!verifyMetaSignature(raw,request.headers.get('x-hub-signature-256'),process.env.META_APP_SECRET||''))
+ if(!verifyMetaSignature(raw,request.headers.get('x-hub-signature-256'),process.env.META_APP_SECRET||'')){
+  console.warn('whatsapp_pilot_webhook_invalid_signature');
   return new Response('Unauthorized',{status:401});
+ }
+ console.info('whatsapp_pilot_webhook_authenticated');
  let payload:unknown;
  try{payload=JSON.parse(raw);}catch{return new Response('Invalid JSON',{status:400});}
- if(process.env.META_WHATSAPP_PILOT_ENABLED!=='true')return Response.json({received:true,pilot:'disabled'},{headers:noStore});
+ if(process.env.META_WHATSAPP_PILOT_ENABLED!=='true'){
+  console.info('whatsapp_pilot_webhook_disabled');
+  return Response.json({received:true,pilot:'disabled'},{headers:noStore});
+ }
  const phoneId=process.env.META_WHATSAPP_TEST_PHONE_NUMBER_ID;
  const organizationId=process.env.KOWI_WHATSAPP_TEST_ORGANIZATION_ID;
  if(!phoneId||!organizationId)return new Response('Pilot configuration incomplete',{status:503});
- const messages=parseMetaMessages(payload).filter(m=>m.phoneNumberId===phoneId&&isAllowedMetaTestRecipient(m.from,process.env.META_WHATSAPP_TEST_RECIPIENTS));
+ const parsed=parseMetaMessages(payload);
+ const forTestPhone=parsed.filter(m=>m.phoneNumberId===phoneId);
+ const messages=forTestPhone.filter(m=>isAllowedMetaTestRecipient(m.from,process.env.META_WHATSAPP_TEST_RECIPIENTS));
  if(!messages.length){
-  console.info('whatsapp_pilot_filtered_event');
+  console.info('whatsapp_pilot_filtered_event',JSON.stringify({recognizedText:parsed.length,matchedTestNumber:forTestPhone.length,allowed:0}));
   return Response.json({received:true,stored:0},{headers:noStore});
  }
  try{
   const db=serviceDb();
   const {data:binding,error}=await db.from('whatsapp_pilot_bindings').select('organization_id')
    .eq('phone_number_id',phoneId).eq('organization_id',organizationId).eq('enabled',true).maybeSingle();
-  if(error||!binding)return new Response('Test binding unavailable',{status:503});
+  if(error||!binding){
+   console.error('whatsapp_pilot_binding_unavailable');
+   return new Response('Test binding unavailable',{status:503});
+  }
   const results=[];
   for(const message of messages)results.push(await handleMessage(db,message,organizationId,phoneId));
   console.info('whatsapp_pilot_processed',JSON.stringify({accepted:messages.length,results}));
