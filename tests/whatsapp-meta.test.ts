@@ -17,6 +17,8 @@ test('Meta webhook signatures require valid raw HMAC and reject tampering',()=>{
 });
 test('parse inbound text only with valid identifiers and no status echoes',()=>{
  assert.deepEqual(parseMetaMessages(good),[{id:'wamid.demo123',from:'34600111222',phoneNumberId:'123456789012345',text:'Quiero reservar una cita'}]);
+ const encoded=JSON.parse(JSON.stringify(good)); encoded.entry[0].changes[0].value.messages[0].id='wamid.HBgLMTIzNDU2Nzg5MA==';
+ assert.equal(parseMetaMessages(encoded)[0]?.id,'wamid.HBgLMTIzNDU2Nzg5MA==');
  assert.deepEqual(parseMetaMessages({object:'whatsapp_business_account',entry:[{changes:[{value:{statuses:[{id:'wamid.demo123'}]}}]}]}),[]);
  assert.deepEqual(parseMetaMessages({object:'page',entry:good.entry}),[]);
  assert.deepEqual(parseMetaMessages(null),[]);
