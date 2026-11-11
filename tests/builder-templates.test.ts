@@ -3,8 +3,7 @@ import test from 'node:test';
 import {builderTemplates,previewBuilderReply,templateById,validateBuilderConfig} from '../src/lib/builder-templates';
 
 test('each KOWI Builder template has a valid business configuration',()=>{
- assert.equal(builderTemplates.length,6);
- for(const item of builderTemplates){
+ for(const item of builderTemplates.filter(template=>template.id!=='personalizado')){
   assert.ok(validateBuilderConfig(item.config).success,item.label);
   assert.ok(item.prompts.length>=2);
   assert.ok(item.config.escalation.length>10);
@@ -29,4 +28,11 @@ test('unknown information is escalated, not fabricated',()=>{
  const config=templateById('taller').config;
  const result=previewBuilderReply(config,'¿Me reparáis un coche sin verlo?');
  assert.match(result,/equipo|técnico|revis/i);
+});
+
+test('a custom blank template requires configuration and a disabled FAQ capability escalates',()=>{
+ assert.equal(validateBuilderConfig(templateById('personalizado').config).success,false);
+ const config={...templateById('belleza').config,automaticActions:[]};
+ assert.doesNotMatch(previewBuilderReply(config,'¿Cuánto cuesta un corte?'),/18 €/);
+ assert.match(previewBuilderReply(config,'¿Cuánto cuesta un corte?'),/revisión/);
 });

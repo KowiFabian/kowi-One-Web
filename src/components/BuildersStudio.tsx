@@ -19,8 +19,16 @@ function Section({number,title,description,children}:{number:string;title:string
    {children}
  </section>;
 }
-export default function BuildersStudio(){
- const initial=builderTemplates[0];
+const draftKey = 'kowi.builders.draft.v1';
+
+const capabilities = [
+ { id:'answer_faq', label:'Responder preguntas frecuentes', detail:'Respuestas basadas en hechos confirmados.' },
+ { id:'recommend', label:'Recomendar servicios', detail:'Sugerencias del catálogo de la empresa.' },
+ { id:'qualify', label:'Aclarar la necesidad', detail:'Preguntas para preparar el siguiente paso.' },
+] as const;
+
+export default function BuildersStudio({ initialTemplate }: { initialTemplate?: string }){
+ const initial=templateById(initialTemplate ?? 'personalizado');
  const [sector,setSector]=useState(initial.id);
  const [config,setConfig]=useState<BusinessConfig>(()=>cloneConfig(initial.config));
  const [agentName,setAgentName]=useState(initial.agentName);
@@ -35,13 +43,19 @@ export default function BuildersStudio(){
  const [signedIn,setSignedIn]=useState(false);
  const [notice,setNotice]=useState('');
  const [error,setError]=useState('');
+ const [hasLocalDraft,setHasLocalDraft]=useState(false);
+ const [confirmed,setConfirmed]=useState(false);
  const [step,setStep]=useState<'config'|'preview'|'review'>('config');
  const selected=templateById(sector);
  const selectedCompany=orgs.find(o=>o.id===org);
  const canSave=['owner','admin','configurator'].includes(role);
  const validated=validateBuilderConfig({...config,name:selectedCompany?.name||config.name});
- function change<K extends keyof BusinessConfig>(key:K,value:BusinessConfig[K]){setConfig(c=>({...c,[key]:value}));setNotice('');}
+ function change<K extends keyof BusinessConfig>(key:K,value:BusinessConfig[K]){setConfig(c=>({...c,[key]:value}));setNotice('');setConfirmed(false);setMessages([]);}
 
+ useEffect(()=>{
+   try {setHasLocalDraft(window.sessionStorage.getItem(draftKey)!==null);}
+   catch {setHasLocalDraft(false);}
+ },[]);
  useEffect(()=>{let live=true;
    api<Organization[]>('/api/organizations').then(rows=>{
      if(!live)return;
@@ -59,10 +73,44 @@ export default function BuildersStudio(){
      .catch(e=>{if(live)setError(e instanceof Error?e.message:'No se pudieron cargar los agentes de la empresa.');});
    return()=>{live=false;};
  },[org]);
+ function keepDraft(){
+   try {
+     if(!validateBuilderConfig({...config,name:config.name||'Ficha local'}).success){
+       setError('Completa los servicios y las preguntas frecuentes antes de guardar la ficha en esta pestaña.');
+       return;
+     }
+     window.sessionStorage.setItem(draftKey,JSON.stringify({sector,agentName,config}));
+     setHasLocalDraft(true);
+     setError('');
+     setNotice('Ficha guardada en esta pestaña. Tras iniciar sesión, vuelve a Builders y selecciona «Recuperar ficha de esta pestaña».');
+   } catch {
+     setError('No se pudo guardar la ficha en esta pestaña.');
+   }
+ }
+ function restoreDraft(){
+   try {
+     const raw=window.sessionStorage.getItem(draftKey);
+     if(!raw)throw new Error();
+     const draft=JSON.parse(raw);
+     const result=validateBuilderConfig({...draft.config,name:draft.config?.name||'Ficha local'});
+     if(!result.success||typeof draft.agentName!=='string'||draft.agentName.length>120)throw new Error();
+     setConfig({...result.data,name:draft.config.name||''});
+     setAgentName(draft.agentName);
+     setSector(templateById(draft.sector).id);
+     setMessages([]);
+     setPreviewInput('');
+     setConfirmed(false);
+     setError('');
+     setStep('config');
+     setNotice('Ficha recuperada. Revísala antes de guardar en tu empresa.');
+   } catch {
+     setError('La ficha guardada no se pudo recuperar. Completa los campos y vuelve a guardar.');
+   }
+ }
  function chooseSector(id:string){
-   if(id===sector)return;
+   if(id===sector||busy)return;
    const t=templateById(id);
-   setSector(t.id);setConfig(cloneConfig(t.config));setAgentName(t.agentName);
+   setConfirmed(false);setSector(t.id);setConfig(cloneConfig(t.config));setAgentName(t.agentName);
    setMessages([]);setPreviewInput('');setError('');setNotice('Plantilla de '+t.label+' cargada. Los campos anteriores se han reemplazado.');
    setStep('config');
  }
@@ -74,10 +122,13 @@ export default function BuildersStudio(){
    setStep('preview');
  }
  async function save(e:FormEvent){
-   e.preventDefault();setError('');setNotice('');
+   e.preventDefault();
+   if(busy)return;
+   setError('');setNotice('');
    if(!signedIn||!org){setError('Inicia sesión y crea o selecciona una empresa antes de guardar en KOWI.');return;}
    if(!canSave){setError('Tu rol no permite registrar agentes en esta empresa. Solicita acceso al propietario.');return;}
-   if(agentName.trim().length<2||agentName.trim().length>120){setError('El nombre del agente debe tener entre 2 y 120 caracteres.');return;}
+   if(!confirmed){setError('Confirma que la ficha contiene datos autorizados antes de guardarla.');return;}
+   if(agentName.trim().length<2||agentName.trim().length>120){setError('El nombre del agente debe tener entre 2 y 120 caracteres.');setStep('config');return;}
    const final=validateBuilderConfig({...config,name:selectedCompany?.name||config.name});
    if(!final.success){const first=final.error.issues[0];setError('Revisa '+(first?.path.join(' → ')||'la ficha')+': '+(first?.message||'valor inválido')+'.');setStep('config');return;}
    setBusy(true);
@@ -86,7 +137,8 @@ export default function BuildersStudio(){
        method:'POST',body:JSON.stringify({name:agentName.trim(),config:final.data}),
      });
      setAgents(old=>[saved,...old.filter(a=>a.id!==saved.id)]);
-     setNotice('Agente '+saved.name+' registrado en DRAFT. No está activo ni envía mensajes. Debes probarlo y verificarlo antes de su activación.');
+     setNotice(saved.status==='draft' ? 'Borrador registrado: '+saved.name+'. Abre su conversación privada para verificarlo.' : 'Ya existe un agente con esta configuración: '+saved.name+' ('+saved.status+').');
+     setConfirmed(false);
      setStep('review');
    }catch(e){setError(e instanceof Error?e.message:'No se pudo registrar el agente.');}
    finally{setBusy(false);}
@@ -96,7 +148,7 @@ export default function BuildersStudio(){
  return <main className="min-h-screen bg-[#fafafa] px-4 pb-20 pt-8 text-[#1b1d21] sm:px-6 lg:px-10"><div className="mx-auto max-w-6xl">
    <header className="flex flex-wrap items-center justify-between gap-4">
      <Link href="/" className="flex items-center gap-3" aria-label="KOWI IA, inicio">
-       <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f0f1f2] text-2xl font-bold">◎</span>
+       <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f4dfc8] text-2xl font-bold text-[#624022]">◎</span>
        <span><strong className="block text-2xl tracking-tight">KOWI IA</strong><small className="text-[#777b81]">Human-First AI · Builders Studio</small></span>
      </Link>
      <div className="flex flex-wrap items-center gap-2"><Link href="/builders/ingresos" className="rounded-full border border-[#dadddf] bg-white px-4 py-2 text-sm font-medium hover:bg-[#f0f1f2]">Cómo ganan los Builders</Link><span className="rounded-full bg-[#eeeeef] px-3 py-1 text-xs font-semibold">PILOTO</span></div>
@@ -110,29 +162,34 @@ export default function BuildersStudio(){
        <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Crea un agente que conozca tu negocio.</h1>
        <p className="mt-4 max-w-3xl leading-relaxed text-[#686e76]">Elige una plantilla, personaliza información confirmada, prueba respuestas en una simulación y registra un borrador en tu empresa. Sin código, sin inventar reservas y sin enviar mensajes a terceros.</p><Link href="/builders/ingresos" className="mt-4 inline-block text-sm font-semibold underline underline-offset-4">Descubre el modelo de ingresos de KOWI, Partners y Builders ↗</Link>
      </section>
+     {hasLocalDraft&&<button type="button" className={secondary+' mt-4'} disabled={busy} onClick={restoreDraft}>Recuperar ficha de esta pestaña</button>}
      <section className="mt-8">
        <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="text-lg font-semibold">1. Elige una plantilla sectorial</h2><span className="text-xs text-[#6f737a]">Las plantillas contienen únicamente datos ficticios</span></div>
        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-         {builderTemplates.map(t=><button type="button" key={t.id} aria-pressed={t.id===sector} onClick={()=>chooseSector(t.id)}
-           className={'rounded-2xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 '+(t.id===sector?'border-[#22252a] bg-[#f4f5f6]':'border-[#e3e5e8] bg-white hover:border-[#8b9098]')}>
+         {builderTemplates.map(t=><button type="button" key={t.id} aria-pressed={t.id===sector} disabled={busy} onClick={()=>chooseSector(t.id)}
+           className={'rounded-2xl border p-4 text-left transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 '+(t.id===sector?'border-[#a77649] bg-[#fbf2e8]':'border-[#e3e5e8] bg-white hover:border-[#8b9098]')}>
            <span className="text-2xl" aria-hidden="true">{t.icon}</span><strong className="mt-3 block">{t.label}</strong><span className="mt-1 block text-sm text-[#6f747b]">{t.description}</span>
          </button>)}
        </div>
      </section>
      <div className="mt-8 flex flex-wrap gap-2" aria-label="Etapas del constructor">
-       {[{id:'config',title:'Configurar'},{id:'preview',title:'Probar agente'},{id:'review',title:'Registrar borrador'}].map((t,index)=><button key={t.id} type="button" aria-pressed={step===t.id} onClick={()=>setStep(t.id as typeof step)} className={step===t.id?primary:secondary}>{index+1}. {t.title}</button>)}
+       {[{id:'config',title:'Configurar'},{id:'preview',title:'Probar agente'},{id:'review',title:'Registrar borrador'}].map((t,index)=><button key={t.id} type="button" aria-pressed={step===t.id} disabled={busy} onClick={()=>setStep(t.id as typeof step)} className={step===t.id?primary:secondary}>{index+1}. {t.title}</button>)}
      </div>
      {notice&&<p role="status" className="mt-4 rounded-xl border border-[#d2e5d7] bg-[#f2f9f3] p-3 text-sm text-[#25472c]">{notice}</p>}
      {error&&<p role="alert" aria-live="assertive" className="mt-4 rounded-xl border border-[#edb7b7] bg-[#fff0f0] p-3 text-sm text-[#9b2525]">{error}</p>}
-     {step==='config'&&<form noValidate onSubmit={save} className="mt-6 space-y-4">
+     {step==='config'&&<div className="mt-6 space-y-4">
        <Section number="01" title="Identidad y objetivos" description="Qué hace tu agente, qué negocio representa y cómo debe comunicarse.">
          <div className="grid gap-4 sm:grid-cols-2">
-           <label className={lbl}>Nombre del agente<input className={field} required maxLength={120} value={agentName} onChange={e=>setAgentName(e.target.value)}/></label>
-           <label className={lbl}>Nombre de la empresa de ejemplo<input className={field} maxLength={120} value={config.name} onChange={e=>change('name',e.target.value)}/></label>
+           <label className={lbl}>Nombre del agente<input className={field} required maxLength={120} value={agentName} onChange={e=>{setAgentName(e.target.value);setConfirmed(false);setMessages([]);}}/></label>
+           <label className={lbl}>Nombre de la empresa para la simulación<input className={field} maxLength={120} value={config.name} onChange={e=>change('name',e.target.value)}/></label>
            <label className={lbl+' sm:col-span-2'}>Objetivo y descripción del negocio<textarea className={field} rows={3} maxLength={1200} value={config.description} onChange={e=>change('description',e.target.value)}/></label>
            <label className={lbl}>Tono de la conversación<input className={field} maxLength={300} value={config.tone} onChange={e=>change('tone',e.target.value)}/></label>
            <label className={lbl}>Contacto público<input className={field} maxLength={300} value={config.contact} onChange={e=>change('contact',e.target.value)}/></label>
            <label className={lbl+' sm:col-span-2'}>Horario confirmado<textarea className={field} rows={2} maxLength={700} value={config.hours} onChange={e=>change('hours',e.target.value)}/></label>
+           <label className={lbl}>Especialidad<select className={field} value={config.sector} onChange={e=>change('sector',e.target.value as BusinessConfig['sector'])}>
+             {Object.entries({ belleza:'Peluquería y estética', inmobiliaria:'Inmobiliaria', salud:'Recepción sanitaria', taller:'Taller', restauracion:'Restaurante', comercio:'Comercio', profesional:'Profesional', pyme:'Pyme', otro:'Otra especialidad' }).map(([id,label])=><option key={id} value={id}>{label}</option>)}
+           </select></label>
+           <label className={lbl}>Equipo responsable<input className={field} maxLength={700} value={config.team} onChange={e=>change('team',e.target.value)}/></label>
          </div>
        </Section>
        <Section number="02" title="Servicios y precios" description="Añade solo servicios y precios autorizados. No es un inventario conectado.">
@@ -151,7 +208,16 @@ export default function BuildersStudio(){
          </div>)}</div>
          <button type="button" disabled={config.faq.length>=25} className={secondary+' mt-3 disabled:opacity-40'} onClick={()=>change('faq',[...config.faq,{question:'',answer:''}])}>+ Añadir respuesta</button>
        </Section>
-       <Section number="04" title="Seguridad y supervisión" description="Un borrador no puede enviar mensajes ni confirmar pagos o reservas.">
+       <Section number="04" title="Capacidades y herramientas" description="Elige lo que el agente puede resolver en una conversación privada.">
+         <div className="grid gap-3 sm:grid-cols-3">
+           {capabilities.map(item=><label className="flex items-start gap-3 rounded-xl border border-[#e7e8ea] p-3 text-sm" key={item.id}>
+             <input type="checkbox" className="mt-1 accent-[#98683c]" checked={config.automaticActions.includes(item.id)} onChange={e=>change('automaticActions',e.target.checked?[...config.automaticActions,item.id]:config.automaticActions.filter(action=>action!==item.id))}/>
+             <span><strong className="block">{item.label}</strong>{item.detail}</span>
+           </label>)}
+         </div>
+         <p className="mt-4 text-sm text-[#555c64]">CRM, agenda, correo y WhatsApp se gestionan desde Business según permisos y conexión del canal.</p>
+       </Section>
+       <Section number="05" title="Seguridad y supervisión" description="Un borrador no puede enviar mensajes ni confirmar pagos o reservas.">
          <div className="grid gap-4 sm:grid-cols-2">
            <label className={lbl}>Políticas y límites<textarea className={field} rows={3} maxLength={1500} value={config.policies} onChange={e=>change('policies',e.target.value)}/></label>
            <label className={lbl}>Cuándo derivar a una persona<textarea className={field} rows={3} maxLength={700} value={config.escalation} onChange={e=>change('escalation',e.target.value)}/></label>
@@ -160,14 +226,14 @@ export default function BuildersStudio(){
        </Section>
        <div className="flex flex-wrap justify-between gap-3">
          <button type="button" className={secondary} onClick={()=>setStep('preview')}>Probar antes de guardar</button>
-         <button type="submit" className={primary} disabled={busy||!signedIn||!org||!canSave}>{busy?'Registrando…':'Registrar agente DRAFT'}</button>
+         <button type="button" className={primary} onClick={()=>setStep('review')}>Revisar para guardar</button>
        </div>
        {!signedIn&&<p className="text-sm text-[#666b72]">Puedes probar esta plantilla sin cuenta. Para registrar el agente, <Link href="/business#crear" className="font-semibold underline">entra a KOWI Business</Link> y crea una empresa.</p>}
-     </form>}
+     </div>}
      {step==='preview'&&<div className="mt-6 grid gap-5 lg:grid-cols-[1fr_.85fr]">
        <Section number="02" title="Simulador de conversación" description="Reglas locales de ejemplo: no ejecuta IA real ni consulta sistemas externos.">
          <div className="h-[330px] space-y-3 overflow-auto rounded-xl border border-[#e4e5e7] bg-[#f7f7f8] p-4" role="log" aria-label="Mensajes simulados" aria-live="polite">
-           <div className="max-w-[90%] rounded-xl bg-white p-3 text-sm shadow-sm">¡Hola! Soy {agentName}. ¿En qué puedo ayudarte? Responderé únicamente con la información configurada.</div>
+           <div className="max-w-[90%] rounded-xl bg-white p-3 text-sm shadow-sm">¡Hola! Soy {agentName.trim()||'tu nuevo agente'}. ¿En qué puedo ayudarte? Responderé únicamente con la información configurada.</div>
            {messages.map((m,i)=><div key={i} className={'max-w-[90%] rounded-xl p-3 text-sm '+(m.from==='cliente'?'ml-auto bg-[#24272d] text-white':'bg-white shadow-sm')}><span className="mb-1 block text-[10px] opacity-70">{m.from==='cliente'?'Cliente':'KOWI · respuesta simulada'}</span>{m.text}</div>)}
          </div>
          <form className="mt-3 flex gap-2" onSubmit={e=>{e.preventDefault();simulate(previewInput);}}>
@@ -180,24 +246,35 @@ export default function BuildersStudio(){
        <Section number="03" title="Ficha del agente" description="Vista de la configuración que recibirá el negocio.">
          <div className="space-y-3 text-sm">
            <p><strong>Agente: </strong>{agentName}</p>
-           <p><strong>Sector: </strong>{selected.label}</p>
+           <p><strong>Especialidad: </strong>{config.sector}</p>
            <p><strong>Empresa: </strong>{config.name}</p>
            <p><strong>Servicios: </strong>{config.services.filter(x=>x.name.trim()).map(x=>x.name).join(', ')||'Pendientes'}</p>
            <p><strong>Horario: </strong>{config.hours||'No confirmado'}</p>
            <p><strong>Derivación: </strong>{config.escalation||'Pendiente'}</p>
          </div>
          <div className="mt-5 rounded-xl border border-[#e5e6e7] bg-[#f9fafb] p-3 text-sm">Para registrar y activar el agente en KOWI Business hace falta iniciar sesión, elegir una empresa y verificarlo con una conversación real. No se activan canales externos desde esta pantalla.</div>
-         <button type="button" className={primary+' mt-5'} onClick={()=>setStep('config')}>Volver a configurar</button>
+         <div className="mt-5 flex flex-wrap gap-2"><button type="button" className={secondary} onClick={()=>setStep('config')}>Volver a configurar</button><button type="button" className={primary} onClick={()=>setStep('review')}>Revisar para guardar</button></div>
        </Section>
      </div>}
      {step==='review'&&<div className="mt-6 grid gap-4 lg:grid-cols-[1fr_.8fr]">
        <Section number="03" title="Registrar borrador en tu empresa" description="Solo los roles owner, admin o configurator pueden guardar agentes.">
-         {loading?<p role="status" className="text-sm">Comprobando tu sesión…</p>:!signedIn?<div className="space-y-3 text-sm"><p>La simulación está abierta a todos, pero guardar requiere iniciar sesión.</p><Link href="/business#crear" className={primary+' inline-block'}>Entrar a KOWI Business</Link></div>:orgs.length===0?<div className="space-y-3 text-sm"><p>Todavía no tienes una empresa configurada.</p><Link href="/business/app" className={primary+' inline-block'}>Crear empresa</Link></div>:<form onSubmit={save} className="space-y-4">
-           <label className={lbl}>Empresa de destino<select className={field} value={org} onChange={e=>setOrg(e.target.value)}>{orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
-           <p className="text-sm text-[#666b72]">Rol: {role||'comprobando permisos'}. El agente se guardará en <strong>DRAFT</strong>, no estará activo ni se conectará a WhatsApp.</p>
+         {loading?<p role="status" className="text-sm">Comprobando tu sesión…</p>:!signedIn?<div className="space-y-3 text-sm"><p>Entra en KOWI Business para registrar el agente. Puedes conservar la ficha durante el acceso si vuelves a Builders en esta pestaña.</p><button type="button" className={secondary+' mr-2'} onClick={keepDraft}>Guardar ficha en esta pestaña</button><Link href="/business#crear" className={primary+' inline-block'}>Entrar a KOWI Business</Link></div>:orgs.length===0?<div className="space-y-3 text-sm"><p>Todavía no tienes una empresa configurada.</p><Link href="/business/app" className={primary+' inline-block'}>Crear empresa</Link></div>:<form onSubmit={save} className="space-y-4">
+           <label className={lbl}>Empresa de destino<select className={field} value={org} disabled={busy} onChange={e=>{setOrg(e.target.value);setConfirmed(false);setNotice('');setError('');}}>{orgs.map(o=><option value={o.id} key={o.id}>{o.name}</option>)}</select></label>
+           <div className="rounded-xl border border-[#e5e6e7] bg-[#f9fafb] p-4 text-sm">
+             <h3 className="font-semibold">Ficha que se va a registrar</h3>
+             <dl className="mt-3 grid gap-2 break-words">
+               <div><dt className="inline font-medium">Agente · </dt><dd className="inline">{agentName.trim()||'Nombre pendiente'}</dd></div>
+               <div><dt className="inline font-medium">Objetivo · </dt><dd className="inline">{config.description||'Por definir'}</dd></div>
+               <div><dt className="inline font-medium">Capacidades · </dt><dd className="inline">{capabilities.filter(item=>config.automaticActions.includes(item.id)).map(item=>item.label).join(', ')||'Solo revisión humana'}</dd></div>
+               <div><dt className="inline font-medium">Conocimiento · </dt><dd className="inline">{config.services.length} servicios y {config.faq.length} preguntas frecuentes</dd></div>
+               <div><dt className="inline font-medium">Derivación · </dt><dd className="inline">{config.escalation||'Por definir'}</dd></div>
+             </dl>
+           </div>
+           <p className="text-sm text-[#666b72]">Rol: {role||'comprobando permisos'}. El agente se guardará como borrador. Los canales se gestionan en Business.</p>
            {!validated.success&&<p role="alert" className="text-sm text-[#a42727]">Faltan campos válidos. Revisa la configuración antes de guardarla.</p>}
-           <button type="submit" className={primary} disabled={busy||!canSave||!validated.success}>{busy?'Guardando…':'Registrar agente en DRAFT'}</button>
-           <button type="button" className={secondary+' ml-2'} onClick={()=>setStep('config')}>Editar ficha</button>
+           <label className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={confirmed} disabled={busy} onChange={e=>setConfirmed(e.target.checked)}/>He revisado la ficha y confirmo que los datos están autorizados para {selectedCompany?.name}.</label>
+           <button type="submit" className={primary} disabled={busy||!canSave||!validated.success||!confirmed}>{busy?'Guardando…':'Registrar agente en DRAFT'}</button>
+           <button type="button" className={secondary+' ml-2'} disabled={busy} onClick={()=>setStep('config')}>Editar ficha</button>
            {!canSave&&<p className="text-xs text-[#9b2525]">No tienes permisos de configuración en esta empresa o están por comprobarse.</p>}
          </form>}
        </Section>
