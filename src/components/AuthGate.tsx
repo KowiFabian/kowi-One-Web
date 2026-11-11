@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { browserSupabase } from '@/lib/supabase-browser';
@@ -8,7 +8,7 @@ import BusinessWorkspace from './BusinessWorkspace';
 import InstallKowi from './InstallKowi';
 import {useRouter} from 'next/navigation';
 
-export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' | 'workspace' }) {
+export default function AuthGate({ mode = 'one', guestIntro }: { mode?: 'one' | 'business' | 'workspace'; guestIntro?: ReactNode }) {
   const router=useRouter();
   const isBusiness=mode!=='one';
   const [session, setSession] = useState<Session | null>(null);
@@ -62,7 +62,7 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
     setSession(null);
   }} />;
 
-  return <main className="kowi-shell kowi-readable grid min-h-screen text-[#f4f3f2] place-items-center px-6 py-12">
+  return <>{guestIntro}<main id={guestIntro ? 'entrar' : undefined} className="kowi-shell kowi-readable grid min-h-screen text-[#f4f3f2] place-items-center px-6 py-12">
     <div className="kowi-grid pointer-events-none absolute inset-0 opacity-40"/>
     <section className="glass relative z-10 grid w-full max-w-5xl overflow-hidden rounded-[2rem] md:grid-cols-[1.05fr_.95fr]">
       <div className="relative min-h-[420px] border-b border-white/10 p-8 md:border-b-0 md:border-r md:p-10">
@@ -98,5 +98,5 @@ export default function AuthGate({ mode = 'one' }: { mode?: 'one' | 'business' |
         <p className="mt-6 text-xs leading-relaxed text-[#c3d0ca]">No incluyas contraseñas ni información sensible. Consulta <Link href="/privacidad" className="underline">privacidad y uso de IA</Link>.</p>
       </div>
     </section>
-  </main>;
+  </main></>;
 }

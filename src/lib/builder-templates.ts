@@ -87,6 +87,23 @@ export const builderTemplates:BuilderTemplate[]=[
       policies:'No sustituir consejos jurídicos, sanitarios o financieros profesionales.',
       escalation:'Derivar propuestas y decisiones especializadas al profesional.'},
   },
+  {
+    id:'salud',label:'Clínica dental',description:'Información y solicitudes para recepción',icon:'＋',
+    agentName:'KOWI Recepción Dental',companyName:'Clínica Sonrisa (DEMO)',
+    prompts:['¿Puedo solicitar una cita?','¿Cuál es vuestro horario?','¿Cuánto cuesta una limpieza?'],
+    config:{...base,name:'Clínica Sonrisa (DEMO)',sector:'salud',
+      description:'Recepción de una clínica dental ficticia.',
+      hours:'Lunes a viernes, 09:00 a 18:00 (ejemplo).',
+      services:[{name:'Limpieza dental',price:''}],
+      faq:[{question:'¿Puedo solicitar una cita?',answer:'Puedes indicar un horario de preferencia. Recepción debe confirmar la disponibilidad y la cita.'}],
+      policies:'No diagnosticar ni pedir datos de salud. Las citas y precios requieren confirmación de la clínica.',
+      escalation:'Derivar las consultas clínicas y las reservas a recepción.'},
+  },
+  {
+    id:'personalizado',label:'Desde cero',description:'Define tu propia especialidad y ficha',icon:'＋',
+    agentName:'',companyName:'',prompts:['¿Qué servicios ofrecéis?','¿Cuál es vuestro horario?'],
+    config:{...base,name:'',sector:'otro',description:'',hours:'',services:[],faq:[],policies:'',escalation:''},
+  },
 ];
 export function templateById(id:string){return builderTemplates.find(t=>t.id===id)||builderTemplates[0];}
 export function validateBuilderConfig(config:unknown){return businessConfigSchema.safeParse(config);}
@@ -95,36 +112,48 @@ function normalized(value:string){return value.normalize('NFD').replace(/[\u0300
 export function previewBuilderReply(config:BusinessConfig,question:string):string{
   const q=normalized(question.trim());
   if(!q)return 'Escribe una consulta para comprobar la configuración del agente.';
-  if(/\b(horario|hora|abri|cerr|cuando)\b/.test(q)){
-    return config.hours? 'Según la información proporcionada por el negocio: '+config.hours :
-      'Aún no tengo un horario confirmado. '+(config.escalation||'Lo consultaré con el responsable.');
-  }
-  if(/\b(contacto|telefono|correo|email|direccion)\b/.test(q)){
-    return config.contact?'Contacto publicado por el negocio: '+config.contact:
-      'No hay un contacto público confirmado. '+(config.escalation||'Te derivaremos al equipo.');
-  }
-  if(/\b(precio|cuanto|cuesta|coste|costar|valor)\b/.test(q)){
-    const priced=config.services.find(s=>normalized(s.name).length>=4&&q.includes(normalized(s.name)));
-    if(priced)return priced.price
-      ? priced.name+': '+priced.price+'. Confirma cualquier condición con el equipo.'
-      : 'No tengo un precio confirmado de '+priced.name+'. '+config.escalation;
-    return 'No tengo una tarifa confirmada para esa consulta. '+config.escalation;
-  }
-  for(const item of config.faq){
-    const words=normalized(item.question).split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>=5 && !['puedo','tienen','teneis','vuestra','vuestro','hacer','sobre','quiero'].includes(w));
-    if(words.some(w=>q.includes(w)))return item.answer;
-  }
-  for(const service of config.services){
-    const name=normalized(service.name);
-    if(name.length>=4 && q.includes(name)){
-      return service.price?service.name+': '+service.price+'. Confirma disponibilidad y condiciones con el equipo.':
-        'Ofrecemos '+service.name+', pero su precio no está confirmado. '+config.escalation;
+  const actions = config.automaticActions;
+  const escalation = config.escalation || 'Un responsable debe revisar el siguiente paso.';
+  if(actions.includes('answer_faq')){
+    if(/\b(horario|hora|abri|cerr|cuando)\b/.test(q)){
+      return config.hours? 'Según la información proporcionada por el negocio: '+config.hours :
+        'Aún no tengo un horario confirmado. '+(config.escalation||'Lo consultaré con el responsable.');
+    }
+    if(/\b(contacto|telefono|correo|email|direccion)\b/.test(q)){
+      return config.contact?'Contacto publicado por el negocio: '+config.contact:
+        'No hay un contacto público confirmado. '+(config.escalation||'Te derivaremos al equipo.');
+    }
+    if(/\b(precio|cuanto|cuesta|coste|costar|valor)\b/.test(q)){
+      const priced=config.services.find(s=>normalized(s.name).length>=4&&q.includes(normalized(s.name)));
+      if(priced)return priced.price
+        ? priced.name+': '+priced.price+'. Confirma cualquier condición con el equipo.'
+        : 'No tengo un precio confirmado de '+priced.name+'. '+config.escalation;
+      return 'No tengo una tarifa confirmada para esa consulta. '+config.escalation;
+    }
+    for(const item of config.faq){
+      const words=normalized(item.question).split(/[^\p{L}\p{N}]+/u).filter(w=>w.length>=5 && !['puedo','tienen','teneis','vuestra','vuestro','hacer','sobre','quiero'].includes(w));
+      if(words.some(w=>q.includes(w)))return item.answer;
+    }
+    for(const service of config.services){
+      const name=normalized(service.name);
+      if(name.length>=4 && q.includes(name)){
+        return service.price?service.name+': '+service.price+'. Confirma disponibilidad y condiciones con el equipo.':
+          'Ofrecemos '+service.name+', pero su precio no está confirmado. '+config.escalation;
+      }
+    }
+    if(/\b(reserva|reservar|cita|visita|mesa|presupuesto)\b/.test(q)){
+      return 'Puedo recoger tu solicitud para que el equipo la revise. No puedo confirmar disponibilidad, citas ni precios definitivos. '+(config.escalation||'Un responsable deberá confirmar el siguiente paso.');
     }
   }
-  if(/\b(reserva|reservar|cita|visita|mesa|presupuesto)\b/.test(q)){
-    return 'Puedo recoger tu solicitud para que el equipo la revise. No puedo confirmar disponibilidad, citas ni precios definitivos. '+(config.escalation||'Un responsable deberá confirmar el siguiente paso.');
+  if (actions.includes('recommend') && /\b(recomienda|recomiendas|recomendacion|sugiere)\b/.test(q)) {
+    const offered = config.services.map(service=>service.name.trim()).filter(Boolean);
+    return offered.length ? 'Puedo orientarte sobre estos servicios confirmados: '+offered.join(', ')+'. '+escalation : escalation;
   }
-  const serviceNames=config.services.map(s=>s.name).join(', ');
-  return 'Soy '+config.name+'. '+(serviceNames?'Puedo ayudarte con: '+serviceNames+'. ':'')+
+  if (actions.includes('qualify') && /\b(ayuda|necesito|interesa)\b/.test(q)) {
+    return '¿Qué resultado buscas y para cuándo lo necesitas? '+escalation;
+  }
+  if(!actions.includes('answer_faq'))return 'Consulta preparada para revisión. '+escalation;
+  const serviceNames=config.services.map(s=>s.name).filter(Boolean).join(', ');
+  return 'Soy el asistente de '+(config.name||'tu negocio')+'. '+(serviceNames?'Puedo ayudarte con: '+serviceNames+'. ':'')+
     'Para información no confirmada, consultaré con el equipo. '+(config.escalation||'');
 }

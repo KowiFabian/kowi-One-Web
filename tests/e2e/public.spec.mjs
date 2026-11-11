@@ -6,6 +6,9 @@ test('Visitor reaches Business registration on desktop and mobile', async ({ pag
   const overflows = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
   expect(overflows, 'Landing must fit the viewport').toBe(false);
   await page.getByRole('link', { name: /Crear mi agente KOWI/ }).first().click();
+  await expect(page).toHaveURL(/\/builders$/);
+  await page.getByRole('button', { name: 'Revisar para guardar' }).click();
+  await page.getByRole('link', { name: 'Entrar a KOWI Business' }).click();
   await expect(page).toHaveURL(/\/business#crear$/);
   await expect(page.getByRole('heading', { name: 'Crear cuenta o entrar' })).toBeVisible();
   await expect(page.getByLabel('Correo electrónico')).toBeVisible();
@@ -239,4 +242,26 @@ test('LOCAL UI FIXTURE: saved chat remains successful when agent refresh fails',
  await expect(page.getByRole('status')).toContainText('Respuesta y evidencia guardadas. No se pudo actualizar');
  await expect(page.locator('main').getByRole('alert')).toHaveCount(0);
  await expect(page.getByLabel('Mensaje',{exact:true})).toHaveValue('');expect(posts).toBe(1);
+});
+
+test('KOWI connects conversational examples and Business demos to editable agent simulations', async ({page})=>{
+ await page.goto('/');
+ await page.getByRole('link',{name:'Hablar con KOWI',exact:true}).click();
+ await page.getByRole('button',{name:'Atender clientes',exact:true}).click();
+ await page.getByRole('link',{name:/Configurar un recepcionista/}).click();
+ await expect(page).toHaveURL(/\/builders\?template=belleza$/);
+ await expect(page.getByLabel('Nombre del agente')).toHaveValue('KOWI Recepción');
+ await page.getByLabel('Precio autorizado').first().fill('22 €');
+ await page.getByRole('button',{name:'Probar antes de guardar'}).click();
+ await page.getByRole('button',{name:'¿Cuánto cuesta un corte?',exact:true}).click();
+ await expect(page.getByRole('log',{name:'Mensajes simulados'})).toContainText('22 €');
+ await page.getByRole('button',{name:'Revisar para guardar'}).click();
+ await expect(page.getByRole('link',{name:'Entrar a KOWI Business'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+1)).toBe(false);
+
+ await page.goto('/business/demo');
+ await page.getByRole('button',{name:'Clínica dental',exact:true}).click();
+ await page.getByRole('link',{name:/Personalizar este agente/}).click();
+ await expect(page).toHaveURL(/\/builders\?template=salud$/);
+ await expect(page.getByLabel('Especialidad')).toHaveValue('salud');
 });
