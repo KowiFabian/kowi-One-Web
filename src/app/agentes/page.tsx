@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AgentConfigurator from '@/components/AgentConfigurator';
 
 export const metadata: Metadata = {
   title: 'Agentes IA especializados | KOWI AI',
@@ -49,6 +50,7 @@ export default function CatalogoAgentesPage() {
         <a href={mailto} className="mt-6 inline-block font-semibold text-[#087e75] underline underline-offset-4">Consultar configuración y precio</a>
       </article>)}</div>
     </section>
+    <AgentConfigurator />
     <section className="bg-[#142a27] px-5 py-16 text-white"><div className="mx-auto max-w-6xl">
       <p className="text-xs font-bold uppercase tracking-widest text-[#9ad7c7]">KOWI Human-First AI</p>
       <h2 className="mt-4 text-3xl font-semibold">Automatización con responsabilidad y trazabilidad.</h2>
