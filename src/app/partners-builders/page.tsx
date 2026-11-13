@@ -19,7 +19,7 @@ const tracks=[
 export default function PartnersBuildersPage(){
  return <main className="min-h-screen bg-[#f8f9fa] px-4 py-8 text-[#202327] sm:px-8"><div className="mx-auto max-w-6xl space-y-8">
    <header className="flex flex-wrap items-center justify-between gap-4"><Link href="/" className="flex items-center gap-3"><span className="grid h-11 w-11 place-items-center rounded-xl bg-[#eef0f2] text-2xl">◎</span><span><strong className="block text-xl">KOWI IA</strong><small className="text-[#70757e]">Human-First AI · Colaboradores</small></span></Link>
-     <nav aria-label="KOWI" className="flex flex-wrap gap-4 text-sm"><Link href="/business">Business</Link><Link href="/builders">Builders Studio</Link><Link href="/school">School</Link><Link href="/builders/ingresos">Ingresos</Link></nav>
+     <nav aria-label="KOWI" className="flex flex-wrap gap-4 text-sm"><Link href="/agentes">Catálogo de agentes</Link><Link href="/business">Business</Link><Link href="/builders">Builders Studio</Link><Link href="/school">School</Link><Link href="/builders/ingresos">Ingresos</Link></nav>
    </header>
    <section className="rounded-[28px] border border-[#e6e8eb] bg-white px-5 py-10 sm:px-8">
      <span className="rounded-full bg-[#eef0f1] px-3 py-1 text-xs font-semibold">RED DE COLABORACIÓN · PILOTO</span>
