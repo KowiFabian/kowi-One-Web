@@ -39,8 +39,7 @@ export default function EliminacionDatosPage() {
           seguridad y sistemas de proveedores. No afirmamos que exista un borrado automático
           integral ni inmediato.</p>
         <h2 className="text-2xl font-semibold">Responsable del tratamiento</h2>
-        <p><strong>PENDIENTE:</strong> identificar a la persona física responsable y su dirección
-          de contacto legal antes de utilizar esta página como instrucciones definitivas en Meta.</p>
+        <p>Responsable indicado: <strong>Fabian Garay</strong>, Madrid, España. <strong>PENDIENTE:</strong> verificar identidad legal completa y dirección de contacto legal antes de utilizar esta página como instrucciones definitivas en Meta.</p>
         <p>Para más información, consulta nuestra <Link href="/privacidad" className="underline">
           política de privacidad</Link>.</p>
       </section>
