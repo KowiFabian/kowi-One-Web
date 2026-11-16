@@ -18,8 +18,7 @@ export default function CondicionesPage() {
       <section className="mt-8 space-y-5">
         <h2 className="text-2xl font-semibold">1. Identidad del operador</h2>
         <p>KOWI AI es un proyecto en fase de pruebas, sin sociedad constituida.
-          <strong> PENDIENTE:</strong> confirmar el nombre y apellidos y la dirección de
-          contacto de la persona física responsable.
+           Responsable del proyecto: <strong>Fabian Garay</strong>. Identificación legal completa y dirección postal válida para correspondencia: <strong>PENDIENTES de confirmar</strong>.
           Contacto: <a href="mailto:info@kowi.one" className="underline">info@kowi.one</a>.</p>
         <h2 className="text-2xl font-semibold">2. Ámbito de uso</h2>
         <p>Se permiten demostraciones limitadas, con participantes autorizados y datos
