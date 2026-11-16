@@ -19,8 +19,8 @@ export default function AvisoLegalPage() {
         <h2 className="text-2xl font-semibold">Identificación del titular</h2>
         <p>Denominación del proyecto: <strong>KOWI AI</strong> (proyecto en desarrollo;
           no es una sociedad mercantil constituida).</p>
-        <p>Titular persona física: <strong>PENDIENTE de confirmar nombre legal completo</strong>.</p>
-        <p>Domicilio o dirección válida de contacto: <strong>PENDIENTE de confirmar</strong>.</p>
+        <p>Responsable facilitado: <strong>Fabian Garay</strong> (pendiente de verificar nombre legal completo).</p>
+        <p>Localización: <strong>Madrid, 28014, España</strong>. Dirección postal válida de contacto: <strong>PENDIENTE de confirmar</strong>.</p>
         <p>Identificación fiscal, si procede su publicación: <strong>PENDIENTE de revisión</strong>.</p>
         <p>Contacto: <a href="mailto:info@kowi.one" className="underline">info@kowi.one</a>.</p>
         <p>Sitio web: <a href="https://kowi.one" className="underline">https://kowi.one</a>.</p>
