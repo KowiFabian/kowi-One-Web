@@ -20,8 +20,8 @@ export default function PrivacidadPage() {
         recabar datos reales de personas externas al equipo de pruebas.</p>
       <section className="mt-8 space-y-5">
         <h2 className="text-2xl font-semibold">1. Responsable y contacto</h2>
-        <p>Responsable: <strong>PENDIENTE: nombre y apellidos de la persona física responsable</strong>.</p>
-        <p>Dirección de contacto: <strong>PENDIENTE: dirección válida para comunicaciones legales</strong>.</p>
+        <p>Responsable del proyecto: <strong>Fabian Garay</strong> (nombre facilitado por el titular; pendiente de verificar si coincide con la identificación legal completa).</p>
+        <p>Localización comunicada: <strong>Madrid, 28014, España</strong>. Dirección postal para notificaciones legales: <strong>PENDIENTE de confirmar</strong>.</p>
         <p>Correo para información y ejercicio de derechos: <a href="mailto:info@kowi.one" className="underline">info@kowi.one</a>.</p>
         <h2 className="text-2xl font-semibold">2. Información que puede tratar el piloto</h2>
         <p>Correo de acceso a la cuenta, conversaciones y proyectos introducidos en KOWI, datos de configuración
@@ -54,7 +54,7 @@ export default function PrivacidadPage() {
           Puedes reclamar ante la Agencia Española de Protección de Datos (AEPD).
           Consulta las <Link href="/eliminacion-datos" className="underline">instrucciones de supresión</Link>.</p>
         <h2 className="text-2xl font-semibold">8. Información previa al lanzamiento</h2>
-        <p>Faltan identidad completa y dirección del responsable, bases jurídicas documentadas, plazos de
+        <p>Faltan verificación de identidad legal completa y dirección postal de contacto, bases jurídicas documentadas, plazos de
           conservación, contratos y garantías de los proveedores, y el procedimiento operativo de ejercicio
           de derechos. Hasta resolverlo, el servicio se mantiene en entorno de prueba controlado.</p>
       </section>
